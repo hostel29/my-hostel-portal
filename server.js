@@ -11,8 +11,8 @@ const app = express();
 // 🛑 अपनी Cloudinary की डिटेल यहाँ पक्का चेक कर लें
 cloudinary.config({
     cloud_name: 'dhg4qy5rw', 
-    api_key: '739265882672152', // 👈 अपनी असली API Key डालें (अगर यह नहीं है तो बदलें)
-    api_secret: 'nPJYcf47rjH56k2cNQtIi6etBLA   // 👈 अपना असली API Secret डालें
+    api_key: '492175456555184', // 👈 अपनी असली API Key डालें (अगर यह नहीं है तो बदलें)
+    api_secret: 'nPJYcf47rjH56k2cNQtIi6etBLA'
 });
 
 const storage = new CloudinaryStorage({
