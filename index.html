@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <title>एडवांस्ड हॉस्टल मैनेजमेंट सिस्टम</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="#">🏠 प्रीमियम हॉस्टल पोर्टल</a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link btn btn-outline-light text-white px-3" href="http://127.0.0.1:5000/view-students" target="_blank">🔒 एडमिन पैनल (Admin)</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row">
+            
+            <div class="col-md-8">
+                <div class="card border-warning mb-4 shadow-sm">
+                    <div class="card-header bg-warning text-dark fw-bold">📢 महत्वपूर्ण नोटिस बोर्ड</div>
+                    <div class="card-body bg-white"><ul id="live-notices" class="mb-0 fw-bold text-dark"></ul></div>
+                </div>
+
+                <div class="card border-info mb-4 shadow-sm">
+                    <div class="card-header bg-info text-white fw-bold">🔍 अपना रूम नंबर / प्रोफाइल स्टेटस चेक करें</div>
+                    <div class="card-body">
+                        <div class="input-group">
+                            <input type="tel" id="searchMobile" class="form-control" placeholder="अपना रजिस्टर्ड मोबाइल नंबर लिखें">
+                            <button onclick="checkStatus()" class="btn btn-primary">स्टेटस देखें</button>
+                        </div>
+                        <div id="statusResult" class="mt-3"></div>
+                    </div>
+                </div>
+
+                <div class="card p-4 shadow-sm mb-5">
+                    <h3 class="text-center text-primary mb-4">प्रीमियम स्टूडेंट रजिस्ट्रेशन फॉर्म</h3>
+                    <form action="http://127.0.0.1:5000/submit-form" method="POST" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label class="form-label">विद्यार्थी का नाम:</label>
+                            <input type="text" name="studentName" class="form-control" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">क्लास / कोर्स:</label>
+                                <input type="text" name="studentClass" class="form-control" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">कैटगरी (Category):</label>
+                                <select name="category" class="form-select" required>
+                                    <option value="General">General</option>
+                                    <option value="OBC">OBC</option>
+                                    <option value="SC">SC</option>
+                                    <option value="ST">ST</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">मोबाइल नंबर:</label>
+                            <input type="tel" name="mobile" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">📸 अपनी प्रोफाइल फोटो चुनें (एल्बम/गैलरी से):</label>
+                            <input type="file" name="studentPhoto" class="form-control" accept="image/*" required>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100 btn-lg">एडमिशन फॉर्म जमा करें</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card border-primary shadow-sm sticky-top" style="top: 20px;">
+                    <div class="card-header bg-primary text-white text-center fw-bold">👨‍💼 हॉस्टल वार्डन कॉर्नर</div>
+                    <div class="card-body text-center bg-white text-dark" id="warden-card">
+                        <p class="text-muted">वार्डन जानकारी लोड हो रही है...</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            fetch('http://127.0.0.1:5000/get-notices')
+                .then(res => res.json())
+                .then(notices => {
+                    const list = document.getElementById('live-notices');
+                    list.innerHTML = notices.length === 0 ? "<li>अभी कोई नया नोटिस नहीं है।</li>" : notices.map(n => `<li class="mb-2 text-danger">👉 [${n.date}] ${n.text}</li>`).join('');
+                });
+
+            fetch('http://127.0.0.1:5000/get-warden')
+                .then(res => res.json())
+                .then(w => {
+                    document.getElementById('warden-card').innerHTML = `
+                        <img src="${w.photoUrl}" class="rounded-circle mb-3 border shadow-sm" style="width: 120px; height: 120px; object-fit: cover;">
+                        <h5 class="card-title text-dark mb-1">${w.name}</h5>
+                        <p class="text-muted small mb-3">${w.designation}</p>
+                        <hr>
+                        <div class="text-start">
+                            <p class="mb-2">📞 **मोबाइल:** ${w.mobile}</p>
+                            <p class="mb-0">🏢 **ऑफिस:** ${w.office}</p>
+                        </div>
+                    `;
+                });
+        };
+
+        function checkStatus() {
+            const mobile = document.getElementById('searchMobile').value;
+            const resultDiv = document.getElementById('statusResult');
+            if(!mobile) { alert('कृपया मोबाइल नंबर लिखें!'); return; }
+
+            fetch('http://127.0.0.1:5000/check-room-status?mobile=' + mobile)
+                .then(res => res.json())
+                .then(data => {
+                    if(data.found) {
+                        resultDiv.innerHTML = `
+                            <div class="card border-success bg-white shadow-sm">
+                                <div class="card-body text-dark">
+                                    <div class="d-flex align-items-center">
+                                        <img src="${data.photoUrl}" class="rounded border me-4 shadow-sm" style="width: 100px; height: 100px; object-fit: cover;">
+                                        <div>
+                                            <h4 class="text-success mb-2">👤 ${data.name}</h4>
+                                            <p class="mb-1">📚 **कोर्स:** ${data.studentClass} | 🎫 **कैटगरी:** ${data.category}</p>
+                                            <p class="mb-0 fs-5">🏠 **अलॉटेड रूम नंबर:** <span class="badge bg-success fs-6">${data.roomNumber}</span></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>`;
+                    } else {
+                        resultDiv.innerHTML = `<div class="alert alert-danger text-center">❌ इस मोबाइल नंबर से कोई छात्र नहीं मिला!</div>`;
+                    }
+                });
+        }
+    </script>
+</body>
+</html>
