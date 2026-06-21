@@ -8,14 +8,13 @@ const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 const app = express();
 
-// 🛑 यहाँ अपनी Cloudinary की डिटेल भरें जो आपने चरण 1 में नोट की थी
+// 🛑 अपनी Cloudinary की डिटेल यहाँ पक्का चेक कर लें
 cloudinary.config({
-    cloud_name: 'यहाँ_अपना_Cloud_Name_लिखें',
-    api_key: 'यहाँ_अपनी_API_Key_लिखें',
-    api_secret: 'यहाँ_अपना_API_Secret_लिखें'
+    cloud_name: 'dhg4qy5rw', 
+    api_key: '739265882672152', // 👈 अपनी असली API Key डालें (अगर यह नहीं है तो बदलें)
+    api_secret: 'nPJYcf47rjH56k2cNQtIi6etBLA   // 👈 अपना असली API Secret डालें
 });
 
-// ☁️ क्लाउड स्टोरेज सेटिंग (अब फोटो इंटरनेट पर सेव होगी)
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
@@ -42,35 +41,51 @@ const defaultWarden = {
     name: "डॉ. राजेश कुमार शर्मा",
     designation: "मुख्य हॉस्टल वार्डन",
     mobile: "+91 98765 43210",
-    office: "रूम नंबर 01, ग्राउंड फ्लोर",
+    office: "रूम नंबर 01, grounding floor",
     photoUrl: "https://res.cloudinary.com/demo/image/upload/v1312461204/sample.jpg"
 };
 
+// फाइलें न होने पर ब्लैंक फाइलें बनाने का सेफ्टी फंक्शन
+const initFile = (filePath, defaultData = '[]') => {
+    if (!fs.existsSync(filePath)) {
+        fs.writeFileSync(filePath, defaultData, 'utf8');
+    }
+};
+initFile(studentsFile, '[]');
+initFile(noticesFile, '[]');
+initFile(wardenFile, JSON.stringify(defaultWarden, null, 2));
+
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+
 app.get('/get-warden', (req, res) => {
-    fs.readFile(wardenFile, 'utf8', (err, data) => res.json(err || !data ? defaultWarden : JSON.parse(data)));
+    fs.readFile(wardenFile, 'utf8', (err, data) => {
+        res.json(err || !data ? defaultWarden : JSON.parse(data));
+    });
 });
+
 app.get('/get-notices', (req, res) => {
-    fs.readFile(noticesFile, 'utf8', (err, data) => res.json(err || !data ? [] : JSON.parse(data)));
+    fs.readFile(noticesFile, 'utf8', (err, data) => {
+        res.json(err || !data ? [] : JSON.parse(data));
+    });
 });
 
 app.get('/check-room-status', (req, res) => {
     const mobileQuery = req.query.mobile ? req.query.mobile.trim() : "";
     fs.readFile(studentsFile, 'utf8', (err, data) => {
         if (err || !data) return res.json({ found: false });
-        const student = JSON.parse(data).find(s => s.mobile === mobileQuery);
-        if (student) {
-            res.json({ found: true, name: student.studentName, studentClass: student.studentClass, category: student.category, photoUrl: student.photoUrl, roomNumber: student.roomNumber });
-        } else {
-            res.json({ found: false });
-        }
+        try {
+            const student = JSON.parse(data).find(s => s.mobile === mobileQuery);
+            if (student) {
+                res.json({ found: true, name: student.studentName, studentClass: student.studentClass, category: student.category, photoUrl: student.photoUrl, roomNumber: student.roomNumber });
+            } else {
+                res.json({ found: false });
+            }
+        } catch(e) { res.json({ found: false }); }
     });
 });
 
 app.post('/submit-form', upload.single('studentPhoto'), (req, res) => {
-    // req.file.path में अब इंटरनेट वाला लाइव फोटो लिंक आता है
     const photoPath = req.file ? req.file.path : "https://via.placeholder.com/150";
-
     const studentData = {
         id: req.body.mobile.trim(), 
         studentName: req.body.studentName,
@@ -83,7 +98,10 @@ app.post('/submit-form', upload.single('studentPhoto'), (req, res) => {
     };
 
     fs.readFile(studentsFile, 'utf8', (err, data) => {
-        let studentsList = !err && data ? JSON.parse(data) : [];
+        let studentsList = [];
+        if (!err && data) {
+            try { studentsList = JSON.parse(data); } catch(e) { studentsList = []; }
+        }
         studentsList = studentsList.filter(s => s.mobile !== studentData.mobile);
         studentsList.push(studentData);
         fs.writeFile(studentsFile, JSON.stringify(studentsList, null, 2), () => {
@@ -101,10 +119,17 @@ app.get('/view-students', (req, res) => {
         return res.status(401).send('<h1 style="text-align:center; margin-top:50px; color:red;">❌ गलत पासवर्ड!</h1>');
     }
 
-    let currentWarden = fs.existsSync(wardenFile) ? JSON.parse(fs.readFileSync(wardenFile, 'utf8')) : defaultWarden;
+    // एरर प्रूफ वार्डन रीड
+    let currentWarden = defaultWarden;
+    if (fs.existsSync(wardenFile)) {
+        try { currentWarden = JSON.parse(fs.readFileSync(wardenFile, 'utf8')); } catch(e) { currentWarden = defaultWarden; }
+    }
 
     fs.readFile(studentsFile, 'utf8', (err, data) => {
-        let studentsList = !err && data ? JSON.parse(data) : [];
+        let studentsList = [];
+        if (!err && data) {
+            try { studentsList = JSON.parse(data); } catch(e) { studentsList = []; }
+        }
         let tableRows = '';
         studentsList.forEach((student, index) => {
             tableRows += `
@@ -178,7 +203,8 @@ app.get('/view-students', (req, res) => {
 app.post('/assign-room', (req, res) => {
     const { studentId, roomNumber } = req.body;
     fs.readFile(studentsFile, 'utf8', (err, data) => {
-        let studentsList = JSON.parse(data);
+        let studentsList = [];
+        try { studentsList = JSON.parse(data); } catch(e) {}
         studentsList = studentsList.map(s => { if (s.id === studentId) s.roomNumber = roomNumber; return s; });
         fs.writeFile(studentsFile, JSON.stringify(studentsList, null, 2), () => res.json({ success: true }));
     });
@@ -187,14 +213,18 @@ app.post('/assign-room', (req, res) => {
 app.post('/post-notice', (req, res) => {
     const newNotice = { text: req.body.noticeText, date: new Date().toLocaleDateString() };
     fs.readFile(noticesFile, 'utf8', (err, data) => {
-        let noticesList = !err && data ? JSON.parse(data) : [];
+        let noticesList = [];
+        if (!err && data) { try { noticesList = JSON.parse(data); } catch(e){} }
         noticesList.unshift(newNotice);
         fs.writeFile(noticesFile, JSON.stringify(noticesList, null, 2), () => res.send("<h1 style='color:green; text-align:center; margin-top:50px;'>📢 नोटिस लाइव हो गया है!</h1><a href='/view-students' style='display:block; text-align:center;'>वापस</a>"));
     });
 });
 
 app.post('/update-warden', upload.single('wardenPhoto'), (req, res) => {
-    let currentWarden = fs.existsSync(wardenFile) ? JSON.parse(fs.readFileSync(wardenFile, 'utf8')) : defaultWarden;
+    let currentWarden = defaultWarden;
+    if (fs.existsSync(wardenFile)) {
+        try { currentWarden = JSON.parse(fs.readFileSync(wardenFile, 'utf8')); } catch(e){}
+    }
     const photoPath = req.file ? req.file.path : currentWarden.photoUrl;
 
     const updatedWarden = {
@@ -210,6 +240,5 @@ app.post('/update-warden', upload.single('wardenPhoto'), (req, res) => {
     });
 });
 
-// Render होस्टिंग के लिए पोर्ट को डायनामिक करना ज़रूरी है
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 सर्वर पोर्ट ${PORT} पर चालू है!`));
+app.listen(PORT, () => console.log(`🚀 सर्वर चालू है!`));
