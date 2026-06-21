@@ -38,7 +38,7 @@
 
                 <div class="card p-4 shadow-sm mb-5">
                     <h3 class="text-center text-primary mb-4">प्रीमियम स्टूडेंट रजिस्ट्रेशन फॉर्म</h3>
-                    <form action="http://127.0.0.1:5000/submit-form" method="POST" enctype="multipart/form-data">
+                    <form action="/submit-form" method="POST" enctype="multipart/form-data">
                         <div class="mb-3">
                             <label class="form-label">विद्यार्थी का नाम:</label>
                             <input type="text" name="studentName" class="form-control" required>
@@ -85,14 +85,14 @@
 
     <script>
         window.onload = function() {
-            fetch('http://127.0.0.1:5000/get-notices')
+            fetch('/get-notices')
                 .then(res => res.json())
                 .then(notices => {
                     const list = document.getElementById('live-notices');
                     list.innerHTML = notices.length === 0 ? "<li>अभी कोई नया नोटिस नहीं है।</li>" : notices.map(n => `<li class="mb-2 text-danger">👉 [${n.date}] ${n.text}</li>`).join('');
                 });
 
-            fetch('http://127.0.0.1:5000/get-warden')
+           fetch('/get-warden')
                 .then(res => res.json())
                 .then(w => {
                     document.getElementById('warden-card').innerHTML = `
@@ -113,7 +113,7 @@
             const resultDiv = document.getElementById('statusResult');
             if(!mobile) { alert('कृपया मोबाइल नंबर लिखें!'); return; }
 
-            fetch('http://127.0.0.1:5000/check-room-status?mobile=' + mobile)
+            fetch('/check-room-status?mobile=' + mobile)
                 .then(res => res.json())
                 .then(data => {
                     if(data.found) {
