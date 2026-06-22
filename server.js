@@ -11,8 +11,8 @@ const app = express();
 // 🛑 अपनी Cloudinary की डिटेल यहाँ पक्का चेक कर लें
 cloudinary.config({
     cloud_name: 'dhg4qy5rw', 
-    api_key: '492175456555184', // 👈 अपनी असली API Key डालें (अगर यह नहीं है तो बदलें)
-    api_secret: 'nPJYcf47rjH56k2cNQtIi6etBLA'
+    api_key: '492175456555184', 
+    api_secret: 'nPJYcf47rjH56k2cNQtIi6etBLA' 
 });
 
 const storage = new CloudinaryStorage({
@@ -33,9 +33,11 @@ app.use((req, res, next) => {
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-const studentsFile = path.join(__dirname, 'students.json');
-const noticesFile = path.join(__dirname, 'notices.json');
-const wardenFile = path.join(__dirname, 'warden.json');
+// रेंडर पर डेटा डिलीट होने से बचाने के लिए /tmp/ फोल्डर का इस्तेमाल (टेंपरेरी सेफ ज़ोन)
+const studentsFile = path.join('/tmp', 'students.json');
+const noticesFile = path.join('/tmp', 'notices.json');
+const wardenFile = path.join('/tmp', 'warden.json');
+const logoFile = path.join('/tmp', 'logo.json');
 
 const defaultWarden = {
     name: "डॉ. राजेश कुमार शर्मा",
@@ -45,21 +47,32 @@ const defaultWarden = {
     photoUrl: "https://res.cloudinary.com/demo/image/upload/v1312461204/sample.jpg"
 };
 
-// फाइलें न होने पर ब्लैंक फाइलें बनाने का सेफ्टी फंक्शन
+const defaultLogo = {
+    url: "https://via.placeholder.com/150?text=HOSTEL+LOGO"
+};
+
 const initFile = (filePath, defaultData = '[]') => {
     if (!fs.existsSync(filePath)) {
         fs.writeFileSync(filePath, defaultData, 'utf8');
     }
 };
+
 initFile(studentsFile, '[]');
 initFile(noticesFile, '[]');
 initFile(wardenFile, JSON.stringify(defaultWarden, null, 2));
+initFile(logoFile, JSON.stringify(defaultLogo, null, 2));
 
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
 app.get('/get-warden', (req, res) => {
     fs.readFile(wardenFile, 'utf8', (err, data) => {
         res.json(err || !data ? defaultWarden : JSON.parse(data));
+    });
+});
+
+app.get('/get-logo', (req, res) => {
+    fs.readFile(logoFile, 'utf8', (err, data) => {
+        res.json(err || !data ? defaultLogo : JSON.parse(data));
     });
 });
 
@@ -76,7 +89,7 @@ app.get('/check-room-status', (req, res) => {
         try {
             const student = JSON.parse(data).find(s => s.mobile === mobileQuery);
             if (student) {
-                res.json({ found: true, name: student.studentName, studentClass: student.studentClass, category: student.category, photoUrl: student.photoUrl, roomNumber: student.roomNumber });
+                res.json({ found: true, ...student });
             } else {
                 res.json({ found: false });
             }
@@ -89,9 +102,14 @@ app.post('/submit-form', upload.single('studentPhoto'), (req, res) => {
     const studentData = {
         id: req.body.mobile.trim(), 
         studentName: req.body.studentName,
-        studentClass: req.body.studentClass,
-        category: req.body.category,
+        fatherName: req.body.fatherName,
+        motherName: req.body.motherName,
+        dob: req.body.dob,
+        aadharCard: req.body.aadharCard,
         mobile: req.body.mobile.trim(),
+        studentClass: req.body.studentClass,
+        course: req.body.course,
+        category: req.body.category,
         photoUrl: photoPath, 
         roomNumber: "अभी अलॉट नहीं हुआ", 
         date: new Date().toLocaleString()
@@ -105,7 +123,7 @@ app.post('/submit-form', upload.single('studentPhoto'), (req, res) => {
         studentsList = studentsList.filter(s => s.mobile !== studentData.mobile);
         studentsList.push(studentData);
         fs.writeFile(studentsFile, JSON.stringify(studentsList, null, 2), () => {
-            res.send("<h1 style='color:green; text-align:center; margin-top:50px;'>🎉 प्रोफाइल बन गई!</h1><a href='/' style='display:block; text-align:center; font-size:20px;'>वापस जाएँ</a>");
+            res.send("<h1 style='color:green; text-align:center; margin-top:50px;'>🎉 प्रोफाइल सफलता पूर्वक बन गई!</h1><a href='/' style='display:block; text-align:center; font-size:20px;'>वापस जाएँ</a>");
         });
     });
 });
@@ -119,10 +137,9 @@ app.get('/view-students', (req, res) => {
         return res.status(401).send('<h1 style="text-align:center; margin-top:50px; color:red;">❌ गलत पासवर्ड!</h1>');
     }
 
-    // एरर प्रूफ वार्डन रीड
     let currentWarden = defaultWarden;
     if (fs.existsSync(wardenFile)) {
-        try { currentWarden = JSON.parse(fs.readFileSync(wardenFile, 'utf8')); } catch(e) { currentWarden = defaultWarden; }
+        try { currentWarden = JSON.parse(fs.readFileSync(wardenFile, 'utf8')); } catch(e) {}
     }
 
     fs.readFile(studentsFile, 'utf8', (err, data) => {
@@ -133,15 +150,18 @@ app.get('/view-students', (req, res) => {
         let tableRows = '';
         studentsList.forEach((student, index) => {
             tableRows += `
-                <tr class="align-middle">
+                <tr class="align-middle text-white">
                     <td>${index + 1}</td>
-                    <td><img src="${student.photoUrl}" class="rounded border shadow-sm me-2" style="width:45px; height:45px; object-fit:cover;"><b>${student.studentName}</b></td>
-                    <td>${student.studentClass}</td>
-                    <td><span class="badge bg-info">${student.category}</span></td>
+                    <td><img src="${student.photoUrl}" class="rounded border" style="width:45px; height:45px; object-fit:cover; margin-right:10px;"><b>${student.studentName}</b></td>
+                    <td><b>पिता:</b> ${student.fatherName}<br><b>माता:</b> ${student.motherName}</td>
+                    <td>${student.dob}</td>
+                    <td>${student.aadharCard ? `XXXX-XXXX-${student.aadharCard.slice(-4)}` : 'N/A'}</td>
                     <td>${student.mobile}</td>
+                    <td>${student.studentClass} (${student.course})</td>
+                    <td><span class="badge bg-info">${student.category}</span></td>
                     <td>
                         <div class="d-flex">
-                            <input type="text" id="room-${student.id}" class="form-control form-control-sm bg-dark text-white border-0" value="${student.roomNumber}" style="width:110px; margin-right:5px;">
+                            <input type="text" id="room-${student.id}" class="form-control form-control-sm bg-dark text-white border-0" value="${student.roomNumber}" style="width:90px; margin-right:5px;">
                             <button onclick="saveRoom('${student.id}')" class="btn btn-sm btn-warning">अलॉट</button>
                         </div>
                     </td>
@@ -152,37 +172,48 @@ app.get('/view-students', (req, res) => {
             <!DOCTYPE html>
             <html>
             <head><title>एडमिन पैनल</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"></head>
-            <body class="bg-dark text-light p-5">
+            <body class="bg-dark text-light p-4">
                 <div class="row mb-4">
-                    <div class="col-md-6">
-                        <div class="container bg-secondary p-4 rounded shadow h-100">
-                            <h3 class="text-warning">📢 नया नोटिस जारी करें</h3>
-                            <form action="/post-notice" method="POST" class="input-group mt-3">
-                                <input type="text" name="noticeText" class="form-control" placeholder="यहाँ नया नोटिस..." required>
-                                <button type="submit" class="btn btn-danger">नोटिस लाइव करें</button>
+                    <div class="col-md-4">
+                        <div class="bg-secondary p-3 rounded shadow h-100">
+                            <h4 class="text-warning">⚙️ हॉस्टल लोगो बदलें</h4>
+                            <form action="/update-logo" method="POST" enctype="multipart/form-data" class="mt-2">
+                                <input type="file" name="hostelLogo" class="form-control form-control-sm mb-2" accept="image/*" required>
+                                <button type="submit" class="btn btn-sm btn-primary w-100">लोगो अपलोड करें</button>
                             </form>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="container bg-secondary p-4 rounded shadow h-100">
-                            <h3 class="text-warning">⚙️ वार्डन की जानकारी और फोटो बदलें</h3>
+                    <div class="col-md-4">
+                        <div class="bg-secondary p-3 rounded shadow h-100">
+                            <h4 class="text-warning">📢 नया नोटिस जारी करें</h4>
+                            <form action="/post-notice" method="POST" class="mt-2">
+                                <input type="text" name="noticeText" class="form-control form-control-sm mb-2" placeholder="यहाँ नया नोटिस..." required>
+                                <button type="submit" class="btn btn-sm btn-danger w-100">नोटिस लाइव करें</button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="bg-secondary p-3 rounded shadow h-100">
+                            <h4 class="text-warning">⚙️ वार्डन की जानकारी बदलें</h4>
                             <form action="/update-warden" method="POST" enctype="multipart/form-data" class="row g-2 mt-1">
-                                <div class="col-md-6"><input type="text" name="wName" class="form-control form-control-sm" value="${currentWarden.name}" placeholder="नाम" required></div>
-                                <div class="col-md-6"><input type="text" name="wDesig" class="form-control form-control-sm" value="${currentWarden.designation}" placeholder="पद" required></div>
-                                <div class="col-md-6"><input type="text" name="wMobile" class="form-control form-control-sm" value="${currentWarden.mobile}" placeholder="मोबाइल" required></div>
-                                <div class="col-md-6"><input type="text" name="wOffice" class="form-control form-control-sm" value="${currentWarden.office}" placeholder="ऑफिस" required></div>
-                                <div class="col-md-10"><label class="small text-warning">📸 वार्डन फोटो (गैलरी से):</label><input type="file" name="wardenPhoto" class="form-control form-control-sm" accept="image/*"></div>
-                                <div class="col-md-2 d-flex align-items-end"><button type="submit" class="btn btn-sm btn-primary w-100">सेव</button></div>
+                                <div class="col-6"><input type="text" name="wName" class="form-control form-control-sm" value="${currentWarden.name}" required></div>
+                                <div class="col-6"><input type="text" name="wDesig" class="form-control form-control-sm" value="${currentWarden.designation}" required></div>
+                                <div class="col-6"><input type="text" name="wMobile" class="form-control form-control-sm" value="${currentWarden.mobile}" required></div>
+                                <div class="col-6"><input type="text" name="wOffice" class="form-control form-control-sm" value="${currentWarden.office}" required></div>
+                                <div class="col-12"><input type="file" name="wardenPhoto" class="form-control form-control-sm" accept="image/*"></div>
+                                <div class="col-12"><button type="submit" class="btn btn-sm btn-warning w-100">वार्डन सेव करें</button></div>
                             </form>
                         </div>
                     </div>
                 </div>
-                <div class="container bg-secondary p-4 rounded shadow">
-                    <h2 class="text-center text-warning mb-4">🔒 हॉस्टल एडमिन पैनल - स्टूडेंट प्रोफाइल्स</h2>
-                    <table class="table table-dark table-striped table-hover align-middle">
-                        <thead><tr><th>S.No</th><th>छात्र (फ़ोटो + नाम)</th><th>क्लास</th><th>कैटगरी</th><th>मोबाइल</th><th>ROOM NO</th></tr></thead>
-                        <tbody>${tableRows || '<tr><td colspan="6" class="text-center">अभी कोई छात्र पंजीकृत नहीं है।</td></tr>'}</tbody>
-                    </table>
+                <div class="bg-secondary p-4 rounded shadow">
+                    <h2 class="text-center text-warning mb-4">🔒 हॉस्टल एडमिन पैनल - स्टूडेंट लिस्ट</h2>
+                    <div class="table-responsive">
+                        <table class="table table-dark table-striped table-hover">
+                            <thead><tr><th>S.No</th><th>छात्र</th><th>माता/पिता</th><th>DOB</th><th>Aadhaar</th><th>मोबाइल</th><th>क्लास/कोर्स</th><th>कैटगरी</th><th>ROOM NO</th></tr></thead>
+                            <tbody>${tableRows || '<tr><td colspan="9" class="text-center">अभी कोई छात्र पंजीकृत नहीं है।</td></tr>'}</tbody>
+                        </table>
+                    </div>
                 </div>
                 <script>
                     function saveRoom(studentId) {
@@ -198,6 +229,14 @@ app.get('/view-students', (req, res) => {
             </html>
         `);
     });
+});
+
+app.post('/update-logo', upload.single('hostelLogo'), (req, res) => {
+    if (req.file) {
+        fs.writeFile(logoFile, JSON.stringify({ url: req.file.path }, null, 2), () => {
+            res.send("<h1 style='color:green; text-align:center; margin-top:50px;'>🎉 लोगो सफलतापूर्वक बदल गया!</h1><a href='/view-students' style='display:block; text-align:center;'>वापस एडमिन पैनल जाएँ</a>");
+        });
+    } else { res.redirect('/view-students'); }
 });
 
 app.post('/assign-room', (req, res) => {
