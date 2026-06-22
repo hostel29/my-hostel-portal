@@ -83,7 +83,6 @@ const Warden = mongoose.model('Warden', WardenSchema);
 const LogoSchema = new mongoose.Schema({ url: String });
 const Logo = mongoose.model('Logo', LogoSchema);
 
-// 📋 मेरIT लिस्ट और रिन्यूअल के लिए मास्टर सेटिंग्स स्कीमा
 const SettingSchema = new mongoose.Schema({
     photoActive: { type: Boolean, default: true },
     signatureActive: { type: Boolean, default: true },
@@ -92,7 +91,7 @@ const SettingSchema = new mongoose.Schema({
     casteActive: { type: Boolean, default: true },
     resActive: { type: Boolean, default: true },
     rationActive: { type: Boolean, default: true },
-    meritListLink: { type: String, default: "" } // 🔗 डायनामिक मेरिट लिस्ट लिंक होल्डर
+    meritListLink: { type: String, default: "" }
 });
 const Setting = mongoose.model('Setting', SettingSchema);
 
@@ -102,7 +101,7 @@ const defaultWarden = {
 };
 const defaultLogo = { url: "https://via.placeholder.com/800x250?text=PRE+MATRIC+BOYS+HOSTEL+SURAJPUR" };
 const defaultSetting = { photoActive: true, signatureActive: true, aadharActive: true, resultActive: true, casteActive: true, resActive: true, rationActive: true, meritListLink: "" };
-// 🏠 मुख्य पृष्ठ
+// 🏠 मुख्य पृष्ठ (Server Side Live Render)
 app.get('/', async (req, res) => {
     try {
         const students = await Student.find({});
@@ -129,30 +128,23 @@ app.get('/', async (req, res) => {
 
         h += '<div class="row g-4"><div class="col-md-8"><div class="logo-container shadow-sm"><img src="' + logo.url + '" alt="Hostel Logo" class="logo-img"></div><div class="card p-3 mb-4 shadow-sm"><div class="card-header bg-danger text-white rounded mb-2 fw-bold fs-6">Notice Board</div><ul class="list-group list-group-flush">';
         
-        if(notices.length === 0) {
-            h += "<li class='text-muted text-center p-3'>कोई नया नोटिस नहीं है।</li>";
-        } else {
-            notices.forEach(n => {
-                h += "<li class='list-group-item bg-white text-dark border-bottom mb-1 p-2'><b class='text-danger'>[" + n.date + "]:</b> " + n.text + "</li>";
-            });
-        }
+        if(notices.length === 0) { h += "<li class='text-muted text-center p-3'>कोई नया नोटिस नहीं है।</li>"; } 
+        else { notices.forEach(n => { h += "<li class='list-group-item bg-white text-dark border-bottom mb-1 p-2'><b class='text-danger'>[" + n.date + "]:</b> " + n.text + "</li>"; }); }
         h += '</ul></div><hr class="my-4 border-secondary opacity-25">';
         
         h += '<div class="row g-4 mb-5"><div class="col-md-4"><a href="/registration-form" class="premium-btn reg text-dark shadow-sm"><span style="font-size: 45px; display:block;" class="mb-1">📝</span><h5 class="fw-bold text-primary">नवीन प्रवेश फॉर्म</h5><span class="badge bg-primary px-2 py-1 my-1">सत्र 2026-27</span><p class="text-muted small mb-0" style="font-size:11px;">नया एडमिशन फॉर्म यहाँ भरें</p></a></div>';
         h += '<div class="col-md-4"><a href="/renewal-form" class="premium-btn ren text-dark shadow-sm"><span style="font-size: 45px; display:block;" class="mb-1">🔄</span><h5 class="fw-bold text-dark">हॉस्टल नवीनीकरण</h5><span class="badge bg-warning text-dark px-2 py-1 my-1">पुराने छात्र</span><p class="text-muted small mb-0" style="font-size:11px;">रिन्यूअल फॉर्म भरने के लिए यहाँ जाएँ</p></a></div>';
         h += '<div class="col-md-4"><a href="/check-status-page" class="premium-btn stat text-dark shadow-sm"><span style="font-size: 45px; display:block;" class="mb-1">🔍</span><h5 class="fw-bold text-success">अलॉटमेंट स्टेटस</h5><span class="badge bg-success px-2 py-1 my-1">प्रोफाइल / रसीद</span><p class="text-muted small mb-0" style="font-size:11px;">अपना आबंटित रूम नंबर देखें</p></a></div></div></div>';
         
-        // ✨ [TWO WARDEN FIX] दोनों वॉर्डन की फ़ोटो और विवरण बिना लोडिंग के लाइव
         h += '<div class="col-md-4"><div class="card p-3 text-center mb-4 border-top border-warning border-4 shadow-sm"><div class="card-header bg-light text-dark fw-bold rounded mb-3 border-0 fs-6">👨‍💼 हॉस्टल वॉर्डन कॉर्नर</div><div class="row g-2">';
         h += '<div class="col-6 border-end"><img src="' + warden.w1Photo + '" class="rounded border mb-2 shadow-sm" style="width: 90px; height: 90px; object-fit: cover;" onerror="this.src=\'https://via.placeholder.com/150\'\"><h6 class="fw-bold text-dark mb-0 small">' + warden.w1Name + '</h6><small class="text-muted block" style="font-size:10px;">' + warden.w1Desig + '</small><div class="text-start bg-light p-2 rounded border mt-2" style="font-size:10px;"><b>📞:</b> ' + warden.w1Mobile + '<br><b>🏢:</b> ' + warden.w1Office + '</div></div>';
         h += '<div class="col-6"><img src="' + warden.w2Photo + '" class="rounded border mb-2 shadow-sm" style="width: 90px; height: 90px; object-fit: cover;" onerror="this.src=\'https://via.placeholder.com/150\'\"><h6 class="fw-bold text-dark mb-0 small">' + warden.w2Name + '</h6><small class="text-muted block" style="font-size:10px;">' + warden.w2Desig + '</small><div class="text-start bg-light p-2 rounded border mt-2" style="font-size:10px;"><b>📞:</b> ' + warden.w2Mobile + '<br><b>🏢:</b> ' + warden.w2Office + '</div></div></div></div>';
         
-        // ✨ [DYNAMIC MERIT LIST BUTTON] एडमिन से डाली लिंक यहाँ एक्टिव होगी
         let meritTarget = config.meritListLink ? config.meritListLink : '/public-admission-list';
-        h += '<div class="card p-3 shadow-sm border-top border-success border-4"><div class="card-header bg-light text-success fw-bold rounded mb-2 border-0 fs-6 text-center">📋 छात्रावास फाइनल मेरिट चयन सूची</div><a href="' + meritTarget + '" target="_blank" class="btn btn-sm btn-success w-100 fw-bold py-2 mt-1 rounded-3">चयनित छात्रों की सूची / PDF देखें ➔</a></div></div></div></div>';
+        h += '<div class="card p-3 shadow-sm border-top border-success border-4"><div class="card-header bg-light text-success fw-bold rounded mb-2 border-0 fs-6 text-center">📋 छात्रावास फाइनल मेरिट चयन सूची</div><a href="' + meritTarget + '" target="_blank" class="btn btn-sm btn-success w-100 fw-bold py-2 mt-1 rounded-3">सूची देखें ➔</a></div></div></div></div>';
         
         h += '<a id="whatsapp-link" href="https://wa.me/91' + warden.w1Mobile + '?text=Namaste" target="_blank" class="whatsapp-float">💬 वॉर्डन सहायता केंद्र</a>';
-        h += '<div class="modal fade" id="rulesModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content text-dark"><div class="modal-header bg-danger text-white"><h5 class="modal-title fw-bold text-warning">📜 शासकीय छात्रावास आवश्यक नियम एवं अनिवार्य नियमावली</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body p-4" style="font-size: 15px; line-height: 1.8;"><ol class="fw-bold text-secondary"><li class="mb-2">छात्रावास में प्रवेशित छात्र को छात्रावास में भोजन (मेस) करना अनिवार्य है।</li><li class="mb-2">स्थानीय शिक्षण संस्था में छात्र को नियमित प्रवेश व उपस्थिति अनिवार्य है।</li><li class="mb-2">बिना सूचना के लगातार अनुपस्थित रहने पर छात्र को छात्रावास से निष्कासित किया जा सकेगा।</li><li class="mb-2">अप्रवेशी छात्र को बिना अधीक्षक की लिखित अनुमति के ठहराना वर्जित है।</li><li class="mb-2">मादक पदार्थों एवं मद्यपान का सेवन करने पर तत्काल निष्कासित किया जा सकेगा।</li></ol></div><div class="modal-footer"><button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">मैंने नियम पढ़ लिए हैं</button></div></div></div></div>';
+        h += '<div class="modal fade" id="rulesModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content text-dark"><div class="modal-header bg-danger text-white"><h5 class="modal-title fw-bold text-warning">📜 शासकीय छात्रावास आवश्यक नियम एवं अनिवार्य नियमावली</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body p-4" style="font-size: 15px; line-height: 1.8;"><ol class="fw-bold text-secondary"><li class="mb-2">छात्रावास में प्रवेशित छात्र को छात्रावास में भोजन (मेस) करना अनिवार्य है।</li><li class="mb-2">स्थानीय शिक्षण संस्था में छात्र को नियमित प्रवेश व उपस्थिति अनिवार्य है।</li><li class="mb-2">बिना सूचना के लगातार अनुपस्थित रहने पर छात्र को छात्रावास से निष्कासित किया जा सकेगा।</li><li class="mb-2"> अप्रवेशी छात्र को बिना अधीक्षक की लिखित अनुमति के ठहराना वर्जित है।</li><li class="mb-2">मादक पदार्थों एवं मद्यपान का सेवन करने पर तत्काल निष्कासित किया जा सकेगा।</li></ol></div><div class="modal-footer"><button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">मैंने नियम पढ़ लिए हैं</button></div></div></div></div>';
         h += '<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script></body></html>';
         
         res.send(h);
@@ -184,7 +176,8 @@ app.get('/renewal-form', async (req, res) => {
     
     rf += '<div class="col-md-12 mt-4"><button type="submit" class="btn btn-warning text-dark w-100 fw-bold fs-5 shadow-sm">🔄 नवीनीकरण आवेदन सबमिट करें</button></div></form><div class="text-center mt-3"><a href="/" class="btn btn-link">🏠 मुख्य पृष्ठ</a></div></div></div>' + fileValidationScript + '</body></html>';
     res.send(rf);
-});app.get('/check-status-page', (req, res) => {
+});
+app.get('/check-status-page', (req, res) => {
     res.send('<!DOCTYPE html><html lang="hi"><head><meta charset="UTF-8"><title>अलॉटमेंट रिजल्ट स्टेटस</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"></head><body class="p-5 bg-light"><div class="container" style="max-width: 650px;"><div class="card p-4 shadow-sm bg-white border border-success mb-4"><h3 class="text-center text-success fw-bold mb-4">🔍 छात्रावास अलॉटमेंट रिजल्ट / स्टेटस</h3><div class="input-group mb-3"><input type="tel" id="searchMobile" class="form-control" placeholder="रजिस्टर्ड मोबाइल नंबर दर्ज करें..."><button onclick="checkStatus()" class="btn btn-success fw-bold">रिजल्ट देखें</button></div><div id="statusResult"></div></div><div class="card p-4 shadow-sm bg-white border border-warning"><h4 class="text-center text-warning fw-bold mb-3">⚠️ आवेदन पत्र में त्रुटि सुधार (Edit Form)</h4><div class="input-group"><input type="tel" id="editMobile" class="form-control" placeholder="अपना रजिस्टर्ड मोबाइल नंबर डालें..."><button onclick="openEditForm()" class="btn btn-warning fw-bold">त्रुटि सुधार खोलें</button></div></div><div class="text-center mt-4"><a href="/" class="btn btn-link">🏠 मुख्य पृष्ठ पर वापस जाएँ</a></div></div><script>function checkStatus() { const mobile = document.getElementById("searchMobile").value; if(!mobile) { alert("कृपया मोबाइल नंबर लिखें!"); return; } window.location.href = "/get-receipt-view?mobile=" + mobile; } function openEditForm() { const m = document.getElementById("editMobile").value; if(!m) return alert("नंबर लिखें!"); window.location.href = "/edit-student-form?mobile=" + m; }</script></body></html>');
 });
 
@@ -269,7 +262,6 @@ app.post('/submit-form', (req, res) => {
     });
 });
 
-// 🔒 एडमिन कंट्रोल हब (✨ 2 Warden Photo Controls & Merit PDF Linker Built In)
 app.get('/view-students', async (req, res) => {
     const auth = { login: 'admin', password: 'password123' }; const b64 = (req.headers.authorization || '').split(' ')[1] || ''; const [login, password] = Buffer.from(b64, 'base64').toString().split(':');
     if (!login || !password || login !== auth.login || password !== auth.password) { res.set('WWW-Authenticate', 'Basic realm="401"'); return res.status(401).send('❌ गलत पासवर्ड!'); }
@@ -287,11 +279,8 @@ app.get('/view-students', async (req, res) => {
         rows += '<tr class="align-middle" style="font-size:12px;"><td>' + (idx + 1) + '</td><td><img src="' + s.photoUrl + '" class="rounded me-1" style="width:35px; height:35px; object-fit:cover;"><b>' + s.studentName + '</b><br>' + typeBadge + '</td><td>' + s.fatherName + '</td><td>' + s.mobile + '</td><td>' + docsLinks + '</td><td><div class="d-flex"><input type="text" id="room-' + s.id + '" class="form-control form-control-sm me-1" value="' + (s.roomNumber || '') + '" style="width:55px;"><button onclick="saveRoom(\'' + s.id + '\')" class="btn btn-sm btn-dark">सेव</button></div></td><td>' + actionBtn + '</td><td><button onclick="removeStudent(\'' + s.id + '\')" class="btn btn-sm btn-danger">Remove</button></td></tr>';
     });
 
-    let admHtml = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>प्रठनिक कंट्रोल हब</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"></head><body class="bg-light p-4"><div class="row mb-4"><div class="col-md-3"><div class="bg-white border p-3 rounded h-100 shadow-sm"><h5>⚙️ लोगो बदलें</h5><form action="/update-logo" method="POST" enctype="multipart/form-data"><input type="file" name="hostelLogo" class="form-control form-control-sm mb-2" required><button type="submit" class="btn btn-sm btn-primary w-100">अपलोड</button></form><hr><h5>📋 मेरिट लिस्ट PDF / ड्राइव लिंक डालें</h5><form action="/update-merit" method="POST"><input type="url" name="meritListLink" class="form-control form-control-sm mb-2" value="' + (config.meritListLink || '') + '" placeholder="https://drive.google.com/..."><button type="submit" class="btn btn-sm btn-success w-100">मेरिट लिंक सेव करें</button></form></div></div><div class="col-md-3"><div class="bg-white border p-3 rounded h-100 shadow-sm"><h5 class="text-danger">📢 नया नोटिस जारी करें</h5><form action="/post-notice" method="POST"><input type="text" name="noticeText" class="form-control form-control-sm mb-2" required><button type="submit" class="btn btn-sm btn-danger w-100">Notice Board लाइव करें</button></form></div></div>';
-    
-    // ✨ [TWO WARDEN EDITORS ACTIVE] दोनों वॉर्डन की फ़ोटो अलग-अलग एडमिन से कंट्रोल होगी
+    let admHtml = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>प्रशासनिक कंट्रोल हब</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"></head><body class="bg-light p-4"><div class="row mb-4"><div class="col-md-3"><div class="bg-white border p-3 rounded h-100 shadow-sm"><h5>⚙️ लोगो बदलें</h5><form action="/update-logo" method="POST" enctype="multipart/form-data"><input type="file" name="hostelLogo" class="form-control form-control-sm mb-2" required><button type="submit" class="btn btn-sm btn-primary w-100">अपलोड</button></form><hr><h5>📋 मेरिट लिस्ट PDF / ड्राइव लिंक डालें</h5><form action="/update-merit" method="POST"><input type="url" name="meritListLink" class="form-control form-control-sm mb-2" value="' + (config.meritListLink || '') + '" placeholder="https://drive.google.com/..."><button type="submit" class="btn btn-sm btn-success w-100">मेरिट लिंक सेव करें</button></form></div></div><div class="col-md-3"><div class="bg-white border p-3 rounded h-100 shadow-sm"><h5 class="text-danger">📢 नया नोटिस जारी करें</h5><form action="/post-notice" method="POST"><input type="text" name="noticeText" class="form-control form-control-sm mb-2" required><button type="submit" class="btn btn-sm btn-danger w-100">Notice Board लाइव करें</button></form></div></div>';
     admHtml += '<div class="col-md-3"><div class="bg-white border p-3 rounded h-100 shadow-sm"><h5>⚙️ 2 वॉर्डन जानकारी व फ़ोटो बदलें</h5><form action="/update-warden" method="POST" enctype="multipart/form-data" class="row g-2"><h6>वॉर्डन (A)</h6><input type="text" name="w1Name" class="form-control form-control-sm" value="' + currentWarden.w1Name + '"><input type="text" name="w1Mobile" class="form-control form-control-sm" value="' + currentWarden.w1Mobile + '"><input type="file" name="w1PhotoFile" class="form-control form-control-sm" accept="image/*"><hr class="my-1"><h6>वॉर्डन (B)</h6><input type="text" name="w2Name" class="form-control form-control-sm" value="' + currentWarden.w2Name + '"><input type="text" name="w2Mobile" class="form-control form-control-sm" value="' + currentWarden.w2Mobile + '"><input type="file" name="w2PhotoFile" class="form-control form-control-sm" accept="image/*"><button type="submit" class="btn btn-sm btn-warning w-100 mt-2">दोनों वॉर्डन सेव करें</button></form></div></div>';
-    
     admHtml += '<div class="col-md-3"><div class="bg-white border p-3 rounded h-100 shadow-sm"><h5>🎛️ रिन्यूअल दस्तावेज़ मैट्रिक्स कंट्रोल</h5>';
     admHtml += '<button onclick="toggleF(\'photoActive\')" class="btn btn-xs w-100 mb-1 btn-' + (config.photoActive?'success':'danger') + '">फ़ोटो: ' + (config.photoActive?'ON':'OFF') + '</button>';
     admHtml += '<button onclick="toggleF(\'signatureActive\')" class="btn btn-xs w-100 mb-1 btn-' + (config.signatureActive?'success':'danger') + '">हस्ताक्षर: ' + (config.signatureActive?'ON':'OFF') + '</button>';
@@ -301,7 +290,6 @@ app.get('/view-students', async (req, res) => {
     admHtml += '<button onclick="toggleF(\'resActive\')" class="btn btn-xs w-100 mb-1 btn-' + (config.resActive?'success':'danger') + '">निवास: ' + (config.resActive?'ON':'OFF') + '</button>';
     admHtml += '<button onclick="toggleF(\'rationActive\')" class="btn btn-xs w-100 mb-1 btn-' + (config.rationActive?'success':'danger') + '">राशन: ' + (config.rationActive?'ON':'OFF') + '</button>';
     admHtml += '</div></div></div>';
-    
     admHtml += '<div class="bg-white border p-3 rounded shadow-sm"><h4 class="text-center text-primary fw-bold mb-3">🔒 हॉस्टल कंट्रोल पैनल</h4><table class="table table-bordered text-center"><thead class="table-dark"><tr><th>S.No</th><th>छात्र</th><th>पिता</th><th>मोबाइल</th><th>📁 दस्तावेज़ देखें</th><th>ROOM अलॉट</th><th>Approval</th><th>हटाएं</th></tr></thead><tbody>' + (rows || '<tr><td colspan="8">कोई छात्र रिकॉर्ड नहीं है।</td></tr>') + '</tbody></table></div><script>function saveRoom(id){ const val=document.getElementById("room-"+id).value; fetch("/assign-room",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({studentId:id,roomNumber:val})}).then(()=>location.reload())} function approveStudent(id){ fetch("/approve-student",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({studentId:id})}).then(()=>location.reload())} function removeStudent(id){ if(confirm("क्या आप डिलीट करना चाहते हैं?")){ fetch("/remove-student",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({studentId:id})}).then(()=>location.reload())} } function toggleF(field){ fetch("/toggle-field-setting",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({field:field})}).then(()=>location.reload()); }</script></body></html>';
     res.send(admHtml);
 });
@@ -322,25 +310,15 @@ app.post('/assign-room', async (req, res) => { await Student.updateOne({ mobile:
 app.post('/approve-student', async (req, res) => { await Student.updateOne({ mobile: req.body.studentId }, { $set: { approved: true } }); res.json({ success: true }); });
 app.post('/remove-student', async (req, res) => { await Student.deleteOne({ mobile: req.body.studentId }); res.json({ success: true }); });
 
-// ✨ [DUAL WARDEN MULTIPART SAVER] दोनों की फ़ोटो को सुरक्षित स्टोर करने वाला इंजन
 app.post('/update-warden', uploadMiddleware, async (req, res) => { 
-    let cur = await Warden.findOne({}) || defaultWarden; 
-    let p1 = cur.w1Photo, p2 = cur.w2Photo;
+    let cur = await Warden.findOne({}) || defaultWarden; let p1 = cur.w1Photo, p2 = cur.w2Photo;
     if (req.files) {
         if (req.files['w1PhotoFile']) p1 = req.files['w1PhotoFile'][0].path;
         if (req.files['w2PhotoFile']) p2 = req.files['w2PhotoFile'][0].path;
     }
-    const updated = { 
-        w1Name: req.body.w1Name || cur.w1Name, w1Desig: "छात्रावास अधीक्षक (A)", w1Mobile: req.body.w1Mobile || cur.w1Mobile, w1Office: "कार्यालय कक्ष 01", w1Photo: p1, 
-        w2Name: req.body.w2Name || cur.w2Name, w2Desig: "छात्रावास अधीक्षक (B)", w2Mobile: req.body.w2Mobile || cur.w2Mobile, w2Office: "कार्यालय कक्ष 02", w2Photo: p2 
-    }; 
+    const updated = { w1Name: req.body.w1Name || cur.w1Name, w1Desig: "छात्रावास अधीक्षक (A)", w1Mobile: req.body.w1Mobile || cur.w1Mobile, w1Office: "कार्यालय कक्ष 01", w1Photo: p1, w2Name: req.body.w2Name || cur.w2Name, w2Desig: "छात्रावास अधीक्षक (B)", w2Mobile: req.body.w2Mobile || cur.w2Mobile, w2Office: "कार्यालय कक्ष 02", w2Photo: p2 }; 
     await Warden.deleteMany({}); const nw = new Warden(updated); await nw.save(); res.redirect('/view-students');
 });
-// ✨ नई फ़ाइल को मुख्य सर्वर से जोड़ने का कनेक्शन (एरर फ्री वर्जन)
-const newAdminRoutes = require('./adminRoutes');
-app.use('/', newAdminRoutes);
 
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, '0.0.0.0', () => console.log('🚀 भव्य क्लाउड सिंक सर्वर चालू है!'));
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, '0.0.0.0', () => console.log('🚀 भव्य क्लाउड सिंक सर्वर पूरी तरह से एक्टिव है!'));
