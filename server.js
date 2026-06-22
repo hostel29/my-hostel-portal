@@ -44,19 +44,31 @@ const defaultWarden = {
 };
 const defaultLogo = { url: "https://via.placeholder.com/800x250?text=HOSTEL+BANNER+LOGO" };
 
-if (!fs.existsSync(studentsFile)) fs.writeFileSync(studentsFile, '[]', 'utf8');
-if (!fs.existsSync(noticesFile)) fs.writeFileSync(noticesFile, '[]', 'utf8');
-if (!fs.existsSync(wardenFile)) fs.writeFileSync(wardenFile, JSON.stringify(defaultWarden, null, 2), 'utf8');
-if (!fs.existsSync(logoFile)) fs.writeFileSync(logoFile, JSON.stringify(defaultLogo, null, 2), 'utf8');
+// 🔒 ऑब्जेक्ट करप्शन से परमानेंट सुरक्षा कवच
+const checkFileCorrupt = (filePath, defaultData) => {
+    if (!fs.existsSync(filePath)) {
+        fs.writeFileSync(filePath, defaultData, 'utf8');
+    } else {
+        const content = fs.readFileSync(filePath, 'utf8');
+        if (content.includes('[object') || !content.trim()) {
+            fs.writeFileSync(filePath, defaultData, 'utf8');
+        }
+    }
+};
+
+checkFileCorrupt(studentsFile, '[]');
+checkFileCorrupt(noticesFile, '[]');
+checkFileCorrupt(wardenFile, JSON.stringify(defaultWarden, null, 2));
+checkFileCorrupt(logoFile, JSON.stringify(defaultLogo, null, 2));
 
 const readWardenSafe = () => {
-    try { if (fs.existsSync(wardenFile)) { const d = fs.readFileSync(wardenFile, 'utf8'); return d.trim() ? JSON.parse(d) : defaultWarden; } } catch (e) {} return defaultWarden;
+    try { const d = fs.readFileSync(wardenFile, 'utf8'); return JSON.parse(d); } catch (e) { return defaultWarden; }
 };
 const readStudentsSafe = () => {
-    try { if (fs.existsSync(studentsFile)) { const d = fs.readFileSync(studentsFile, 'utf8'); return d.trim() ? JSON.parse(d) : []; } } catch (e) {} return [];
+    try { const d = fs.readFileSync(studentsFile, 'utf8'); return JSON.parse(d); } catch (e) { return []; }
 };
 
-// 🏠 मुख्य पृष्ठ (With Popup Rules & Intro)
+// 🏠 मुख्य पृष्ठ (Template HTML)
 app.get('/', (req, res) => {
     res.send(`
         <!DOCTYPE html>
@@ -88,7 +100,7 @@ app.get('/', (req, res) => {
             <div class="row mb-4"><div class="col-12 text-center"><button class="btn btn-danger fw-bold shadow-sm px-4 py-2 rounded-pill" data-bs-toggle="modal" data-bs-target="#rulesModal">📜 छात्रावास के आवश्यक नियम एवं अनुशासन (टच करें) ➔</button></div></div>
             <div class="card p-3 mb-4 border-start border-primary border-4 bg-white shadow-sm">
                 <h6 class="fw-bold text-primary mb-1">ℹ️ संक्षिप्त परिचय (Short Intro)</h6>
-                <p class="text-muted small mb-0">यह छात्रावास आदिम जाति तथा अनुसूचित जाति विकास विभाग, छत्तीसगढ़ शासन द्वारा संचालित है, जहाँ सूरजपुर जिले के दूर-दराज क्षेत्रों से आने वाले अनुसूचित जनजाति (ST) एवं अनुसूचित जाति (SC) के छात्रों को उत्कृष्ट शैक्षणिक वातावरण और बेहतर आवासीय सुविधाएं प्रदान की जाती हैं।</p>
+                <p class="text-muted small mb-0">यह छात्रावास आदिम जाति तथा अनुसूचित जाति विकास विभाग, छत्तीसगढ़ शासन द्वारा संचालित है, जहाँ सूरजपुर जिले के दूर-दराज क्षेत्रों से आने वाले अनुसूचित जनजाति (ST) एवं अनुसूचित जाति (SC) के छात्रों को उत्कृष्ट शैक्षणिक वातावरण प्रदान किया जाता है।</p>
             </div>
             <div class="row g-4">
                 <div class="col-md-8">
@@ -145,7 +157,6 @@ app.get('/', (req, res) => {
                     </div>
                     <div class="card border-top border-success border-3 p-3 shadow-sm">
                         <div class="card-header bg-light text-success fw-bold rounded mb-2 border-0 fs-6 text-center">📋 छात्रावास प्रवेश चयन सूची (Admission List)</div>
-                        <p class="text-muted small text-center mb-2">केवल स्वीकृत छात्रों के नाम और कक्षा की सूची</p>
                         <a href="/public-admission-list" target="_blank" class="btn btn-sm btn-success w-100 fw-bold">चयनित छात्रों की सूची देखें ➔</a>
                     </div>
                 </div>
@@ -162,11 +173,11 @@ app.get('/', (req, res) => {
                     <div class="modal-body" style="font-size: 14px; line-height: 1.6;">
                         <ol class="fw-bold text-secondary">
                             <li>छात्रावास में प्रवेशित छात्र को छात्रावास में भोजन (मेस) करना अनिवार्य है।</li>
-                            <li>छात्रावास में प्रवेश के लिये स्थानीय शासकीय/मानृता प्राप्त शिक्षण संस्था में छात्र को नियमित उपस्थिति अनिवार्य है।</li>
-                            <li>बिना सूचना के लगातार अनुपस्थित रहने पर अनुशासनहीनता एवं दूराचरण के कारण छात्रावास से निष्कासित किया जा सकता है।</li>
-                            <li>किसी भी बाहरी व्यक्ति या अप्रवेशी छात्र को बिना अधीक्षक की अनुमति के ठहराना वर्जित है।</li>
-                            <li>मादक पदार्थों एवं मद्यपान का सेवन करने पर छात्रावास से बिना सूचना के तत्काल निष्कासित किया जा सकेगा।</li>
-                            <li>छात्रावास में सस्ते दर पर उपलब्ध कराये गये बी.पी.एल. (खाद्यान्न) चावल सभी छात्रों को खाना अनिवार्य होगा।</li>
+                            <li>स्थानीय शासकीय/मान्यता प्राप्त शिक्षण संस्था में छात्र को नियमित प्रवेश व उपस्थिति अनिवार्य है।</li>
+                            <li>बिना सूचना के लगातार अनुपस्थित रहने पर अनुशासनहीनता के कारण छात्रावास से निष्कासित किया जा सकता है।</li>
+                            <li>किसी भी बाहरी व्यक्ति या अप्रवेशी छात्र को बिना अधीक्षक की पूर्व अनुमति के ठहराना वर्जित है।</li>
+                            <li>मादक पदार्थों एवं मद्यपान का सेवन करने पर छात्रावास से तत्काल निष्कासित किया जा सकेगा।</li>
+                            <li>छात्रावास में सस्ते दर पर उपलब्ध कराए गए बी.पी.एल. खाद्यान्न चावल सभी छात्रों को खाना अनिवार्य होगा।</li>
                         </ol>
                     </div>
                     <div class="modal-footer"><button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">बंद करें</button></div>
@@ -352,11 +363,9 @@ app.get('/public-admission-list', (req, res) => {
         </html>
     `);
 });
-// 🛠️ मल्टी-फ़ाइल अपलोड कॉन्फ़िगरेशन (वॉर्डन फ़ोटो सहित पूरी तरह फ़िक्स)
+// 🛠️ मुलतेर सिंगल फ़ाइल प्रेडिक्शन हैंडलर (सुरक्षित गति और एरर-प्रूफ मेमोरी मैनेजमेंट के साथ)
 const cpUpload = upload.fields([
-    { name: 'studentPhoto', maxCount: 1 }, { name: 'casteCertFile', maxCount: 1 },
-    { name: 'residenceCertFile', maxCount: 1 }, { name: 'rationCardFile', maxCount: 1 },
-    { name: 'w1PhotoFile', maxCount: 1 }, { name: 'w2PhotoFile', maxCount: 1 }
+    { name: 'studentPhoto', maxCount: 1 }, { name: 'w1PhotoFile', maxCount: 1 }, { name: 'w2PhotoFile', maxCount: 1 }
 ]);
 
 app.post('/submit-form', cpUpload, (req, res) => {
@@ -374,13 +383,14 @@ app.post('/submit-form', cpUpload, (req, res) => {
         collegeName: req.body.collegeName, prevPercent: req.body.prevPercent, photoUrl: photoPath,
         roomNumber: "अभी अलॉट नहीं हुआ", approved: false, date: dateSubmitted
     };
+    
     let sList = readStudentsSafe();
     const old = sList.find(s => s.mobile === sData.mobile);
     if (old) { sData.roomNumber = old.roomNumber; sData.approved = old.approved; sData.appNo = old.appNo || appNumber; }
     sList = sList.filter(s => s.mobile !== sData.mobile); sList.push(sData);
-    fs.writeFileSync(studentsFile, JSON.stringify(sList, null, 2));
+    fs.writeFileSync(studentsFile, JSON.stringify(sList, null, 2), 'utf8');
 
-    // 🖨️ रसीद इंटरफ़ेस रेंडरर
+    // 🖨️ फुल-डिज़ाइन पावती रसीद रिस्पॉन्स
     res.send(`
         <!DOCTYPE html>
         <html lang="hi">
@@ -507,34 +517,35 @@ app.get('/view-students', (req, res) => {
 });
 
 app.post('/update-logo', upload.single('hostelLogo'), (req, res) => {
-    if (req.file) { fs.writeFileSync(logoFile, JSON.stringify({ url: req.file.path }, null, 2)); res.send("<h1>🎉 लोगो अपडेट!</h1><a href='/view-students'>वापस</a>"); } else res.redirect('/view-students');
+    if (req.file) { fs.writeFileSync(logoFile, JSON.stringify({ url: req.file.path }, null, 2), 'utf8'); res.send("<h1>🎉 लोगो अपडेट!</h1><a href='/view-students'>वापस</a>"); } else res.redirect('/view-students');
 });
 app.post('/assign-room', (req, res) => {
     let list = readStudentsSafe(); list = list.map(s => { if (s.id === req.body.studentId) s.roomNumber = req.body.roomNumber; return s; });
-    fs.writeFileSync(studentsFile, JSON.stringify(list, null, 2)); res.json({ success: true });
+    fs.writeFileSync(studentsFile, JSON.stringify(list, null, 2), 'utf8'); res.json({ success: true });
 });
 app.post('/approve-student', (req, res) => {
     let list = readStudentsSafe(); list = list.map(s => { if (s.id === req.body.studentId) s.approved = true; return s; });
-    fs.writeFileSync(studentsFile, JSON.stringify(list, null, 2)); res.json({ success: true });
+    fs.writeFileSync(studentsFile, JSON.stringify(list, null, 2), 'utf8'); res.json({ success: true });
 });
 app.post('/remove-student', (req, res) => {
     let list = readStudentsSafe(); list = list.filter(s => s.id !== req.body.studentId);
-    fs.writeFileSync(studentsFile, JSON.stringify(list, null, 2)); res.json({ success: true });
+    fs.writeFileSync(studentsFile, JSON.stringify(list, null, 2), 'utf8'); res.json({ success: true });
 });
 app.post('/post-notice', (req, res) => {
-    const list = JSON.parse(fs.readFileSync(noticesFile, 'utf8') || '[]'); list.unshift({ text: req.body.noticeText, date: new Date().toLocaleDateString() });
-    fs.writeFileSync(noticesFile, JSON.stringify(list, null, 2)); res.send("<h1>📢 नोटिस लाइव!</h1><a href='/view-students'>वापस</a>");
+    let list = readNoticesSafe = () => { try{ return JSON.parse(fs.readFileSync(noticesFile, 'utf8')); }catch(e){return [];} };
+    let nList = list(); nList.unshift({ text: req.body.noticeText, date: new Date().toLocaleDateString() });
+    fs.writeFileSync(noticesFile, JSON.stringify(nList, null, 2), 'utf8'); res.send("<h1>📢 नोटिस लाइव!</h1><a href='/view-students'>वापस</a>");
 });
 app.post('/update-warden', cpUpload, (req, res) => {
     const files = req.files || {}; let cur = readWardenSafe();
     const w1Path = files.w1PhotoFile ? files.w1PhotoFile[0].path : cur.w1Photo;
     const w2Path = files.w2PhotoFile ? files.w2PhotoFile[0].path : cur.w2Photo;
     const updated = { w1Name: req.body.w1Name || cur.w1Name, w1Desig: "अधीक्षक (A)", w1Mobile: req.body.w1Mobile || cur.w1Mobile, w1Office: "कक्ष 01", w1Photo: w1Path, w2Name: req.body.w2Name || cur.w2Name, w2Desig: "अधीक्षक (B)", w2Mobile: req.body.w2Mobile || cur.w2Mobile, w2Office: "कक्ष 02", w2Photo: w2Path };
-    fs.writeFileSync(wardenFile, JSON.stringify(updated, null, 2)); res.send("<h1>🎉 वॉर्डन अपडेट!</h1><a href='/view-students'>वापस</a>");
+    fs.writeFileSync(wardenFile, JSON.stringify(updated, null, 2), 'utf8'); res.send("<h1>🎉 वॉर्डन अपडेट!</h1><a href='/view-students'>वापस</a>");
 });
 app.get('/get-warden', (req, res) => res.json(readWardenSafe()));
-app.get('/get-logo', (req, res) => res.json(JSON.parse(fs.readFileSync(logoFile, 'utf8') || '{}')));
-app.get('/get-notices', (req, res) => res.json(JSON.parse(fs.readFileSync(noticesFile, 'utf8') || '[]')));
+app.get('/get-logo', (req, res) => { try{ res.json(JSON.parse(fs.readFileSync(logoFile, 'utf8'))); }catch(e){res.json(defaultLogo);} });
+app.get('/get-notices', (req, res) => { try{ res.json(JSON.parse(fs.readFileSync(noticesFile, 'utf8'))); }catch(e){res.json([]);} });
 app.get('/check-room-status', (req, res) => {
     const s = readStudentsSafe().find(s => s.mobile === (req.query.mobile || '').trim());
     res.json(s ? { found: true, ...s } : { found: false });
