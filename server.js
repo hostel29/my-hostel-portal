@@ -23,8 +23,8 @@ const storage = new CloudinaryStorage({
     },
 });
 
-// ✨ Multer Instance (upload.single एरर को रोकने के लिए इसे ऑब्जेक्ट ही रखा है)
-const upload = multer({ storage: storage });
+// ✨ एरर-फ्री अपलोडिंग के लिए .any() के साथ रूट फंक्शन्स को वॉटरप्रूफ किया गया है
+const uploadMiddleware = multer({ storage: storage }).any();
 
 app.use((req, res, next) => {
     res.header("Access-Control-Allow-Origin", "*");
@@ -46,7 +46,7 @@ const defaultWarden = {
 };
 const defaultLogo = { url: "https://via.placeholder.com/800x250?text=HOSTEL+BANNER+LOGO" };
 
-// 🔒 डेटा करप्शन से परमानेंट सुरक्षा चक्र
+// 🔒 [object Object] डेटा करप्शन और क्रैश से परमानेंट सुरक्षा चक्र
 const checkFileCorrupt = (filePath, defaultData) => {
     if (!fs.existsSync(filePath)) {
         fs.writeFileSync(filePath, defaultData, 'utf8');
@@ -67,6 +67,9 @@ const readWardenSafe = () => {
 };
 const readStudentsSafe = () => {
     try { const d = fs.readFileSync(studentsFile, 'utf8'); return JSON.parse(d); } catch (e) { return []; }
+};
+const readNoticesSafe = () => {
+    try { const d = fs.readFileSync(noticesFile, 'utf8'); return JSON.parse(d); } catch (e) { return []; }
 };
 
 // 🏠 मुख्य पृष्ठ (Premium Look Interface)
@@ -121,7 +124,7 @@ app.get('/', (req, res) => {
 
             <div class="card p-3 mb-4 border-start border-primary border-4 bg-white shadow-sm">
                 <h6 class="fw-bold text-primary mb-1">ℹ️ संक्षिप्त परिचय (Short Intro)</h6>
-                <p class="text-muted small mb-0">यह छात्रावास आदिम जाति तथा अनुसूचित जाति विकास विभाग, छत्तीसगढ़ शासन द्वारा संचालित है, जहाँ सूरजपुर जिले के ग्रामीण क्षेत्रों के छात्रों को आवासीय सुविधाएँ प्रदान की जाती हैं।</p>
+                <p class="text-muted small mb-0">यह छात्रावास आदिम जाति तथा अनुसूचित जाति विकास विभाग, छत्तीसगढ़ शासन द्वारा संचालित है, जहाँ सूरजपुर जिले के ग्रामीण क्षेत्रों के छात्रों को आवासीय एवं शैक्षणिक वातावरण प्रदान किया जाता है।</p>
             </div>
             <div class="row g-4">
                 <div class="col-md-8">
@@ -195,7 +198,7 @@ app.get('/', (req, res) => {
                             <li>छात्रावास में प्रवेशित छात्र को छात्रावास में भोजन (मेस) करना अनिवार्य है।</li>
                             <li>स्थानीय शिक्षण संस्था में छात्र को नियमित प्रवेश व उपस्थिति अनिवार्य है।</li>
                             <li>बिना सूचना के लगातार अनुपस्थित रहने पर अनुशासनहीनता के कारण छात्रावास से निष्कासित किया जा सकता है।</li>
-                            <li>अप्रवेशी छात्र को बिना अधीक्षक की लिखित अनुमति के ठहराना वर्जित है।</li>
+                            <li>अप्रवेशी छात्र को बिना अधीक्षक की लिखित अनुमति के अपने कमरों में ठहराना पूर्णतः वर्जित है।</li>
                             <li>मादक पदार्थों एवं मद्यपान का सेवन करने पर तत्काल निष्कासित किया जा सकेगा।</li>
                         </ol>
                     </div>
@@ -226,7 +229,7 @@ app.get('/', (req, res) => {
         </html>
     `);
 });
-// 📝 लिंक 1: ऑनलाइन रजिस्ट्रेशन फॉर्म (Unexpected field एरर रोकने के लिए नाम सुधारे गए)
+// 📝 लिंक 1: ऑनलाइन रजिस्ट्रेशन फॉर्म पेज 
 app.get('/registration-form', (req, res) => {
     res.send(`
         <!DOCTYPE html>
@@ -257,20 +260,20 @@ app.get('/registration-form', (req, res) => {
                         
                         <div class="section-title">2. पारिवारिक विवरण एवं पालक आधार (Optional)</div>
                         <div class="col-md-6"><label class="form-label fw-bold">पिता का नाम:</label><input type="text" name="fatherName" class="form-control" required></div>
-                        <div class="col-md-6"><label class="form-label text-muted fw-bold">पिता का आधार कार्ड फ़ोटो (Optional):</label><input type="file" name="studentPhoto" class="form-control" accept="image/*,application/pdf"></div>
+                        <div class="col-md-6"><label class="form-label text-muted fw-bold">पिता का आधार कार्ड फ़ोटो (Optional):</label><input type="file" name="fatherAadharFile" class="form-control" accept="image/*,application/pdf"></div>
                         <div class="col-md-6"><label class="form-label fw-bold">माता का नाम:</label><input type="text" name="motherName" class="form-control" required></div>
-                        <div class="col-md-6"><label class="form-label text-muted fw-bold">माता का आधार कार्ड फ़ोटो (Optional):</label><input type="file" name="studentPhoto" class="form-control" accept="image/*,application/pdf"></div>
+                        <div class="col-md-6"><label class="form-label text-muted fw-bold">माता का आधार कार्ड फ़ोटो (Optional):</label><input type="file" name="motherAadharFile" class="form-control" accept="image/*,application/pdf"></div>
                         <div class="col-md-4"><label class="form-label fw-bold">पिता का व्यवसाय:</label><input type="text" name="fatherJob" class="form-control" required></div>
                         <div class="col-md-4"><label class="form-label fw-bold">माता का व्यवसाय:</label><input type="text" name="motherJob" class="form-control" required></div>
                         <div class="col-md-4"><label class="form-label fw-bold">पालक की वार्षिक आय (₹):</label><input type="number" name="annualIncome" class="form-control" required></div>
 
                         <div class="section-title">3. सरकारी प्रमाण पत्र एवं कार्ड फ़ोटो अपलोड</div>
-                        <div class="col-md-6"><label class="form-label fw-bold">जाति प्रमाण पत्र अपलोड (अनिवार्य):</label><input type="file" name="studentPhoto" class="form-control" accept="image/*,application/pdf"></div>
-                        <div class="col-md-6"><label class="form-label fw-bold">निवास प्रमाण पत्र अपलोड (अनिवार्य):</label><input type="file" name="studentPhoto" class="form-control" accept="image/*,application/pdf"></div>
-                        <div class="col-md-6"><label class="form-label text-muted fw-bold">आय प्रमाण पत्र अपलोड (Optional):</label><input type="file" name="studentPhoto" class="form-control" accept="image/*,application/pdf"></div>
-                        <div class="col-md-6"><label class="form-label text-muted fw-bold">दूरी प्रमाण पत्र अपलोड (Optional):</label><input type="file" name="studentPhoto" class="form-control" accept="image/*,application/pdf"></div>
-                        <div class="col-md-6"><label class="form-label text-muted fw-bold">आयुष्मान कार्ड अपलोड (Optional):</label><input type="file" name="studentPhoto" class="form-control" accept="image/*,application/pdf"></div>
-                        <div class="col-md-6"><label class="form-label fw-bold">राशन कार्ड फ़ोटो अपलोड (अनिवार्य):</label><input type="file" name="studentPhoto" class="form-control" accept="image/*,application/pdf"></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">जाति प्रमाण पत्र अपलोड (अनिवार्य):</label><input type="file" name="casteCertFile" class="form-control" accept="image/*,application/pdf"></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">निवास प्रमाण पत्र अपलोड (अनिवार्य):</label><input type="file" name="residenceCertFile" class="form-control" accept="image/*,application/pdf"></div>
+                        <div class="col-md-6"><label class="form-label text-muted fw-bold">आय प्रमाण पत्र अपलोड (Optional):</label><input type="file" name="incomeCertFile" class="form-control" accept="image/*,application/pdf"></div>
+                        <div class="col-md-6"><label class="form-label text-muted fw-bold">दूरी प्रमाण पत्र अपलोड (Optional):</label><input type="file" name="distanceCertFile" class="form-control" accept="image/*,application/pdf"></div>
+                        <div class="col-md-6"><label class="form-label text-muted fw-bold">आयुष्मान कार्ड अपलोड (Optional):</label><input type="file" name="ayushmanFile" class="form-control" accept="image/*,application/pdf"></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">राशन कार्ड फ़ोटो अपलोड (अनिवार्य):</label><input type="file" name="rationCardFile" class="form-control" accept="image/*,application/pdf"></div>
 
                         <div class="section-title">4. स्टेटस, पता एवं विद्यालय विवरण</div>
                         <div class="col-md-3"><label class="form-label fw-bold">नक्सल प्रभावित:</label><select name="naxalStatus" class="form-select"><option value="नहीं">नहीं</option><option value="हाँ">हाँ</option></select></div>
@@ -296,13 +299,13 @@ app.get('/registration-form', (req, res) => {
         </html>
     `);
 });
-// 🔍 लिंक 2: अलॉटमेंट स्टेटस चेक करने वाला पेज (मोबाइल और कंप्यूटर फुल्ली रिस्पॉन्सिव)
+// 🔍 लिंक 2: अलॉटमेंट स्टेटस चेक करने वाला पेज
 app.get('/check-status-page', (req, res) => {
     res.send(`
         <!DOCTYPE html>
         <html lang="hi">
         <head><title>अलॉटमेंट रिजल्ट स्टेटस</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"></head>
-        <body class="p-4 bg-light">
+        <body class="p-5 bg-light">
             <div class="container" style="max-width: 650px;">
                 <div class="card p-4 shadow-sm bg-white border border-success mb-4">
                     <h3 class="text-center text-success fw-bold mb-4">🔍 छात्रावास अलॉटमेंट रिजल्ट / स्टेटस</h3>
@@ -383,7 +386,7 @@ app.get('/public-admission-list', (req, res) => {
         </html>
     `);
 });
-// 🛠️ त्रुटि सुधार फ़ॉर्म इंटरफ़ेस पाथवे फिक्स (Data Auto-Load Route Fixed)
+// 🛠️ त्रुटि सुधार फ़ॉर्म डेटा ऑटो-लोड (Edit Form Core Route Repair)
 app.get('/edit-student-form', (req, res) => {
     const mobileQuery = (req.query.mobile || '').trim();
     const studentsList = readStudentsSafe();
@@ -412,7 +415,7 @@ app.get('/edit-student-form', (req, res) => {
                         <div class="col-md-4"><label class="form-label fw-bold">वर्तमान कक्षा:</label><input type="text" name="studentClass" class="form-control" value="${student.studentClass || ''}" required></div>
                         <div class="col-md-4"><label class="form-label fw-bold">शाला का नाम:</label><input type="text" name="collegeName" class="form-control" value="${student.collegeName || ''}" required></div>
                         <div class="col-md-4"><label class="form-label fw-bold">परीक्षा प्रतिशत (%):</label><input type="text" name="prevPercent" class="form-control" value="${student.prevPercent || ''}" required></div>
-                        <div class="col-md-4"><label class="form-label fw-bold">वर्ग (Category):</label><select name="category" class="form-select"><option value="${student.category || ' अनुसूचित जनजाति (ST)'}">${student.category || 'ST'}</option><option value="अनुसूचित जनजाति (ST)">अनुसूचित जनजाति (ST)</option><option value="अनुसूचित जाति (SC)">अनुसूचित जाति (SC)</option></select></div>
+                        <div class="col-md-4"><label class="form-label fw-bold">वर्ग (Category):</label><select name="category" class="form-select"><option value="${student.category || 'अनुसूचित जनजाति (ST)'}">${student.category || 'ST'}</option><option value="अनुसूचित जनजाति (ST)">अनुसूचित जनजाति (ST)</option><option value="अनुसूचित जाति (SC)">अनुसूचित जाति (SC)</option></select></div>
                         <div class="col-12"><label class="form-label text-danger">📸 नई फोटो (यदि बदलना चाहें):</label><input type="file" name="studentPhoto" class="form-control" accept="image/*"></div>
                         <div class="col-12 mt-4"><button type="submit" class="btn btn-warning w-100 text-dark fw-bold">🔄 जानकारी सुरक्षित करें</button></div>
                     </form>
@@ -425,7 +428,7 @@ app.get('/edit-student-form', (req, res) => {
 
 // 🔒 एरर-फ्री प्रोसेसर लॉजिक (.any() से टाइमआउट और अनएक्सपेक्टेड फील्ड एरर पूरी तरह ब्लॉक)
 app.post('/submit-form', (req, res) => {
-    upload(req, res, (err) => {
+    uploadMiddleware(req, res, (err) => {
         let photoPath = "https://via.placeholder.com/150";
         if (req.files && req.files.length > 0) {
             const f = req.files.find(file => file.fieldname === 'studentPhoto'); if (f) photoPath = f.path;
@@ -452,7 +455,7 @@ app.post('/submit-form', (req, res) => {
         sList = sList.filter(s => s.mobile !== sData.mobile); sList.push(sData);
         fs.writeFileSync(studentsFile, JSON.stringify(sList, null, 2), 'utf8');
 
-        // 🖨️ फुल-डिजाइन पावती रसीद रिस्पॉन्स (Missing tag fixed, print buttons active)
+        // 🖨️ फुल-डिज़ाइन पावती रसीद रिस्पॉन्स
         res.send(`
             <!DOCTYPE html>
             <html lang="hi">
@@ -529,9 +532,13 @@ app.get('/view-students', (req, res) => {
     `);
 });
 
-app.post('/update-logo', upload.single('hostelLogo'), (req, res) => {
-    if (req.file) fs.writeFileSync(logoFile, JSON.stringify({ url: req.file.path }, null, 2), 'utf8');
-    res.send("<h1>🎉 लोगो अपडेट!</h1><a href='/view-students'>वापस</a>");
+app.post('/update-logo', (req, res) => {
+    uploadMiddleware(req, res, (err) => {
+        if (req.files && req.files.length > 0) {
+            const f = req.files.find(file => file.fieldname === 'hostelLogo'); if (f) fs.writeFileSync(logoFile, JSON.stringify({ url: f.path }, null, 2), 'utf8');
+        }
+        res.send("<h1>🎉 लोगो अपडेट!</h1><a href='/view-students'>वापस</a>");
+    });
 });
 app.post('/assign-room', (req, res) => {
     let list = readStudentsSafe(); list = list.map(s => { if (s.id === req.body.studentId) s.roomNumber = req.body.roomNumber; return s; });
@@ -549,17 +556,17 @@ app.post('/post-notice', (req, res) => {
     let nList = readNoticesSafe(); nList.unshift({ text: req.body.noticeText, date: new Date().toLocaleDateString() });
     fs.writeFileSync(noticesFile, JSON.stringify(nList, null, 2), 'utf8'); res.send("<h1>🎉 नोटिस लाइव हो गया है!</h1><a href='/view-students'>वापस जाएँ</a>");
 });
-// 👨‍💼 वॉर्डन अपडेट करने का कड़क एरर-फ्री रूट (upload.fields को सुरक्षित ऑब्जेक्ट एरे के साथ सेट किया है)
-app.post('/update-warden', upload.fields([{ name: 'w1PhotoFile', maxCount: 1 }, { name: 'w2PhotoFile', maxCount: 1 }]), (req, res) => {
-    let cur = readWardenSafe(); let p1 = cur.w1Photo, p2 = cur.w2Photo;
-    if (req.files) {
-        if (req.files.w1PhotoFile) p1 = req.files.w1PhotoFile[0].path;
-        if (req.files.w2PhotoFile) p2 = req.files.w2PhotoFile[0].path;
-    }
-    const updated = { w1Name: req.body.w1Name || cur.w1Name, w1Desig: "अधीक्षक (A)", w1Mobile: req.body.w1Mobile || cur.w1Mobile, w1Office: "कक्ष 01", w1Photo: p1, w2Name: req.body.w2Name || cur.w2Name, w2Desig: "अधीक्षक (B)", w2Mobile: req.body.w2Mobile || cur.w2Mobile, w2Office: "कक्ष 02", w2Photo: p2 };
-    fs.writeFileSync(wardenFile, JSON.stringify(updated, null, 2), 'utf8'); res.send("<h1>🎉 वॉर्डन अपडेट हो गए!</h1><a href='/view-students'>वापस जाएँ</a>");
+app.post('/update-warden', (req, res) => {
+    uploadMiddleware(req, res, (err) => {
+        let cur = readWardenSafe(); let p1 = cur.w1Photo, p2 = cur.w2Photo;
+        if (req.files && req.files.length > 0) {
+            const f1 = req.files.find(file => file.fieldname === 'w1PhotoFile'); if (f1) p1 = f1.path;
+            const f2 = req.files.find(file => file.fieldname === 'w2PhotoFile'); if (f2) p2 = f2.path;
+        }
+        const updated = { w1Name: req.body.w1Name || cur.w1Name, w1Desig: "अधीक्षक (A)", w1Mobile: req.body.w1Mobile || cur.w1Mobile, w1Office: "कक्ष 01", w1Photo: p1, w2Name: req.body.w2Name || cur.w2Name, w2Desig: "अधीक्षक (B)", w2Mobile: req.body.w2Mobile || cur.w2Mobile, w2Office: "कक्ष 02", w2Photo: p2 };
+        fs.writeFileSync(wardenFile, JSON.stringify(updated, null, 2), 'utf8'); res.send("<h1>🎉 वॉर्डन अपडेट!</h1><a href='/view-students'>वापस</a>");
+    });
 });
-
 app.get('/get-warden', (req, res) => res.json(readWardenSafe()));
 app.get('/get-logo', (req, res) => { try{ res.json(JSON.parse(fs.readFileSync(logoFile, 'utf8'))); }catch(e){res.json(defaultLogo);} });
 app.get('/get-notices', (req, res) => res.json(readNoticesSafe()));
