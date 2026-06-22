@@ -6,18 +6,21 @@
     <title>प्रीमियम हॉस्टल पोर्टल</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background-color: #121212; color: #ffffff; }
-        .card { background-color: #1e1e1e; border: none; color: #ffffff; }
-        .form-control, .form-select { background-color: #2b2b2b; color: #fff; border: 1px solid #444; }
-        .form-control:focus, .form-select:focus { background-color: #333; color: #fff; border-color: #ffc107; box-shadow: none; }
-        .logo-img { max-height: 120px; object-fit: contain; display: block; margin: 0 auto 15px auto; border-radius: 8px; }
+        body { background-color: #f8f9fa; color: #212529; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .card { background-color: #ffffff; border: 1px solid #dee2e6; color: #212529; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .logo-container { width: 100%; border-radius: 8px; overflow: hidden; margin-bottom: 15px; background: #fff; }
+        .logo-img { width: 100%; height: auto; max-height: 250px; object-fit: cover; display: block; }
+        .nav-btn-box { transition: all 0.3s ease; border: 2px dashed #0d6efd; }
+        .nav-btn-box:hover { transform: translateY(-3px); box-shadow: 0 6px 12px rgba(0,0,0,0.1); background-color: #f1f7ff; }
+        .nav-btn-box-2 { transition: all 0.3s ease; border: 2px dashed #198754; }
+        .nav-btn-box-2:hover { transform: translateY(-3px); box-shadow: 0 6px 12px rgba(0,0,0,0.1); background-color: #f1fdf7; }
     </style>
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom border-secondary mb-4">
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow-sm">
     <div class="container">
-        <a class="navbar-brand fw-bold text-warning" href="#">🏠 प्रीमियम हॉस्टल पोर्टल</a>
+        <a class="navbar-brand fw-bold text-warning" href="/">🏠 प्रीमियम हॉस्टल पोर्टल</a>
         <div class="navbar-nav ms-auto">
             <a class="nav-link btn btn-outline-warning text-white px-3" href="/view-students" target="_blank">🔒 एडमिन पैनल</a>
         </div>
@@ -27,87 +30,53 @@
 <div class="container">
     <div class="row g-4">
         <div class="col-md-8">
-            <div class="card border border-warning p-3 mb-4 shadow">
-                <div class="text-center">
-                    <img id="hostel-logo" src="" alt="Hostel Logo" class="logo-img border border-secondary shadow-sm">
-                </div>
-                <div class="card-header bg-warning text-dark fw-bold rounded mb-2">📢 महत्वपूर्ण नोटिस बोर्ड</div>
-                <ul id="live-notices" class="list-group list-group-flush bg-transparent"></ul>
+            
+            <div class="logo-container border shadow-sm">
+                <img id="hostel-logo" src="" alt="Hostel Logo" class="logo-img">
             </div>
 
-            <div class="card border border-info p-3 mb-4 shadow">
-                <div class="card-header bg-info text-dark fw-bold rounded mb-2">🔍 अपना रूम नंबर / प्रोफाइल स्टेटस चेक करें</div>
-                <div class="input-group">
-                    <input type="tel" id="searchMobile" class="form-control" placeholder="अपना रजिस्टर्ड मोबाइल नंबर लिखें...">
-                    <button onclick="checkStatus()" class="btn btn-info text-dark fw-bold">स्टेटस देखें</button>
-                </div>
-                <div id="statusResult" class="mt-3"></div>
+            <div class="card p-3 mb-4 shadow-sm">
+                <div class="card-header bg-danger text-white fw-bold rounded mb-2">📢 महत्वपूर्ण नोटिस बोर्ड</div>
+                <ul id="live-notices" class="list-group list-group-flush"></ul>
             </div>
 
-            <div class="card p-4 shadow mb-5 border border-secondary">
-                <h3 class="text-center text-warning mb-4">📝 प्रीमियम स्टूडेंट रजिस्ट्रेशन फॉर्म</h3>
-                <form action="/submit-form" method="POST" enctype="multipart/form-data" class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label">विद्यार्थी का नाम:</label>
-                        <input type="text" name="studentName" class="form-control" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">मोबाइल नंबर:</label>
-                        <input type="tel" name="mobile" class="form-control" placeholder="10 अंकों का नंबर" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">पिता का नाम:</label>
-                        <input type="text" name="fatherName" class="form-control" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">माता का नाम:</label>
-                        <input type="text" name="motherName" class="form-control" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">जन्म तिथि (DOB):</label>
-                        <input type="date" name="dob" class="form-control" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">आधार कार्ड नंबर:</label>
-                        <input type="text" name="aadharCard" class="form-control" placeholder="12 अंकों का आधार नंबर" required>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">क्लास / वर्ष:</label>
-                        <input type="text" name="studentClass" class="form-control" placeholder="उदा: 1st Year" required>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">कोर्स / ब्रांच:</label>
-                        <input type="text" name="course" class="form-control" placeholder="उदा: B.Tech, BCA" required>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">कैटेगरी (Category):</label>
-                        <select name="category" class="form-select" required>
-                            <option value="General">General</option>
-                            <option value="OBC">OBC</option>
-                            <option value="SC">SC</option>
-                            <option value="ST">ST</option>
-                        </select>
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label text-warning">📸 अपनी पासपोर्ट साइज फोटो अपलोड करें (गैलरी से):</label>
-                        <input type="file" name="studentPhoto" class="form-control" accept="image/*" required>
-                    </div>
-                    <div class="col-12 mt-4">
-                        <button type="submit" class="btn btn-warning w-100 fw-bold text-dark fs-5 shadow">🚀 एडमिशन फॉर्म जमा करें</button>
-                    </div>
-                </form>
+            <hr class="my-4">
+
+            <div class="row g-3 mb-5">
+                <div class="col-md-6">
+                    <a href="/registration-form" class="text-decoration-none text-dark">
+                        <div class="card p-4 text-center h-100 nav-btn-box">
+                            <span style="font-size: 40px;">📝</span>
+                            <h4 class="fw-bold text-primary mt-2">हॉस्टल रजिस्ट्रेशन फॉर्म</h4>
+                            <span class="badge bg-primary px-3 py-2 mt-2 fs-6">सत्र 2026-27</span>
+                            <p class="text-muted small mt-2 mb-0">नया एडमिशन फॉर्म भरने के लिए यहाँ क्लिक करें</p>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-md-6">
+                    <a href="/check-status-page" class="text-decoration-none text-dark">
+                        <div class="card p-4 text-center h-100 nav-btn-box-2">
+                            <span style="font-size: 40px;">🔍</span>
+                            <h4 class="fw-bold text-success mt-2">प्रोफाइल / रूम अलॉटमेंट स्टेटस</h4>
+                            <span class="badge bg-success px-3 py-2 mt-2 fs-6">एडमिन द्वारा जारी रिजल्ट</span>
+                            <p class="text-muted small mt-2 mb-0">अपना अलॉटेड रूम और स्टेटस देखने के लिए यहाँ क्लिक करें</p>
+                        </div>
+                    </a>
+                </div>
             </div>
+
         </div>
 
         <div class="col-md-4">
-            <div class="card border border-danger p-3 shadow text-center position-sticky" style="top: 20px;">
-                <div class="card-header bg-danger text-white fw-bold rounded mb-3">👨‍💼 हॉस्टल वार्डन कॉर्नर</div>
-                <img id="warden-img" src="" class="rounded-circle border border-danger mx-auto mb-3 shadow" style="width: 140px; height: 140px; object-fit: cover;">
-                <h4 id="warden-name" class="text-warning mb-1"></h4>
+            <div class="card border-top border-danger border-3 p-3 shadow-sm text-center position-sticky" style="top: 20px;">
+                <div class="card-header bg-light text-danger fw-bold rounded mb-3 border-0 fs-5">👨‍💼 हॉस्टल वार्डन कॉर्नर</div>
+                <img id="warden-img" src="" class="rounded-circle border mx-auto mb-3 shadow-sm" style="width: 130px; height: 130px; object-fit: cover;">
+                <h4 id="warden-name" class="fw-bold text-dark mb-1"></h4>
                 <p id="warden-desig" class="text-muted small mb-3"></p>
-                <div class="text-start bg-dark p-3 rounded border border-secondary text-light">
-                    <p class="mb-2"><b>📞 मोबाइल:</b> <span id="warden-phone"></span></p>
-                    <p class="mb-0"><b>🏢 ऑफिस:</b> <span id="warden-office"></span></p>
+                <div class="text-start bg-light p-3 rounded border text-secondary">
+                    <p class="mb-2"><b>📞 मोबाइल:</b> <span id="warden-phone" class="text-dark"></span></p>
+                    <p class="mb-0"><b>🏢 ऑफिस:</b> <span id="warden-office" class="text-dark"></span></p>
                 </div>
             </div>
         </div>
@@ -126,7 +95,7 @@
             const list = document.getElementById('live-notices');
             list.innerHTML = notices.length === 0 ? "<li class='text-muted text-center p-3'>कोई नया नोटिस नहीं है।</li>" : "";
             notices.forEach(n => {
-                list.innerHTML += `<li class='list-group-item bg-transparent text-white border-secondary mb-2 p-2 rounded bg-dark border'><b class='text-danger'>[${n.date}]:</b> ${n.text}</li>`;
+                list.innerHTML += `<li class='list-group-item bg-white text-dark border-bottom mb-1 p-2'><b class='text-danger'>[${n.date}]:</b> ${n.text}</li>`;
             });
         });
 
@@ -139,33 +108,7 @@
             document.getElementById('warden-office').innerText = w.office;
         });
     };
-
-    function checkStatus() {
-        const mobile = document.getElementById('searchMobile').value;
-        const resultDiv = document.getElementById('statusResult');
-        if(!mobile) { alert('कृपया मोबाइल नंबर लिखें!'); return; }
-        
-        fetch('/check-room-status?mobile=' + mobile).then(res => res.json()).then(data => {
-            if (data.found) {
-                resultDiv.innerHTML = `
-                    <div class="card border border-success p-3 bg-dark text-white">
-                        <div class="d-flex align-items-center mb-2">
-                            <img src="${data.photoUrl}" class="rounded border me-3" style="width:70px; height:70px; object-fit:cover;">
-                            <div>
-                                <h4 class="text-success mb-0">🎉 ${data.studentName}</h4>
-                                <p class="text-muted mb-0">${data.studentClass} (${data.course})</p>
-                            </div>
-                        </div>
-                        <div class="bg-secondary p-2 rounded mt-2">
-                            <p class="mb-1"><b>👨 पिता का नाम:</b> ${data.fatherName}</p>
-                            <p class="mb-1"><b>🏠 अलॉटेड रूम नंबर:</b> <span class="badge bg-warning text-dark fs-6">${data.roomNumber}</span></p>
-                        </div>
-                    </div>`;
-            } else {
-                resultDiv.innerHTML = `<div class="alert alert-danger">❌ इस मोबाइल नंबर से कोई प्रोफाइल नहीं मिली!</div>`;
-            }
-        });
-    }
 </script>
 </body>
 </html>
+
