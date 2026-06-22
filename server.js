@@ -336,6 +336,11 @@ app.post('/update-warden', uploadMiddleware, async (req, res) => {
     }; 
     await Warden.deleteMany({}); const nw = new Warden(updated); await nw.save(); res.redirect('/view-students');
 });
+// ✨ नई फ़ाइल को मुख्य सर्वर से जोड़ने का कनेक्शन (एरर फ्री वर्जन)
+const newAdminRoutes = require('./adminRoutes');
+app.use('/', newAdminRoutes);
 
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, '0.0.0.0', () => console.log('🚀 भव्य क्लाउड सिंक सर्वर चालू है!'));
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, '0.0.0.0', () => console.log('🚀 भव्य क्लाउड सिंक सर्वर पूरी तरह से एक्टिव है!'));
