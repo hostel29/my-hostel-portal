@@ -46,7 +46,8 @@ app.use((req, res, next) => {
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-const mongoURI = "mongodb+srv://surajpurprimatricsthostelsuraj_db_user:OSDLGYTIUuhC2s5P@cluster0.jztdqxu.mongodb.net/hostelData?appName=Cluster0";
+// 🔒 [UPDATED PASSWORD] नया वाटरप्रूफ 100% सही पासवर्ड लिंक यहाँ लगा दिया है
+const mongoURI = "mongodb+srv://surajpurprimatricsthostelsuraj_db_user:HostelSurajpur2026@cluster0.jztdqxu.mongodb.net/hostelData?appName=Cluster0";
 
 mongoose.connect(mongoURI)
     .then(() => console.log("🎰 मोंगोडीबी क्लाउड तिजोरी कनेक्ट हो गई है!"))
@@ -101,16 +102,10 @@ app.get('/', async (req, res) => {
                     <h2 class="fw-bold text-warning">🏠 प्री मैट्रिक ST+SC बालक छात्रावास सूरजपुर (छ. ग.)</h2>
                     <a class="btn btn-sm btn-outline-warning mt-2" href="/view-students" target="_blank">🔒 एडमिन पैनल</a>
                 </div>
-                
                 <div class="row g-3 mb-4 text-center">
-                    <div class="col-md-6">
-                        <div class="card p-3 border-top border-primary border-4"><h6>ST कुल सीटें: 100 | खाली: ${stAvailable}</h6></div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card p-3 border-top border-success border-4"><h6>SC कुल सीटें: 50 | खाली: ${scAvailable}</h6></div>
-                    </div>
+                    <div class="col-md-6"><div class="card p-3 border-top border-primary border-4"><h6>ST कुल सीटें: 100 | खाली: ${stAvailable}</h6></div></div>
+                    <div class="col-md-6"><div class="card p-3 border-top border-success border-4"><h6>SC कुल सीटें: 50 | खाली: ${scAvailable}</h6></div></div>
                 </div>
-
                 <div class="row g-4">
                     <div class="col-md-8">
                         <div class="card p-4 text-center mb-4">
@@ -126,9 +121,7 @@ app.get('/', async (req, res) => {
                     <div class="col-md-4">
                         <div class="card p-3 text-center border-top border-warning border-4">
                             <h6>👨‍💼 हॉस्टल वॉर्डन कॉर्नर</h6>
-                            <div class="text-start small p-2 bg-white rounded mt-2 border">
-                                <b>नाम:</b> <span id="w1-name"></span><br><b>📞:</b> <span id="w1-phone"></span>
-                            </div>
+                            <div class="text-start small p-2 bg-white rounded mt-2 border"><b>नाम:</b> <span id="w1-name"></span><br><b>📞:</b> <span id="w1-phone"></span></div>
                             <a href="/public-admission-list" target="_blank" class="btn btn-sm btn-dark w-100 mt-3 fw-bold">📋 एडमिशन चयन सूची देखें ➔</a>
                         </div>
                     </div>
@@ -141,9 +134,7 @@ app.get('/', async (req, res) => {
                         const list = document.getElementById('live-notices'); list.innerHTML = notices.length === 0 ? "<li class='list-group-item text-muted text-center'>कोई नोटिस नहीं है।</li>" : "";
                         notices.forEach(n => { list.innerHTML += \`<li class='list-group-item'><b>[\${n.date}]:</b> \${n.text}</li>\`; });
                     });
-                    fetch('/get-warden').then(res => res.json()).then(w => {
-                        document.getElementById('w1-name').innerText = w.w1Name; document.getElementById('w1-phone').innerText = w.w1Mobile;
-                    });
+                    fetch('/get-warden').then(res => res.json()).then(w => { document.getElementById('w1-name').innerText = w.w1Name; document.getElementById('w1-phone').innerText = w.w1Mobile; });
                 };
             </script>
             </body></html>
@@ -161,7 +152,7 @@ app.get('/registration-form', (req, res) => {
                         <div class="col-md-6"><label class="form-label fw-bold">पिता का नाम:</label><input type="text" name="fatherName" class="form-control" required></div>
                         <div class="col-md-6"><label class="form-label fw-bold">आधार नंबर:</label><input type="text" name="aadharCard" class="form-control" required></div>
                         <div class="col-md-6"><label class="form-label fw-bold">मोबाइल नंबर:</label><input type="tel" name="mobile" class="form-control" required></div>
-                        <div class="col-md-6"><label class="form-label fw-bold">वर्ग (Category):</label><select name="category" class="form-select"><option value="अनुसूचित जनजाति (ST)">अनुसूचित जनजाति (ST)</option><option value=" अनुसूचित जाति (SC)">अनुसूचित जाति (SC)</option></select></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">वर्ग (Category):</label><select name="category" class="form-select"><option value="अनुसूचित जनजाति (ST)">अनुसूचित जनजाति (ST)</option><option value="अनुसूचित जाति (SC)">अनुसूचित जाति (SC)</option></select></div>
                         <div class="col-md-6"><label class="form-label fw-bold">वर्तमान कक्षा:</label><input type="text" name="studentClass" class="form-control" required></div>
                         <div class="col-md-12"><label class="form-label fw-bold">शाला का नाम:</label><input type="text" name="collegeName" class="form-control" required></div>
                         <div class="col-md-6"><label class="form-label fw-bold">स्थायी पता:</label><input type="text" name="permanentAddress" class="form-control" required></div>
@@ -187,7 +178,7 @@ app.get('/check-status-page', (req, res) => {
                     fetch('/check-room-status?mobile=' + m).then(res => res.json()).then(data => {
                         const r = document.getElementById('statusResult');
                         if (data.found) {
-                            r.innerHTML = \`<div class="alert alert-info"><b>छात्र:</b> \${data.studentName}<br><b>रूम नंबर:</b> \${data.roomNumber || 'अभी अलॉट नहीं हुआ'}<br><b>स्टेटस:</b> \${data.approved ? '✅ स्वीकृत' : '⏳ पेंडिंग'}</div>\`;
+                            r.innerHTML = \`<div class="alert alert-info"><b>छात्र:</b> \${data.studentName}<br><b>룸 नंबर:</b> \${data.roomNumber || 'अभी अलॉट नहीं हुआ'}<br><b>स्टेटस:</b> \${data.approved ? '✅ स्वीकृत' : '⏳ पेंडिंग'}</div>\`;
                         } else { r.innerHTML = '<div class="alert alert-danger">❌ रिकॉर्ड नहीं मिला!</div>'; }
                     });
                 }
@@ -200,7 +191,7 @@ app.get('/public-admission-list', async (req, res) => {
     try {
         const list = await Student.find({ approved: true }); let rows = '';
         list.forEach((s, idx) => { rows += `<tr><td>${idx+1}</td><td>${s.studentName}</td><td>${s.fatherName}</td><td>${s.studentClass}</td><td>${s.roomNumber || 'वेटिंग'}</td></tr>`; });
-        res.send(`<!DOCTYPE html><html><head><title>चयन सूची</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"></head><body class="p-5 bg-light"><div class="container" style="max-width: 700px;"><div class="card p-4"><h4>📋 स्वीकृत छात्र प्रवेश चयन सूची</h4><table class="table table-bordered mt-3"><thead><tr><th>S.No</th><th>नाम</th><th>पिता का नाम</th><th>कक्षा</th><th>रूम नंबर</th></tr></thead><tbody>${rows || '<tr><td colspan="5">कोई सूची स्वीकृत नहीं है।</td></tr>'}</tbody></table></div></div></body></html>`);
+        res.send(`<!DOCTYPE html><html><head><title>चयन सूची</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"></head><body class="p-5 bg-light"><div class="container" style="max-width: 700px;"><div class="card p-4"><h4>📋 स्वीकृत छात्र प्रवेश चयन सूची</h4><table class="table table-bordered mt-3"><thead><tr><th>S.No</th><th>नाम</th><th>पिता का नाम</th><th>कक्षा</th><th>룸 नंबर</th></tr></thead><tbody>${rows || '<tr><td colspan="5">कोई सूची स्वीकृत नहीं है।</td></tr>'}</tbody></table></div></div></body></html>`);
     } catch(e) { res.status(500).send("Error"); }
 });
 
