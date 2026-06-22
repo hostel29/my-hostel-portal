@@ -23,7 +23,7 @@ const storage = new CloudinaryStorage({
     },
 });
 
-// ⚡ सभी दस्तावेज़ों और फ़ोटो को एक साथ प्रोसेस करने वाला कोर इंजन
+// ⚡ छात्र फ़ोटो, वॉर्डन फ़ोटो और सभी सरकारी दस्तावेज़ों को प्रोसेस करने वाला मल्टी-अपलोड इंजन
 const uploadMiddleware = multer({ storage: storage }).fields([
     { name: 'studentPhoto', maxCount: 1 },
     { name: 'fatherAadharFile', maxCount: 1 },
@@ -48,14 +48,14 @@ app.use((req, res, next) => {
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-// 🔒 मोंगोडीबी क्लाउड कनेक्शन तिजोरी
+// 🔒 मोंगोडीबी क्लाउड तिजोरी कनेक्शन लिंक
 const mongoURI = "mongodb+srv://surajpurprimatricsthostelsuraj_db_user:HostelSurajpur2026@cluster0.jztdqxu.mongodb.net/hostelData?appName=Cluster0";
 
 mongoose.connect(mongoURI)
     .then(() => console.log("🎰 मोंगोडीबी क्लाउड तिजोरी कनेक्ट हो गई है!"))
-    .catch(err => console.error("❌ डेटाबेस कनेक्शन एरर:", err));
+    .catch(err => console.error("❌ मोंगोडीबी कनेक्शन एरर:", err));
 
-// 📝 मोंगोडीबी एडवांस स्कीमा मॉडल्स (All Docs Tracked)
+// 📝 मोंगोडीबी डेटा स्कीमा मॉडल्स (दस्तावेज़ ट्रैकिंग के साथ)
 const StudentSchema = new mongoose.Schema({
     id: String, appNo: String, studentName: String, dob: String, aadharCard: String, mobile: String,
     fatherName: String, motherName: String, annualIncome: Number, category: String, subCast: String,
@@ -87,7 +87,7 @@ const defaultWarden = {
     w2Name: "सहायक अधीक्षक", w2Desig: "छात्रावास अधीक्षक (B)", w2Mobile: "9999999999", w2Office: "कार्यालय कक्ष 02", w2Photo: "https://via.placeholder.com/150"
 };
 const defaultLogo = { url: "https://via.placeholder.com/800x250?text=HOSTEL+BANNER+LOGO" };
-// 🏠 मुख्य पृष्ठ (✨ Grand Mega Premium Edition - Bigger Logo & Rules)
+// 🏠 मुख्य पृष्ठ (✨ Grand Mega Premium Edition - Bigger Logo & Strict Rules)
 app.get('/', async (req, res) => {
     try {
         const students = await Student.find({});
@@ -131,10 +131,10 @@ app.get('/', async (req, res) => {
                 
                 <div class="row g-3 mb-4 text-center">
                     <div class="col-md-6">
-                        <div class="card p-3 tracker-card h-100"><span class="text-secondary small fw-bold">अनुसूचित जनजाति (ST) सीट ट्रैकर</span><div class="d-flex justify-content-around align-items-center mt-2"><div><small class="text-muted">कुल सीटें</small><h4 class="fw-bold text-primary mb-0">100</h4></div><div><small class="text-muted">कन्फर्म</small><h4 class="fw-bold text-success mb-0">${stApproved}</h4></div><div><small class="text-muted">खाली सीटें</small><h4 class="fw-bold text-danger mb-0">${stAvailable}</h4></div></div></div>
+                        <div class="card p-3 tracker-card h-100"><span class="text-secondary small fw-bold">अनुसूचित जनजाति (ST) सीट ट्रैकर</span><div class="d-flex justify-content-around align-items-center mt-2"><div><small class="text-muted">कुल सीटें</small><h4 class="fw-bold text-primary mb-0">100</h4></div><div><small class="text-muted">कन्फर्म</small><h4 class="fw-bold text-success mb-0">\${stApproved}</h4></div><div><small class="text-muted">खाली सीटें</small><h4 class="fw-bold text-danger mb-0">\ Astro; \${stAvailable}</h4></div></div></div>
                     </div>
                     <div class="col-md-6">
-                        <div class="card p-3 tracker-card sc h-100"><span class="text-secondary small fw-bold">अनुसूचित जाति (SC) सीट ट्रैकर</span><div class="d-flex justify-content-around align-items-center mt-2"><div><small class="text-muted">कुल सीटें</small><h4 class="fw-bold text-primary mb-0">50</h4></div><div><small class="text-muted">कन्फर्म</small><h4 class="fw-bold text-success mb-0">${scApproved}</h4></div><div><small class="text-muted">खाली सीटें</small><h4 class="fw-bold text-danger mb-0">${scAvailable}</h4></div></div></div>
+                        <div class="card p-3 tracker-card sc h-100"><span class="text-secondary small fw-bold">अनुसूचित जाति (SC) सीट ट्रैकर</span><div class="d-flex justify-content-around align-items-center mt-2"><div><small class="text-muted">कुल सीटें</small><h4 class="fw-bold text-primary mb-0">50</h4></div><div><small class="text-muted">कन्फर्म</small><h4 class="fw-bold text-success mb-0">\${scApproved}</h4></div><div><small class="text-muted">खाली सीटें</small><h4 class="fw-bold text-danger mb-0">\${scAvailable}</h4></div></div></div>
                     </div>
                 </div>
 
@@ -215,7 +215,7 @@ app.get('/', async (req, res) => {
                                 <li class="mb-2">स्थानीय शिक्षण संस्थान (स्कूल/कॉलेज) में छात्र की नियमित उपस्थिति न्यूनतम 75% होना अनिवार्य है।</li>
                                 <li class="mb-2">बिना अधीक्षक की लिखित अनुमति के छात्रावास से अनुपस्थित रहने पर तत्काल प्रभाव से निष्कासित किया जाएगा।</li>
                                 <li class="mb-2">किसी भी बाहरी या अप्रवेशी व्यक्ति को छात्रावास परिसर में ठहराना पूर्णतः वर्जित एवं दण्डनीय अपराध है।</li>
-                                <li class="mb-2">परिसर के भीतर किसी भी प्रकार के मादक पदार्थ या अनुशासनहीनता पाए जाने पर बिना नोटिस निष्कासन की कार्रवाई की जाएगी।</li>
+                                class="mb-2">परिसर के भीतर किसी भी प्रकार के मादक पदार्थ या अनुशासनहीनता पाए जाने पर बिना नोटिस निष्कासन की कार्रवाई की जाएगी।</li>
                             </ol>
                         </div>
                         <div class="modal-footer"><button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">मैंने नियम पढ़ लिए हैं</button></div>
@@ -270,7 +270,7 @@ app.get('/registration-form', (req, res) => {
                         <div class="col-md-4"><label class="form-label fw-bold">विद्यार्थी का नाम (आधार के अनुसार):</label><input type="text" name="studentName" class="form-control" required></div>
                         <div class="col-md-4"><label class="form-label fw-bold">जन्मतिथि (DOB):</label><input type="date" name="dob" class="form-control" required></div>
                         <div class="col-md-4"><label class="form-label fw-bold">विद्यार्थी का आधार नंबर:</label><input type="text" name="aadharCard" class="form-control" required></div>
-                        <div class="col-md-4"><label class="form-label fw-bold">विद्यार्थी का वर्ग (Category):</label><select name="category" class="form-select" required><option value="ST">अनुसूचित जनजाति (ST)</option><option value="SC">अनुसूचित जाति (SC)</option><option value="OBC">अन्य पिछड़ा वर्ग (OBC)</option></select></div>
+                        <div class="col-md-4"><label class="form-label fw-bold">विद्यार्थी का वर्ग (Category):</label><select name="category" class="form-select" required><option value="ST">अनुसूचित जनजाति (ST)</option><option value="SC">अनुसूचित जाति (SC)</option></select></div>
                         <div class="col-md-4"><label class="form-label fw-bold">विद्यार्थी की जाति:</label><input type="text" name="subCast" class="form-control" required></div>
                         <div class="col-md-4"><label class="form-label fw-bold">पालक का मोबाइल नंबर:</label><input type="tel" name="mobile" class="form-control" required></div>
                         <div class="col-12"><label class="form-label fw-bold text-danger">📸 छात्र की फोटो अपलोड करें (अनिवार्य):</label><input type="file" name="studentPhoto" class="form-control" accept="image/*" required></div>
@@ -336,9 +336,7 @@ app.get('/check-status-page', (req, res) => {
             </div>
             <script>
                 function checkStatus() {
-                    const mobile = document.getElementById('searchMobile').value;
-                    const resultDiv = document.getElementById('statusResult');
-                    if(!mobile) { alert('कृपया मोबाइल नंबर लिखें!'); return; }
+                    const mobile = document.getElementById('searchMobile').value; if(!mobile) { alert('कृपया मोबाइल नंबर लिखें!'); return; }
                     window.location.href = '/get-receipt-view?mobile=' + mobile;
                 }
                 function openEditForm() {
@@ -356,7 +354,7 @@ app.get('/public-admission-list', async (req, res) => {
         list.forEach((s, idx) => {
             rows += '<tr><td>' + (idx+1) + '</td><td><b>' + s.studentName + '</b></td><td>' + s.fatherName + '</td><td>' + s.studentClass + '</td><td><span class="badge bg-success fs-6">' + (s.roomNumber || 'वेटिंग') + '</span></td></tr>';
         });
-        res.send('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>चयन सूची 2026-27</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"></head><body class="p-5 bg-light"><div class="container" style="max-width: 850px;"><div class="card p-4 shadow-sm bg-white"><h4 class="text-center text-primary fw-bold mb-4">📋 स्वीकृत छात्र प्रवेश चयन सूची (सत्र 2026-27)</h4><table class="table table-bordered table-striped text-center"><thead class="table-dark"><tr><th>S.No</th><th>छात्र का नाम</th><th>पिता का नाम</th><th>कक्षा</th><th>रूम नंबर</th></tr></thead><tbody>' + (rows || '<tr><td colspan="5" class="text-center text-muted">अभी कोई चयन सूची स्वीकृत नहीं है।</td></tr>') + '</tbody></table><div class="text-center mt-3"><a href="/" class="btn btn-link">🏠 मुख्य पृष्ठ</a></div></div></div></body></html>');
+        res.send('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>चयन सूची 2026-27</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"></head><body class="p-5 bg-light"><div class="container" style="max-width: 850px;"><div class="card p-4 shadow-sm bg-white"><h4 class="text-center text-primary fw-bold mb-4">📋 स्वीकृत छात्र प्रवेश चयन सूची (सत्र 2026-27)</h4><table class="table table-bordered table-striped text-center"><thead class="table-dark"><tr><th>S.No</th><th>छात्र का नाम</th><th>पिता का नाम</th><th>कक्षा</th><th>रूूूम नंबर</th></tr></thead><tbody>' + (rows || '<tr><td colspan="5" class="text-center text-muted">अभी कोई चयन सूची स्वीकृत नहीं है।</td></tr>') + '</tbody></table><div class="text-center mt-3"><a href="/" class="btn btn-link">🏠 मुख्य पृष्ठ</a></div></div></div></body></html>');
     } catch(e) { res.status(500).send("Error"); }
 });
 
@@ -386,12 +384,11 @@ app.get('/edit-student-form', async (req, res) => {
     } catch(err) { res.status(500).send("Error"); }
 });
 
-// ✨ [DYNAMIC CODE RECEIPT] भव्य डिजिटल रसीद विज़ुअलाइज़र
+// 🎫 [GRAND DIGITAL RECEIPT] बारकोड लुक और ऑफिशियल वाटरमार्क वाली भव्य रसीद
 app.get('/get-receipt-view', async (req, res) => {
     try {
         const sData = await Student.findOne({ mobile: req.query.mobile.trim() });
         if (!sData) return res.send("<h2>❌ रिकॉर्ड नहीं मिला!</h2><a href='/'>वापस</a>");
-        
         let badge = sData.approved ? '<span class="badge bg-success p-2 fs-6">✅ ADMISSION CONFIRMED</span>' : '<span class="badge bg-danger p-2 fs-6">⏳ PENDING APPROVAL</span>';
 
         res.send(\`
@@ -422,7 +419,7 @@ app.get('/get-receipt-view', async (req, res) => {
                             <p class="mb-2"><b>विद्यार्थी का नाम (Name):</b> \${sData.studentName}</p>
                             <p class="mb-2"><b>पिता का नाम (Father):</b> \${sData.fatherName}</p>
                             <p class="mb-2"><b>पंजीकृत मोबाइल (Mobile):</b> +91 \${sData.mobile}</p>
-                            <p class="mb-2"><b>कैटेगरी / वर्ग (Category):</b> \${sData.category} (\${sData.subCast})</p>
+                            <p class="mb-2"><b>कैटेगरी / वर्ग (Category):</b> \${sData.category} (\${sData.subCast || 'ST'})</p>
                         </div>
                         <div class="col-4 text-end">
                             <img src="\${sData.photoUrl}" class="img-thumbnail shadow-sm mb-2" style="width: 130px; height: 140px; object-fit: cover;" onerror="this.src='https://via.placeholder.com/150'">
@@ -430,7 +427,7 @@ app.get('/get-receipt-view', async (req, res) => {
                         </div>
                     </div>
                     <table class="table table-bordered bg-light" style="font-size:14px;">
-                        <tr><th class="bg-dark text-white" style="width:35%;">वर्तमान कक्षा/वर्ष</th><td>\${sData.studentClass} (\${sData.course})</td></tr>
+                        <tr><th class="bg-dark text-white" style="width:35%;">वर्तमान कक्षा/वर्ष</th><td>\${sData.studentClass} (\${sData.course || 'N/A'})</td></tr>
                         <tr><th class="bg-dark text-white">अध्ययनरत शाला/संस्थान</th><td>\${sData.collegeName}</td></tr>
                         <tr><th class="bg-dark text-white">घर से शाला की दूरी / पता</th><td>\${sData.homeDistance} KM - \${sData.permanentAddress}, \${sData.blockName} (\${sData.districtName})</td></tr>
                         <tr><th class="bg-dark text-white">आबंटित रूम नंबर (Room)</th><td><b class="text-danger fs-5">\${sData.roomNumber || 'अभी अलॉट नहीं हुआ'}</b></td></tr>
@@ -468,7 +465,6 @@ app.post('/submit-form', (req, res) => {
             }
 
             const cleanMobile = req.body.mobile.trim();
-            // ✨ [IDENTIFIER CODE] रसीद कोड में ही वर्ग और मोबाइल सिंक रहेगा
             const appNumber = "SUR-" + (req.body.category || "ST") + "-" + cleanMobile.slice(-4);
 
             const sData = {
@@ -487,18 +483,15 @@ app.post('/submit-form', (req, res) => {
             if (ayushDoc) sData.ayushmanUrl = ayushDoc; if (rationDoc) sData.rationCardUrl = rationDoc;
 
             const old = await Student.findOne({ mobile: cleanMobile });
-            if (old) {
-                await Student.updateOne({ mobile: cleanMobile }, { $set: sData });
-            } else {
-                const newStudent = new Student(sData); await newStudent.save();
-            }
+            if (old) { await Student.updateOne({ mobile: cleanMobile }, { $set: sData }); }
+            else { const newStudent = new Student(sData); await newStudent.save(); }
 
             res.redirect('/get-receipt-view?mobile=' + cleanMobile);
         } catch (e) { res.status(500).send("Upload Form Error"); }
     });
 });
 
-// 🔒 प्रशासनिक कंट्रोल पैनल (✨ Document Viewer Embedded)
+// 🔒 प्रशासनिक कंट्रोल पैनल (✨ Document Viewer & Warden Photo Upload Fully Active)
 app.get('/view-students', async (req, res) => {
     const auth = { login: 'admin', password: 'password123' }; const b64 = (req.headers.authorization || '').split(' ')[1] || ''; const [login, password] = Buffer.from(b64, 'base64').toString().split(':');
     if (!login || !password || login !== auth.login || password !== auth.password) { res.set('WWW-Authenticate', 'Basic realm="401"'); return res.status(401).send('❌ गलत पासवर्ड!'); }
@@ -507,10 +500,10 @@ app.get('/view-students', async (req, res) => {
     sList.forEach((s, idx) => {
         let actionBtn = s.approved ? '<span class="badge bg-success">Approved</span>' : '<button onclick="approveStudent(\'' + s.id + '\')" class="btn btn-sm btn-primary">Approve</button>';
         
-        // ✨ [FIXED] दस्तावेज सीधे एडमिन पैनल से लाइव ओपन होंगे
-        let docsLinks = \`<a href="\${s.casteCertUrl || '#'}" target="_blank" class="btn btn-xs btn-outline-info p-1 me-1" style="font-size:10px;">जाति</a>\`;
-        docsLinks += \`<a href="\${s.residenceCertUrl || '#'}" target="_blank" class="btn btn-xs btn-outline-info p-1 me-1" style="font-size:10px;">निवास</a>\`;
-        docsLinks += \`<a href="\${s.rationCardUrl || '#'}" target="_blank" class="btn btn-xs btn-outline-info p-1" style="font-size:10px;">राशन</a>\`;
+        // 📁 [FIXED] एडमिन पैनल से छात्र के दस्तावेज़ लाइव एक क्लिक में खुलेंगे
+        let docsLinks = '<a href="' + (s.casteCertUrl || '#') + '" target="_blank" class="btn btn-xs btn-outline-info p-1 me-1" style="font-size:10px;">जाति</a>';
+        docsLinks += '<a href="' + (s.residenceCertUrl || '#') + '" target="_blank" class="btn btn-xs btn-outline-info p-1 me-1" style="font-size:10px;">निवास</a>';
+        docsLinks += '<a href="' + (s.rationCardUrl || '#') + '" target="_blank" class="btn btn-xs btn-outline-info p-1" style="font-size:10px;">राशन</a>';
 
         rows += '<tr class="align-middle" style="font-size:12px;"><td>' + (idx + 1) + '</td><td><img src="' + s.photoUrl + '" class="rounded me-1" style="width:35px; height:35px; object-fit:cover;"><b>' + s.studentName + '</b><br><small class="text-muted">' + s.category + '</small></td><td>' + s.fatherName + '</td><td>' + s.mobile + '</td><td>' + docsLinks + '</td><td><div class="d-flex"><input type="text" id="room-' + s.id + '" class="form-control form-control-sm me-1" value="' + (s.roomNumber || '') + '" style="width:55px;"><button onclick="saveRoom(\'' + s.id + '\')" class="btn btn-sm btn-dark">सेव</button></div></td><td>' + actionBtn + '</td><td><button onclick="removeStudent(\'' + s.id + '\')" class="btn btn-sm btn-danger">Remove</button></td></tr>';
     });
@@ -532,7 +525,7 @@ app.post('/approve-student', async (req, res) => { await Student.updateOne({ mob
 app.post('/remove-student', async (req, res) => { await Student.deleteOne({ mobile: req.body.studentId }); res.json({ success: true }); });
 app.post('/post-notice', uploadMiddleware, async (req, res) => { const n = new Notice({ text: req.body.noticeText, date: new Date().toLocaleDateString() }); await n.save(); res.send("<h1>🎉 नोटिस लाइव!</h1><a href='/view-students'>वापस</a>"); });
 
-// ✨ [FIXED] वॉर्डन फ़ोटो के साथ मोंगोडीबी सिंक प्रोसेसर
+// 📸 [FIXED] वॉर्डन फ़ोटो अपलोड प्रोसेसर
 app.post('/update-warden', uploadMiddleware, async (req, res) => { 
     let cur = await Warden.findOne({}) || defaultWarden; let p1 = cur.w1Photo;
     if (req.files && req.files['w1PhotoFile']) { p1 = req.files['w1PhotoFile'][0].path; }
