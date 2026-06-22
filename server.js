@@ -53,7 +53,7 @@ const readWardenSafe = () => {
     try {
         if (fs.existsSync(wardenFile)) {
             const data = fs.readFileSync(wardenFile, 'utf8');
-            return data ? JSON.parse(data) : defaultWarden;
+            return data.trim() ? JSON.parse(data) : defaultWarden;
         }
     } catch (e) {}
     return defaultWarden;
@@ -169,7 +169,7 @@ app.get('/', (req, res) => {
         </html>
     `);
 });
-// 📝 लिंक 1: रजिस्ट्रेशन फॉर्म पेज (सारे प्रमाण पत्रों की फोटो अपलोड व्यवस्था)
+// 📝 लिंक 1: रजिस्ट्रेशन फॉर्म पेज (दस्तावेज़ फ़ोटो अपलोड फ़ील्ड्स के साथ)
 app.get('/registration-form', (req, res) => {
     res.send(`
         <!DOCTYPE html>
@@ -239,7 +239,7 @@ app.get('/registration-form', (req, res) => {
         </html>
     `);
 });
-// 🔍 लिंक 2: स्टेटस चेक करने वाला पेज
+// 🔍 लिंक 2: स्टेटस चेक करने वाला पेज (फोटो फिक्स के साथ)
 app.get('/check-status-page', (req, res) => {
     res.send(`
         <!DOCTYPE html>
@@ -275,10 +275,19 @@ app.get('/check-status-page', (req, res) => {
                             let statusBadge = isAllocated ? \`<span class="badge bg-success fs-6 ms-2">✅ Admission Confirmed</span>\` : \`<span class="badge bg-secondary fs-6 ms-2">⏳ Waiting List</span>\`;
                             resultDiv.innerHTML = \`
                                 <div class="card p-3 bg-light border mt-3 shadow-sm">
-                                    <h4 class="text-success fw-bold mb-2">🎉 \${data.studentName}</h4>
-                                    <p class="mb-1"><b>👨 पिता का नाम:</b> \${data.fatherName}</p>
-                                    <p class="mb-1"><b>वर्ग (Category):</b> \${data.category}</p>
-                                    <p class="mb-0"><b>🏢 अलॉटेड रूम नंबर:</b> <span class="badge bg-warning text-dark fs-6">\${data.roomNumber}</span> \${statusBadge}</p>
+                                    <div class="d-flex align-items-center mb-3">
+                                        <img src="\${data.photoUrl}" class="rounded border me-3 shadow-sm" style="width:85px; height:85px; object-fit:cover; display:block;" onerror="this.src='https://via.placeholder.com/150'">
+                                        <div>
+                                            <h4 class="text-success fw-bold mb-0">🎉 \${data.studentName}</h4>
+                                            <p class="text-muted mb-0">\${data.studentClass} - \${data.collegeName}</p>
+                                        </div>
+                                    </div>
+                                    <div class="bg-white p-3 rounded border">
+                                        <p class="mb-2"><b>👨 पिता का नाम:</b> \${data.fatherName}</p>
+                                        <p class="mb-2"><b>वर्ग (Category):</b> \${data.category}</p>
+                                        <hr>
+                                        <p class="mb-0"><b>🏢 अलॉटेड रूम नंबर:</b> <span class="badge bg-warning text-dark fs-6">\${data.roomNumber}</span> \${statusBadge}</p>
+                                    </div>
                                 </div>\`;
                         } else { resultDiv.innerHTML = \`<div class="alert alert-danger mt-3">❌ कोई प्रोफाइल नहीं मिली!</div>\`; }
                     });
@@ -325,16 +334,19 @@ app.get('/public-admission-list', (req, res) => {
         `);
     });
 });
-// 🛠️ मल्टी-फ़ाइल अपलोड कॉन्फ़िगरेशन
+// 🛠️ मल्टी-फ़ाइल अपलोड कॉन्फ़िगरेशन (वॉर्डन फ़ोटो सहित)
 const cpUpload = upload.fields([
     { name: 'studentPhoto', maxCount: 1 }, { name: 'casteCertFile', maxCount: 1 },
     { name: 'residenceCertFile', maxCount: 1 }, { name: 'rationCardFile', maxCount: 1 },
+    { name: 'fatherAadharFile', maxCount: 1 }, { name: 'motherAadharFile', maxCount: 1 },
+    { name: 'incomeCertFile', maxCount: 1 }, { name: 'distanceCertFile', maxCount: 1 },
+    { name: 'ayushmanFile', maxCount: 1 },
     { name: 'w1PhotoFile', maxCount: 1 }, { name: 'w2PhotoFile', maxCount: 1 }
 ]);
 
 app.post('/submit-form', cpUpload, (req, res) => {
     const files = req.files || {};
-    const photoPath = files.studentPhoto ? files.studentPhoto[0].path : "https://via.placeholder.com/150";
+    const photoPath = files.studentPhoto ? files.studentPhoto[0].path : (req.body.existingPhoto || "https://via.placeholder.com/150");
     
     const studentData = {
         id: req.body.mobile.trim(), studentName: req.body.studentName, aadharCard: req.body.aadharCard,
@@ -459,7 +471,6 @@ app.post('/post-notice', (req, res) => {
 app.post('/update-warden', cpUpload, (req, res) => {
     const files = req.files || {};
     let currentWarden = readWardenSafe();
-    
     const w1PhotoPath = files.w1PhotoFile ? files.w1PhotoFile[0].path : currentWarden.w1Photo;
     const w2PhotoPath = files.w2PhotoFile ? files.w2PhotoFile[0].path : currentWarden.w2Photo;
 
