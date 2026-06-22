@@ -23,7 +23,6 @@ const storage = new CloudinaryStorage({
     },
 });
 
-// ✨ एरर-फ्री अपलोडिंग के लिए .any() के साथ रूट फंक्शन्स को वॉटरप्रूफ किया गया है
 const uploadMiddleware = multer({ storage: storage }).any();
 
 app.use((req, res, next) => {
@@ -46,7 +45,6 @@ const defaultWarden = {
 };
 const defaultLogo = { url: "https://via.placeholder.com/800x250?text=HOSTEL+BANNER+LOGO" };
 
-// 🔒 [object Object] डेटा करप्शन और क्रैश से परमानेंट सुरक्षा चक्र
 const checkFileCorrupt = (filePath, defaultData) => {
     if (!fs.existsSync(filePath)) {
         fs.writeFileSync(filePath, defaultData, 'utf8');
@@ -72,7 +70,7 @@ const readNoticesSafe = () => {
     try { const d = fs.readFileSync(noticesFile, 'utf8'); return JSON.parse(d); } catch (e) { return []; }
 };
 
-// 🏠 मुख्य पृष्ठ (Premium Look Interface)
+// 🏠 मुख्य पृष्ठ (Premium Smooth UI)
 app.get('/', (req, res) => {
     const students = readStudentsSafe();
     const stApproved = students.filter(s => s.approved === true && s.category && s.category.includes('ST')).length;
@@ -198,7 +196,7 @@ app.get('/', (req, res) => {
                             <li>छात्रावास में प्रवेशित छात्र को छात्रावास में भोजन (मेस) करना अनिवार्य है।</li>
                             <li>स्थानीय शिक्षण संस्था में छात्र को नियमित प्रवेश व उपस्थिति अनिवार्य है।</li>
                             <li>बिना सूचना के लगातार अनुपस्थित रहने पर अनुशासनहीनता के कारण छात्रावास से निष्कासित किया जा सकता है।</li>
-                            <li>अप्रवेशी छात्र को बिना अधीक्षक की लिखित अनुमति के अपने कमरों में ठहराना पूर्णतः वर्जित है।</li>
+                            <li>अप्रवेशी छात्र को बिना अधीक्षक की लिखित अनुमति के ठहराना वर्जित है।</li>
                             <li>मादक पदार्थों एवं मद्यपान का सेवन करने पर तत्काल निष्कासित किया जा सकेगा।</li>
                         </ol>
                     </div>
@@ -229,7 +227,7 @@ app.get('/', (req, res) => {
         </html>
     `);
 });
-// 📝 लिंक 1: ऑनलाइन रजिस्ट्रेशन फॉर्म पेज 
+// 📝 लिंक 1: रजिस्ट्रेशन फॉर्म पेज 
 app.get('/registration-form', (req, res) => {
     res.send(`
         <!DOCTYPE html>
@@ -386,7 +384,7 @@ app.get('/public-admission-list', (req, res) => {
         </html>
     `);
 });
-// 🛠️ त्रुटि सुधार फ़ॉर्म डेटा ऑटो-लोड (Edit Form Core Route Repair)
+// 🛠️ त्रुटि सुधार फ़ॉर्म डेटा ऑटो-लोड (Edit Form Interface Fixed)
 app.get('/edit-student-form', (req, res) => {
     const mobileQuery = (req.query.mobile || '').trim();
     const studentsList = readStudentsSafe();
@@ -426,7 +424,7 @@ app.get('/edit-student-form', (req, res) => {
     `);
 });
 
-// 🔒 एरर-फ्री प्रोसेसर लॉजिक (.any() से टाइमआउट और अनएक्सपेक्टेड फील्ड एरर पूरी तरह ब्लॉक)
+// 🔒 एरर-फ्री प्रोसेसर लॉजिक (.any() मोड से मोबाइल फोटो और डॉक्यूमेंट्स का सिंक लोडिंग फिक्स)
 app.post('/submit-form', (req, res) => {
     uploadMiddleware(req, res, (err) => {
         let photoPath = "https://via.placeholder.com/150";
@@ -455,12 +453,13 @@ app.post('/submit-form', (req, res) => {
         sList = sList.filter(s => s.mobile !== sData.mobile); sList.push(sData);
         fs.writeFileSync(studentsFile, JSON.stringify(sList, null, 2), 'utf8');
 
-        // 🖨️ फुल-डिज़ाइन पावती रसीद रिस्पॉन्स
+        // 🖨️ फुल-डिज़ाइन पावती रसीद रिस्पॉन्स (मोबाइल रेंडर फ्रेंडली, मिसिंग टैग फिक्स)
         res.send(`
             <!DOCTYPE html>
             <html lang="hi">
             <head>
                 <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <title>प्रवेश आवेदन पावती रसीद</title>
                 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
                 <style>body { background-color: #f8f9fa; font-family: sans-serif; } .receipt-card { background: white; border: 2px solid #333; max-width: 650px; margin: 30px auto; padding: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); } @media print { .no-print { display: none; } body { background: white; } .receipt-card { border: none; box-shadow: none; margin: 0; } }</style>
@@ -532,13 +531,12 @@ app.get('/view-students', (req, res) => {
     `);
 });
 
-app.post('/update-logo', (req, res) => {
-    uploadMiddleware(req, res, (err) => {
-        if (req.files && req.files.length > 0) {
-            const f = req.files.find(file => file.fieldname === 'hostelLogo'); if (f) fs.writeFileSync(logoFile, JSON.stringify({ url: f.path }, null, 2), 'utf8');
-        }
-        res.send("<h1>🎉 लोगो अपडेट!</h1><a href='/view-students'>वापस</a>");
-    });
+app.post('/update-logo', uploadMiddleware, (req, res) => {
+    if (req.files && req.files.length > 0) {
+        const f = req.files.find(file => file.fieldname === 'hostelLogo');
+        if (f) fs.writeFileSync(logoFile, JSON.stringify({ url: f.path }, null, 2), 'utf8');
+    }
+    res.send("<h1>🎉 लोगो अपडेट!</h1><a href='/view-students'>वापस</a>");
 });
 app.post('/assign-room', (req, res) => {
     let list = readStudentsSafe(); list = list.map(s => { if (s.id === req.body.studentId) s.roomNumber = req.body.roomNumber; return s; });
@@ -556,16 +554,14 @@ app.post('/post-notice', (req, res) => {
     let nList = readNoticesSafe(); nList.unshift({ text: req.body.noticeText, date: new Date().toLocaleDateString() });
     fs.writeFileSync(noticesFile, JSON.stringify(nList, null, 2), 'utf8'); res.send("<h1>🎉 नोटिस लाइव हो गया है!</h1><a href='/view-students'>वापस जाएँ</a>");
 });
-app.post('/update-warden', (req, res) => {
-    uploadMiddleware(req, res, (err) => {
-        let cur = readWardenSafe(); let p1 = cur.w1Photo, p2 = cur.w2Photo;
-        if (req.files && req.files.length > 0) {
-            const f1 = req.files.find(file => file.fieldname === 'w1PhotoFile'); if (f1) p1 = f1.path;
-            const f2 = req.files.find(file => file.fieldname === 'w2PhotoFile'); if (f2) p2 = f2.path;
-        }
-        const updated = { w1Name: req.body.w1Name || cur.w1Name, w1Desig: "अधीक्षक (A)", w1Mobile: req.body.w1Mobile || cur.w1Mobile, w1Office: "कक्ष 01", w1Photo: p1, w2Name: req.body.w2Name || cur.w2Name, w2Desig: "अधीक्षक (B)", w2Mobile: req.body.w2Mobile || cur.w2Mobile, w2Office: "कक्ष 02", w2Photo: p2 };
-        fs.writeFileSync(wardenFile, JSON.stringify(updated, null, 2), 'utf8'); res.send("<h1>🎉 वॉर्डन अपडेट!</h1><a href='/view-students'>वापस</a>");
-    });
+app.post('/update-warden', uploadMiddleware, (req, res) => {
+    let cur = readWardenSafe(); let p1 = cur.w1Photo, p2 = cur.w2Photo;
+    if (req.files && req.files.length > 0) {
+        const f1 = req.files.find(file => file.fieldname === 'w1PhotoFile'); if (f1) p1 = f1.path;
+        const f2 = req.files.find(file => file.fieldname === 'w2PhotoFile'); if (f2) p2 = f2.path;
+    }
+    const updated = { w1Name: req.body.w1Name || cur.w1Name, w1Desig: "अधीक्षक (A)", w1Mobile: req.body.w1Mobile || cur.w1Mobile, w1Office: "कक्ष 01", w1Photo: p1, w2Name: req.body.w2Name || cur.w2Name, w2Desig: "अधीक्षक (B)", w2Mobile: req.body.w2Mobile || cur.w2Mobile, w2Office: "कक्ष 02", w2Photo: p2 };
+    fs.writeFileSync(wardenFile, JSON.stringify(updated, null, 2), 'utf8'); res.send("<h1>🎉 वॉर्डन अपडेट!</h1><a href='/view-students'>वापस</a>");
 });
 app.get('/get-warden', (req, res) => res.json(readWardenSafe()));
 app.get('/get-logo', (req, res) => { try{ res.json(JSON.parse(fs.readFileSync(logoFile, 'utf8'))); }catch(e){res.json(defaultLogo);} });
