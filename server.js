@@ -44,7 +44,6 @@ const defaultWarden = {
 };
 const defaultLogo = { url: "https://via.placeholder.com/800x250?text=HOSTEL+BANNER+LOGO" };
 
-// 🔒 ऑब्जेक्ट करप्शन से परमानेंट वॉटरप्रूफ सुरक्षा कवच
 const checkFileCorrupt = (filePath, defaultData) => {
     if (!fs.existsSync(filePath)) {
         fs.writeFileSync(filePath, defaultData, 'utf8');
@@ -67,7 +66,7 @@ const readStudentsSafe = () => {
     try { const d = fs.readFileSync(studentsFile, 'utf8'); return JSON.parse(d); } catch (e) { return []; }
 };
 
-// 🏠 मुख्य पृष्ठ (✨ Premium Design Edition)
+// 🏠 मुख्य पृष्ठ
 app.get('/', (req, res) => {
     const students = readStudentsSafe();
     const stApproved = students.filter(s => s.approved === true && s.category && s.category.includes('ST')).length;
@@ -86,19 +85,16 @@ app.get('/', (req, res) => {
             <style>
                 body { background-color: #f4f6f9; color: #212529; font-family: 'Segoe UI', system-ui, sans-serif; }
                 .navbar { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important; }
-                .card { background-color: #ffffff; border: none; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.03); transition: all 0.3s ease; }
-                .logo-container { width: 100%; border-radius: 12px; overflow: hidden; margin-bottom: 20px; background: #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.02); }
+                .card { background-color: #ffffff; border: none; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.03); }
+                .logo-container { width: 100%; border-radius: 12px; overflow: hidden; margin-bottom: 20px; text-align: center; border: 1px solid #dee2e6; }
                 .logo-img { width: 100%; height: auto; max-height: 260px; display: block; margin: 0 auto; object-fit: contain; }
-                .premium-btn { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 25px; text-align: center; text-decoration: none; display: block; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); }
-                .premium-btn:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.05); border-color: #cbd5e1; }
+                .premium-btn { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 25px; text-align: center; text-decoration: none; display: block; transition: all 0.3s ease; }
+                .premium-btn:hover { transform: translateY(-5px); box-shadow: 0 15px 25px rgba(0,0,0,0.05); }
                 .premium-btn.reg { border-bottom: 5px solid #0d6efd; }
                 .premium-btn.stat { border-bottom: 5px solid #198754; }
-                .tracker-card { background: #ffffff; border-radius: 14px; box-shadow: 0 4px 6px rgba(0,0,0,0.01); border-top: 4px solid #3b82f6; }
+                .tracker-card { background: #ffffff; border-radius: 14px; border-top: 4px solid #3b82f6; }
                 .tracker-card.sc { border-top: 4px solid #10b981; }
-                .whatsapp-float { position: fixed; bottom: 25px; right: 25px; background: linear-gradient(135deg, #25d366 0%, #128c7e 100%); color: white; border-radius: 30px; text-align: center; font-weight: 600; box-shadow: 0 10px 20px rgba(37,211,102,0.3); z-index: 1000; text-decoration: none; padding: 12px 24px; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; }
-                .whatsapp-float:hover { transform: translateY(-2px); box-shadow: 0 15px 30px rgba(37,211,102,0.4); color: white; }
-                .notice-header { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important; font-weight: 700; border: none; }
-                .tracker-title { font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
+                .whatsapp-float { position: fixed; bottom: 25px; right: 25px; background: linear-gradient(135deg, #25d366 0%, #128c7e 100%); color: white; border-radius: 30px; text-align: center; font-weight: 600; box-shadow: 0 10px 20px rgba(37,211,102,0.3); z-index: 1000; text-decoration: none; padding: 12px 24px; }
             </style>
         </head>
         <body>
@@ -113,22 +109,22 @@ app.get('/', (req, res) => {
             
             <div class="row g-3 mb-4 text-center">
                 <div class="col-md-6">
-                    <div class="card p-3 tracker-card h-100"><span class="text-secondary small fw-bold">अनुसूचित जनजाति (ST) सीट ट्रैकर</span><div class="d-flex justify-content-around align-items-center mt-2"><div><small class="text-muted block">कुल सीटें</small><h4 class="fw-bold text-primary mb-0">100</h4></div><div><small class="text-muted block">कन्फर्म</small><h4 class="fw-bold text-success mb-0">${stApproved}</h4></div><div><small class="text-muted block">खाली सीटें</small><h4 class="fw-bold text-danger mb-0">${stAvailable}</h4></div></div></div>
+                    <div class="card p-3 tracker-card h-100"><span class="text-secondary small fw-bold">अनुसूचित जनजाति (ST) सीट ट्रैकर</span><div class="d-flex justify-content-around align-items-center mt-2"><div><small class="text-muted">कुल सीटें</small><h4 class="fw-bold text-primary mb-0">100</h4></div><div><small class="text-muted">कन्फर्म</small><h4 class="fw-bold text-success mb-0">${stApproved}</h4></div><div><small class="text-muted">खाली सीटें</small><h4 class="fw-bold text-danger mb-0">${stAvailable}</h4></div></div></div>
                 </div>
                 <div class="col-md-6">
-                    <div class="card p-3 tracker-card sc h-100"><span class="text-secondary small fw-bold">अनुसूचित जाति (SC) सीट ट्रैकर</span><div class="d-flex justify-content-around align-items-center mt-2"><div><small class="text-muted block">कुल सीटें</small><h4 class="fw-bold text-primary mb-0">50</h4></div><div><small class="text-muted block">कन्फर्म</small><h4 class="fw-bold text-success mb-0">${scApproved}</h4></div><div><small class="text-muted block">खाली सीटें</small><h4 class="fw-bold text-danger mb-0">${scAvailable}</h4></div></div></div>
+                    <div class="card p-3 tracker-card sc h-100"><span class="text-secondary small fw-bold">अनुसूचित जाति (SC) सीट ट्रैकर</span><div class="d-flex justify-content-around align-items-center mt-2"><div><small class="text-muted">कुल सीटें</small><h4 class="fw-bold text-primary mb-0">50</h4></div><div><small class="text-muted">कन्फर्म</small><h4 class="fw-bold text-success mb-0">${scApproved}</h4></div><div><small class="text-muted">खाली सीटें</small><h4 class="fw-bold text-danger mb-0">${scAvailable}</h4></div></div></div>
                 </div>
             </div>
 
             <div class="card p-3 mb-4 border-start border-primary border-4 bg-white shadow-sm">
                 <h6 class="fw-bold text-primary mb-1">ℹ️ संक्षिप्त परिचय (Short Intro)</h6>
-                <p class="text-muted small mb-0">यह छात्रावास आदिम जाति तथा अनुसूचित जाति विकास विभाग, छत्तीसगढ़ शासन द्वारा संचालित है, जहाँ सूरजपुर जिले के ग्रामीण क्षेत्रों के छात्रों को उत्कृष्ट आवासीय एवं शैक्षणिक वातावरण प्रदान किया जाता है।</p>
+                <p class="text-muted small mb-0">यह छात्रावास आदिम जाति तथा अनुसूचित जाति विकास विभाग, छत्तीसगढ़ शासन द्वारा संचालित है, जहाँ सूरजपुर जिले के छात्रों को उत्कृष्ट आवासीय सुविधाएँ प्रदान की जाती हैं।</p>
             </div>
             <div class="row g-4">
                 <div class="col-md-8">
                     <div class="logo-container border"><img id="hostel-logo" src="" alt="Hostel Logo" class="logo-img"></div>
                     <div class="card p-3 mb-4 shadow-sm">
-                        <div class="card-header notice-header text-white rounded mb-2">📢 महत्वपूर्ण नोटिस बोर्ड</div>
+                        <div class="card-header bg-danger text-white rounded mb-2 fw-bold">📢 महत्वपूर्ण नोटिस बोर्ड</div>
                         <ul id="live-notices" class="list-group list-group-flush"></ul>
                     </div>
                     <hr class="my-4 border-secondary opacity-25">
@@ -145,7 +141,7 @@ app.get('/', (req, res) => {
                         <div class="col-md-6">
                             <a href="/check-status-page" class="premium-btn stat text-dark">
                                 <span style="font-size: 45px; display:block;" class="mb-2">🔍</span>
-                                <h4 class="fw-bold text-success">प्रोफाइल / रूम अलॉटमेंट स्टेटस</h4>
+                                <h4 class="fw-bold text-success">प्रोفाइल / रूम अलॉटमेंट स्टेटस</h4>
                                 <span class="badge bg-success px-3 py-2 my-2 fs-6">एडमिन द्वारा जारी रिजल्ट</span>
                                 <p class="text-muted small mb-0 mt-1">अपना अलॉटेड रूम और स्टेटस देखने के लिए यहाँ क्लिक करें</p>
                             </a>
@@ -159,7 +155,7 @@ app.get('/', (req, res) => {
                             <div class="col-6 border-end">
                                 <img id="w1-img" src="" class="rounded border mb-2 shadow-sm" style="width: 85px; height: 85px; object-fit: cover;">
                                 <h6 id="w1-name" class="fw-bold text-dark mb-0 small"></h6>
-                                <small id="w1-desig" class="text-muted block style" style="font-size:10px;"></small>
+                                <small id="w1-desig" class="text-muted block" style="font-size:10px;"></small>
                                 <div class="text-start bg-light p-2 rounded border mt-2" style="font-size:10px;">
                                     <b>📞:</b> <span id="w1-phone"></span><br><b>🏢:</b> <span id="w1-office"></span>
                                 </div>
@@ -167,7 +163,7 @@ app.get('/', (req, res) => {
                             <div class="col-6">
                                 <img id="w2-img" src="" class="rounded border mb-2 shadow-sm" style="width: 85px; height: 85px; object-fit: cover;">
                                 <h6 id="w2-name" class="fw-bold text-dark mb-0 small"></h6>
-                                <small id="w2-desig" class="text-muted block style" style="font-size:10px;"></small>
+                                <small id="w2-desig" class="text-muted block" style="font-size:10px;"></small>
                                 <div class="text-start bg-light p-2 rounded border mt-2" style="font-size:10px;">
                                     <b>📞:</b> <span id="w2-phone"></span><br><b>🏢:</b> <span id="w2-office"></span>
                                 </div>
@@ -195,9 +191,9 @@ app.get('/', (req, res) => {
                         <ol class="fw-bold text-secondary">
                             <li>छात्रावास में प्रवेशित छात्र को छात्रावास में भोजन (मेस) करना अनिवार्य है।</li>
                             <li>स्थानीय शिक्षण संस्था में छात्र को नियमित प्रवेश व उपस्थिति अनिवार्य है।</li>
-                            <li>बिना सूचना के लगातार अनुपस्थित रहने पर अनुशासनहीनता के कारण छात्रावास से निष्कासित किया जा सकता है।</li>
-                            <li>किसी भी बाहरी व्यक्ति या अप्रवेशी छात्र को बिना अधीक्षक की लिखित अनुमति के अपने कमरों में ठहराना पूर्णतः वर्जित है।</li>
-                            <li>राजनीति गतिविधियों एवं मादक पदार्थों का सेहत पूर्णतः वर्जित है।</li>
+                            <li>बिना सूचना के लगातार अनुपस्थित रहने पर छात्रावास से निष्कासित किया जा सकता है।</li>
+                            <li>अप्रवेशी छात्र को बिना अधीक्षक की लिखित अनुमति के अपने कमरों में ठहराना पूर्णतः वर्जित है।</li>
+                            <li>राजनीति गतिविधियों एवं मादक पदार्थों का सेवन पूर्णतः वर्जित है।</li>
                             <li>छात्रावास में सस्ते दर पर उपलब्ध कराए गए बी.पी.एल. खाद्यान्न चावल सभी छात्रों को खाना अनिवार्य होगा।</li>
                         </ol>
                     </div>
@@ -298,7 +294,7 @@ app.get('/registration-form', (req, res) => {
         </html>
     `);
 });
-// 🔍 लिंक 2: अलॉटमेंट स्टेटस चेक करने वाला पेज
+// 🔍 लिंक 2: अलॉटमेंट स्टेटस चेक करने वाला पेज (त्रुटि सुधार / Edit Form पाथ फिक्स के साथ)
 app.get('/check-status-page', (req, res) => {
     res.send(`
         <!DOCTYPE html>
@@ -352,7 +348,9 @@ app.get('/check-status-page', (req, res) => {
                     });
                 }
                 function openEditForm() {
-                    const m = document.getElementById('editMobile').value; if(!m) return alert('नंबर लिखें!'); window.location.href = '/edit-student-form?mobile=' + m;
+                    const m = document.getElementById('editMobile').value; 
+                    if(!m) { alert('नंबर लिखें!'); return; }
+                    window.location.href = '/edit-student-form?mobile=' + m;
                 }
             </script>
         </body>
@@ -385,14 +383,52 @@ app.get('/public-admission-list', (req, res) => {
         </html>
     `);
 });
+// 🛠️ त्रुटि सुधार इंटरफ़ेस (Edit Page Interface Route Fixed)
+app.get('/edit-student-form', (req, res) => {
+    const mobileQuery = (req.query.mobile || '').trim();
+    const studentsList = readStudentsSafe();
+    const student = studentsList.find(s => s.mobile === mobileQuery);
+    if (!student) return res.send("<h1 style='text-align:center;color:red;margin-top:50px;'>❌ इस नंबर से कोई फॉर्म पंजीकृत नहीं है!</h1><br><a href='/check-status-page' style='display:block;text-align:center;'>वापस जाएँ</a>");
+
+    res.send(`
+        <!DOCTYPE html>
+        <html lang="hi">
+        <head><title>त्रुटि सुधार</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"></head>
+        <body class="p-4 bg-light">
+            <div class="container" style="max-width: 900px;">
+                <div class="card p-4 bg-white border border-warning shadow-sm">
+                    <h2 class="text-center text-warning fw-bold mb-4">🛠️ आवेदन पत्र में त्रुटि सुधार (Edit Form)</h2>
+                    <form action="/submit-form" method="POST" enctype="multipart/form-data" class="row g-3">
+                        <input type="hidden" name="mobile" value="${student.mobile}">
+                        <input type="hidden" name="existingPhoto" value="${student.photoUrl}">
+                        <div class="col-md-6"><label class="form-label fw-bold">विद्यार्थी का नाम:</label><input type="text" name="studentName" class="form-control" value="${student.studentName || ''}" required></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">आधार नंबर:</label><input type="text" name="aadharCard" class="form-control" value="${student.aadharCard || ''}" required></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">पिता का नाम:</label><input type="text" name="fatherName" class="form-control" value="${student.fatherName || ''}" required></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">माता का नाम:</label><input type="text" name="motherName" class="form-control" value="${student.motherName || ''}" required></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">स्थायी पता:</label><input type="text" name="permanentAddress" class="form-control" value="${student.permanentAddress || ''}" required></div>
+                        <div class="col-md-3"><label class="form-label fw-bold">विकासखंड:</label><input type="text" name="blockName" class="form-control" value="${student.blockName || ''}" required></div>
+                        <div class="col-md-3"><label class="form-label fw-bold">जिला:</label><input type="text" name="districtName" class="form-control" value="${student.districtName || ''}" required></div>
+                        <div class="col-md-4"><label class="form-label fw-bold">दूरी (कि.मी.):</label><input type="number" name="homeDistance" class="form-control" value="${student.homeDistance || ''}" required></div>
+                        <div class="col-md-4"><label class="form-label fw-bold">वर्तमान कक्षा:</label><input type="text" name="studentClass" class="form-control" value="${student.studentClass || ''}" required></div>
+                        <div class="col-md-4"><label class="form-label fw-bold">शाला का नाम:</label><input type="text" name="collegeName" class="form-control" value="${student.collegeName || ''}" required></div>
+                        <div class="col-md-4"><label class="form-label fw-bold">परीक्षा प्रतिशत (%):</label><input type="text" name="prevPercent" class="form-control" value="${student.prevPercent || ''}" required></div>
+                        <div class="col-12"><label class="form-label fw-bold text-danger">📸 नई फोटो (बदलने के लिए अपलोड करें, अन्यथा खाली छोड़ें):</label><input type="file" name="studentPhoto" class="form-control" accept="image/*"></div>
+                        <div class="col-12 mt-4"><button type="submit" class="btn btn-warning w-100 fw-bold fs-5 text-dark">🔄 सुधार की हुई जानकारी सुरक्षित करें</button></div>
+                    </form>
+                </div>
+            </div>
+        </body>
+        </html>
+    `);
+});
+
 app.post('/submit-form', (req, res) => {
     upload(req, res, (err) => {
-        if (err) return res.send("<h1>❌ अपलोड त्रुटि! कृपया पुनः प्रयास करें।</h1>");
+        if (err) return res.send("<h1>❌ अपलोड त्रुटि!</h1>");
         
         let photoPath = "https://via.placeholder.com/150";
         if (req.files && req.files.length > 0) {
-            const f = req.files.find(file => file.fieldname === 'studentPhoto');
-            if (f) photoPath = f.path;
+            const f = req.files.find(file => file.fieldname === 'studentPhoto'); if (f) photoPath = f.path;
         } else if (req.body.existingPhoto) {
             photoPath = req.body.existingPhoto;
         }
@@ -403,9 +439,9 @@ app.post('/submit-form', (req, res) => {
         const sData = {
             id: req.body.mobile.trim(), appNo: appNumber, studentName: req.body.studentName, aadharCard: req.body.aadharCard,
             mobile: req.body.mobile.trim(), fatherName: req.body.fatherName, motherName: req.body.motherName,
-            annualIncome: req.body.annualIncome || 0, category: req.body.category, subCast: req.body.subCast || "",
+            annualIncome: req.body.annualIncome || 0, category: req.body.category || "ST", subCast: req.body.subCast || "",
             permanentAddress: req.body.permanentAddress, blockName: req.body.blockName, districtName: req.body.districtName,
-            homeDistance: req.body.homeDistance, studentClass: req.body.studentClass, course: req.body.course,
+            homeDistance: req.body.homeDistance, studentClass: req.body.studentClass, course: req.body.course || "N/A",
             collegeName: req.body.collegeName, prevPercent: req.body.prevPercent, photoUrl: photoPath,
             roomNumber: "अभी अलॉट नहीं हुआ", approved: false, date: dateSubmitted
         };
@@ -416,7 +452,7 @@ app.post('/submit-form', (req, res) => {
         sList = sList.filter(s => s.mobile !== sData.mobile); sList.push(sData);
         fs.writeFileSync(studentsFile, JSON.stringify(sList, null, 2), 'utf8');
 
-        // 🖨️ फुल-डिजाइन पावती रसीद रिस्पॉन्स
+        // 🖨️ फुल-डिज़ाइन पावती रसीद रिस्पॉन्स (प्रिंट और डाउनलोड बटन फिक्स)
         res.send(`
             <!DOCTYPE html>
             <html lang="hi">
@@ -453,6 +489,11 @@ app.post('/submit-form', (req, res) => {
                             <tr><th>कक्षा / संस्थान</th><td>${sData.studentClass} - ${sData.collegeName}</td></tr>
                             <tr><th>वर्ग / कैटेगरी</th><td>${sData.category}</td></tr>
                             <tr><th>जमा दिनांक व समय</th><td>${sData.date}</td></tr>
+                        </table>
+                        <div class="text-center mt-4 no-print">
+                            <button onclick="window.print()" class="btn btn-primary fw-bold me-2">🖨️ रसीद प्रिंट / PDF डाउनलोड करें</button>
+                            <a href="/" class="btn btn-secondary">🏠 मुख्य पृष्ठ पर जाएँ</a>
+                        </div>
                     </div>
                 </div>
             </body>
@@ -468,25 +509,10 @@ app.get('/view-students', (req, res) => {
     if (!login || !password || login !== auth.login || password !== auth.password) {
         res.set('WWW-Authenticate', 'Basic realm="401"'); return res.status(401).send('❌ गलत पासवर्ड!');
     }
-    let currentWarden = readWardenSafe();
-    let sList = readStudentsSafe();
-    let rows = '';
+    let currentWarden = readWardenSafe(); let sList = readStudentsSafe(); let rows = '';
     sList.forEach((s, idx) => {
         let actionBtn = s.approved ? `<span class="badge bg-success">Approved</span>` : `<button onclick="approveStudent('${s.id}')" class="btn btn-sm btn-primary">Approve</button>`;
-        rows += `
-            <tr class="align-middle" style="font-size:12px;">
-                <td>${idx + 1}</td>
-                <td><img src="${s.photoUrl}" class="rounded me-1" style="width:35px; height:35px; object-fit:cover;"><b>${s.studentName}</b></td>
-                <td>${s.fatherName}</td><td>${s.mobile}</td><td>${s.studentClass}</td>
-                <td>
-                    <div class="d-flex">
-                        <input type="text" id="room-${s.id}" class="form-control form-control-sm me-1" value="${s.roomNumber || ''}" style="width:65px;">
-                        <button onclick="saveRoom('${s.id}')" class="btn btn-sm btn-dark">सेव</button>
-                    </div>
-                </td>
-                <td>${actionBtn}</td>
-                <td><button onclick="removeStudent('${s.id}')" class="btn btn-sm btn-danger">Remove</button></td>
-            </tr>`;
+        rows += `<tr class="align-middle" style="font-size:12px;"><td>${idx + 1}</td><td><img src="${s.photoUrl}" class="rounded me-1" style="width:35px; height:35px; object-fit:cover;"><b>${s.studentName}</b></td><td>${s.fatherName}</td><td>${s.mobile}</td><td>${s.studentClass}</td><td><div class="d-flex"><input type="text" id="room-${s.id}" class="form-control form-control-sm me-1" value="${s.roomNumber || ''}" style="width:65px;"><button onclick="saveRoom('${s.id}')" class="btn btn-sm btn-dark">सेव</button></div></td><td>${actionBtn}</td><td><button onclick="removeStudent('${s.id}')" class="btn btn-sm btn-danger">Remove</button></td></tr>`;
     });
     res.send(`
         <!DOCTYPE html>
@@ -494,40 +520,11 @@ app.get('/view-students', (req, res) => {
         <head><title>एडमिन पैनल</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"></head>
         <body class="bg-light p-4">
             <div class="row mb-4">
-                <div class="col-md-4">
-                    <div class="bg-white border p-3 rounded h-100 shadow-sm">
-                        <h5>⚙️ लोगो / बैनर बदलें</h5>
-                        <form action="/update-logo" method="POST" enctype="multipart/form-data"><input type="file" name="hostelLogo" class="form-control form-control-sm mb-2" accept="image/*" required><button type="submit" class="btn btn-sm btn-primary w-100">अपलोड</button></form>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="bg-white border p-3 rounded h-100 shadow-sm">
-                        <h5 class="text-danger">📢 नया नोटिस जारी करें</h5>
-                        <form action="/post-notice" method="POST"><input type="text" name="noticeText" class="form-control form-control-sm mb-2" required><button type="submit" class="btn btn-sm btn-danger w-100">लाइव करें</button></form>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="bg-white border p-3 rounded h-100 shadow-sm">
-                        <h5 class="text-success">⚙️ वॉर्डन जानकारी व फ़ोटो बदलें</h5>
-                        <form action="/update-warden" method="POST" enctype="multipart/form-data" class="row g-2">
-                            <div class="col-6"><input type="text" name="w1Name" class="form-control form-control-sm" value="${currentWarden.w1Name}"></div>
-                            <div class="col-6"><input type="text" name="w2Name" class="form-control form-control-sm" value="${currentWarden.w2Name}"></div>
-                            <div class="col-6"><input type="text" name="w1Mobile" class="form-control form-control-sm" value="${currentWarden.w1Mobile}"></div>
-                            <div class="col-6"><input type="text" name="w2Mobile" class="form-control form-control-sm" value="${currentWarden.w2Mobile}"></div>
-                            <div class="col-6"><small class="text-muted">वॉर्डन A फ़ोटो:</small><input type="file" name="w1PhotoFile" class="form-control form-control-sm" accept="image/*"></div>
-                            <div class="col-6"><small class="text-muted">वॉर्डन B फ़ोटो:</small><input type="file" name="w2PhotoFile" class="form-control form-control-sm" accept="image/*"></div>
-                            <div class="col-12"><button type="submit" class="btn btn-sm btn-success w-100 mt-1">दोनों वॉर्डन सेव करें</button></div>
-                        </form>
-                    </div>
-                </div>
+                <div class="col-md-4"><div class="bg-white border p-3 rounded h-100 shadow-sm"><h5>⚙️ लोगो / बैनर बदलें</h5><form action="/update-logo" method="POST" enctype="multipart/form-data"><input type="file" name="hostelLogo" class="form-control form-control-sm mb-2" accept="image/*" required><button type="submit" class="btn btn-sm btn-primary w-100">अपलोड</button></form></div></div>
+                <div class="col-md-4"><div class="bg-white border p-3 rounded h-100 shadow-sm"><h5 class="text-danger">📢 नया नोटिस जारी करें</h5><form action="/post-notice" method="POST"><input type="text" name="noticeText" class="form-control form-control-sm mb-2" required><button type="submit" class="btn btn-sm btn-danger w-100">लाइव करें</button></form></div></div>
+                <div class="col-md-4"><div class="bg-white border p-3 rounded h-100 shadow-sm"><h5 class="text-success">⚙️ वॉर्डन जानकारी व फ़ोटो बदलें</h5><form action="/update-warden" method="POST" enctype="multipart/form-data" class="row g-2"><div class="col-6"><input type="text" name="w1Name" class="form-control form-control-sm" value="${currentWarden.w1Name}"></div><div class="col-6"><input type="text" name="w2Name" class="form-control form-control-sm" value="${currentWarden.w2Name}"></div><div class="col-6"><input type="text" name="w1Mobile" class="form-control form-control-sm" value="${currentWarden.w1Mobile}"></div><div class="col-6"><input type="text" name="w2Mobile" class="form-control form-control-sm" value="${currentWarden.w2Mobile}"></div><div class="col-6"><small class="text-muted">वॉर्डन A फ़ोटो:</small><input type="file" name="w1PhotoFile" class="form-control form-control-sm" accept="image/*"></div><div class="col-6"><small class="text-muted">वॉर्डन B फ़ोटो:</small><input type="file" name="w2PhotoFile" class="form-control form-control-sm" accept="image/*"></div><div class="col-12"><button type="submit" class="btn btn-sm btn-success w-100 mt-1">दोनों वॉर्डन सेव करें</button></div></form></div></div>
             </div>
-            <div class="bg-white border p-3 rounded shadow-sm">
-                <h4 class="text-center text-primary fw-bold mb-3">🔒 हॉस्टल कंट्रोल पैनल</h4>
-                <table class="table table-bordered table-striped text-center">
-                    <thead class="table-dark"><tr><th>S.No</th><th>छात्र</th><th>पिता का नाम</th><th>मोबाइल</th><th>कक्षा</th><th>रूम अलॉट</th><th>Approval</th><th>हटाएं</th></tr></thead>
-                    <tbody>${rows || '<tr><td colspan="8">कोई छात्र रिकॉर्ड उपलब्ध नहीं है।</td></tr>'}</tbody>
-                </table>
-            </div>
+            <div class="bg-white border p-3 rounded shadow-sm"><h4 class="text-center text-primary fw-bold mb-3">🔒 हॉस्टल कंट्रोल पैनल</h4><table class="table table-bordered table-striped text-center"><thead class="table-dark"><tr><th>S.No</th><th>छात्र</th><th>पिता का नाम</th><th>मोबाइल</th><th>कक्षा</th><th>रूम अलॉट</th><th>Approval</th><th>हटाएं</th></tr></thead><tbody>${rows || '<tr><td colspan="8">कोई छात्र रिकॉर्ड उपलब्ध नहीं है।</td></tr>'}</tbody></table></div>
             <script>
                 function saveRoom(id){ const val=document.getElementById('room-'+id).value; fetch('/assign-room',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({studentId:id,roomNumber:val})}).then(res=>res.json()).then(d=>{if(d.success){alert('🎉 रूम अलॉट हो गया!');location.reload();}})}
                 function approveStudent(id){ fetch('/approve-student',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({studentId:id})}).then(res=>res.json()).then(d=>{if(d.success){alert('🎉 एडमिशन स्वीकृत!');location.reload();}})}
@@ -541,8 +538,7 @@ app.get('/view-students', (req, res) => {
 app.post('/update-logo', (req, res) => {
     upload(req, res, (err) => {
         if (req.files && req.files.length > 0) {
-            const f = req.files.find(file => file.fieldname === 'hostelLogo');
-            if (f) fs.writeFileSync(logoFile, JSON.stringify({ url: f.path }, null, 2), 'utf8');
+            const f = req.files.find(file => file.fieldname === 'hostelLogo'); if (f) fs.writeFileSync(logoFile, JSON.stringify({ url: f.path }, null, 2), 'utf8');
         }
         res.send("<h1>🎉 लोगो अपडेट!</h1><a href='/view-students'>वापस</a>");
     });
@@ -562,7 +558,7 @@ app.post('/remove-student', (req, res) => {
 app.post('/post-notice', (req, res) => {
     let nList = []; try{ nList = JSON.parse(fs.readFileSync(noticesFile, 'utf8')); }catch(e){}
     nList.unshift({ text: req.body.noticeText, date: new Date().toLocaleDateString() });
-    fs.writeFileSync(noticesFile, JSON.stringify(nList, null, 2), 'utf8'); res.send("<h1>📢 नोटिस लाइव!</h1><a href='/view-students'>वापस</a>");
+    fs.writeFileSync(noticesFile, JSON.stringify(nList, null, 2), 'utf8'); res.send("<h1>🎉 नोटिस लाइव हो गया है!</h1><a href='/view-students'>वापस जाएँ</a>");
 });
 app.post('/update-warden', (req, res) => {
     upload(req, res, (err) => {
