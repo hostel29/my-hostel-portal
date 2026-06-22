@@ -8,7 +8,7 @@ const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 const app = express();
 
-// 🛑 अपनी Cloudinary की डिटेल
+// 🛑 Cloudinary Config
 cloudinary.config({
     cloud_name: 'dhg4qy5rw', 
     api_key: '492175456555184', 
@@ -42,18 +42,24 @@ const defaultWarden = {
     w1Name: "Unknown Warden A", w1Desig: "छात्रावास अधीक्षक (A)", w1Mobile: "+91 XXXXX XXXXX", w1Office: "कार्यालय कक्ष 01", w1Photo: "https://via.placeholder.com/150",
     w2Name: "Unknown Warden B", w2Desig: "छात्रावास अधीक्षक (B)", w2Mobile: "+91 XXXXX XXXXX", w2Office: "कार्यालय कक्ष 02", w2Photo: "https://via.placeholder.com/150"
 };
-
 const defaultLogo = { url: "https://via.placeholder.com/800x250?text=HOSTEL+BANNER+LOGO" };
 
-const initFile = (filePath, defaultData = '[]') => {
-    if (!fs.existsSync(filePath)) { fs.writeFileSync(filePath, defaultData, 'utf8'); }
+if (!fs.existsSync(studentsFile)) fs.writeFileSync(studentsFile, '[]', 'utf8');
+if (!fs.existsSync(noticesFile)) fs.writeFileSync(noticesFile, '[]', 'utf8');
+if (!fs.existsSync(wardenFile)) fs.writeFileSync(wardenFile, JSON.stringify(defaultWarden, null, 2), 'utf8');
+if (!fs.existsSync(logoFile)) fs.writeFileSync(logoFile, JSON.stringify(defaultLogo, null, 2), 'utf8');
+
+const readWardenSafe = () => {
+    try {
+        if (fs.existsSync(wardenFile)) {
+            const data = fs.readFileSync(wardenFile, 'utf8');
+            return data ? JSON.parse(data) : defaultWarden;
+        }
+    } catch (e) {}
+    return defaultWarden;
 };
 
-initFile(studentsFile, '[]'); initFile(noticesFile, '[]');
-initFile(wardenFile, JSON.stringify(defaultWarden, null, 2));
-initFile(logoFile, JSON.stringify(defaultLogo, null, 2));
-
-// 🏠 मुख्य पृष्ठ (Template HTML)
+// 🏠 मुख्य पृष्ठ
 app.get('/', (req, res) => {
     res.send(`
         <!DOCTYPE html>
@@ -135,7 +141,6 @@ app.get('/', (req, res) => {
                             </div>
                         </div>
                     </div>
-                    
                     <div class="card border-top border-success border-3 p-3 shadow-sm">
                         <div class="card-header bg-light text-success fw-bold rounded mb-2 border-0 fs-6 text-center">📋 छात्रावास प्रवेश चयन सूची (Admission List)</div>
                         <p class="text-muted small text-center mb-2">केवल चयनित छात्रों के नाम और कक्षा की सूची (सुरक्षित डेटा)</p>
@@ -164,7 +169,7 @@ app.get('/', (req, res) => {
         </html>
     `);
 });
-// 📝 लिंक 1: रजिस्ट्रेशन फॉर्म पेज (सारे डॉक्यूमेंट्स अपलोड फ़ील्ड्स के साथ)
+// 📝 लिंक 1: रजिस्ट्रेशन फॉर्म पेज (सारे डॉक्यूमेंट्स अपलोड के साथ)
 app.get('/registration-form', (req, res) => {
     res.send(`
         <!DOCTYPE html>
@@ -188,7 +193,7 @@ app.get('/registration-form', (req, res) => {
                         <div class="col-md-4"><label class="form-label fw-bold">विद्यार्थी का नाम (आधार के अनुसार):</label><input type="text" name="studentName" class="form-control" required></div>
                         <div class="col-md-4"><label class="form-label fw-bold">जन्मतिथि (DOB):</label><input type="date" name="dob" class="form-control" required></div>
                         <div class="col-md-4"><label class="form-label fw-bold">विद्यार्थी का आधार नंबर:</label><input type="text" name="aadharCard" class="form-control" required></div>
-                        <div class="col-md-4"><label class="form-label fw-bold">विद्यार्थी का वर्ग:</label><select name="category" class="form-select" required><option value="अनुसूचित जनजाति (ST)"> अनुसूचित जनजाति (ST)</option><option value="अनुसूचित जाति (SC)">अनुसूचित जाति (SC)</option><option value="अन्य पिछड़ा वर्ग (OBC)">अन्य पिछड़ा वर्ग (OBC)</option><option value="सामान्य (General)">सामान्य (General)</option></select></div>
+                        <div class="col-md-4"><label class="form-label fw-bold">विद्यार्थी का वर्ग:</label><select name="category" class="form-select" required><option value="अनुसूचित जनजाति (ST)">अनुसूचित जनजाति (ST)</option><option value="अनुसूचित जाति (SC)">अनुसूचित जाति (SC)</option><option value="अन्य पिछड़ा वर्ग (OBC)">अन्य पिछड़ा वर्ग (OBC)</option><option value="सामान्य (General)">सामान्य (General)</option></select></div>
                         <div class="col-md-4"><label class="form-label fw-bold">विद्यार्थी की जाति:</label><input type="text" name="subCast" class="form-control" required></div>
                         <div class="col-md-4"><label class="form-label fw-bold">पालक का मोबाइल नंबर:</label><input type="tel" name="mobile" class="form-control" required></div>
                         <div class="col-12"><label class="form-label fw-bold text-danger">📸 छात्र की फोटो अपलोड करें (अनिवार्य):</label><input type="file" name="studentPhoto" class="form-control" accept="image/*" required></div>
@@ -289,7 +294,7 @@ app.get('/check-status-page', (req, res) => {
     `);
 });
 
-// 📋 पब्लिक एडमिशन लिस्ट (सिर्फ सुरक्षित डेटा प्रदर्शित करने के लिए)
+// 📋 पब्लिक एडमिशन लिस्ट 
 app.get('/public-admission-list', (req, res) => {
     fs.readFile(studentsFile, 'utf8', (err, data) => {
         let studentsList = [];
@@ -320,7 +325,6 @@ app.get('/public-admission-list', (req, res) => {
         `);
     });
 });
-// 🛠️ मल्टी-फ़ाइल अपलोड हैंडलर कॉन्फ़िगरेशन
 const cpUpload = upload.fields([
     { name: 'studentPhoto', maxCount: 1 }, { name: 'casteCertFile', maxCount: 1 },
     { name: 'residenceCertFile', maxCount: 1 }, { name: 'rationCardFile', maxCount: 1 }
@@ -347,7 +351,7 @@ app.post('/submit-form', cpUpload, (req, res) => {
         studentsList = studentsList.filter(s => s.mobile !== studentData.mobile);
         studentsList.push(studentData);
         fs.writeFile(studentsFile, JSON.stringify(studentsList, null, 2), () => {
-            res.send("<div style='text-align:center; padding:50px;'><h1>🎉 रिकॉर्ड और दस्तावेज़ सफलतापूर्वक सुरक्षित कर लिए गए हैं!</h1><a href='/'>मुख्य पृष्ठ पर वापस जाएँ</a></div>");
+            res.send("<div style='text-align:center; padding:50px;'><h1>🎉 रिकॉर्ड सफलतापूर्वक सुरक्षित कर लिया गया है!</h1><a href='/'>मुख्य पृष्ठ पर वापस जाएँ</a></div>");
         });
     });
 });
@@ -359,8 +363,7 @@ app.get('/view-students', (req, res) => {
     if (!login || !password || login !== auth.login || password !== auth.password) {
         res.set('WWW-Authenticate', 'Basic realm="401"'); return res.status(401).send('❌ गलत पासवर्ड!');
     }
-    let currentWarden = defaultWarden;
-    if (fs.existsSync(wardenFile)) { try { currentWarden = JSON.parse(fs.readFileSync(wardenFile, 'utf8')); } catch(e) {} }
+    let currentWarden = readWardenSafe();
     fs.readFile(studentsFile, 'utf8', (err, data) => {
         let studentsList = [];
         if (!err && data) { try { studentsList = JSON.parse(data); } catch(e) {} }
@@ -373,7 +376,7 @@ app.get('/view-students', (req, res) => {
                     <td><b>पिता:</b> ${student.fatherName}<br><b>माता:</b> ${student.motherName}</td>
                     <td>${student.mobile}</td>
                     <td>${student.permanentAddress}<br><small class="text-danger">दूरी: ${student.homeDistance}KM</small></td>
-                    <td><b>कक्षा:</b> ${student.studentClass}<br><small>${student.collegeName}</small></td>
+                    <td><b>कक्षा:</b> ${student.studentClass}</td>
                     <td>${student.prevPercent}%</td>
                     <td>
                         <div class="d-flex">
@@ -390,36 +393,34 @@ app.get('/view-students', (req, res) => {
             <body class="bg-light text-dark p-4">
                 <div class="row mb-4">
                     <div class="col-md-4">
-                        <div class="bg-white border p-3 rounded shadow-sm h-100">
-                            <h4>⚙️ हॉस्टल लोगो/बैनर बदलें</h4>
+                        <div class="bg-white border p-3 rounded h-100 shadow-sm">
+                            <h4>⚙️ लोगो/बैनर बदलें</h4>
                             <form action="/update-logo" method="POST" enctype="multipart/form-data"><input type="file" name="hostelLogo" class="form-control form-control-sm mb-2" accept="image/*" required><button type="submit" class="btn btn-sm btn-primary w-100">अपलोड करें</button></form>
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <div class="bg-white border p-3 rounded shadow-sm h-100">
+                        <div class="bg-white border p-3 rounded h-100 shadow-sm">
                             <h4>📢 नया नोटिस जारी करें</h4>
                             <form action="/post-notice" method="POST"><input type="text" name="noticeText" class="form-control form-control-sm mb-2" required><button type="submit" class="btn btn-sm btn-danger w-100">लाइव करें</button></form>
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <div class="bg-white border p-3 rounded shadow-sm h-100">
+                        <div class="bg-white border p-3 rounded h-100 shadow-sm">
                             <h4>⚙️ दोनों वार्डन की जानकारी बदलें</h4>
-                            <form action="/update-warden" method="POST" enctype="multipart/form-data" class="row g-2">
+                            <form action="/update-warden" method="POST" class="row g-2">
                                 <div class="col-6"><input type="text" name="w1Name" class="form-control form-control-sm" value="${currentWarden.w1Name}"></div>
                                 <div class="col-6"><input type="text" name="w2Name" class="form-control form-control-sm" value="${currentWarden.w2Name}"></div>
                                 <div class="col-6"><input type="text" name="w1Mobile" class="form-control form-control-sm" value="${currentWarden.w1Mobile}"></div>
                                 <div class="col-6"><input type="text" name="w2Mobile" class="form-control form-control-sm" value="${currentWarden.w2Mobile}"></div>
-                                <div class="col-6"><input type="text" name="w1Office" class="form-control form-control-sm" value="${currentWarden.w1Office}"></div>
-                                <div class="col-6"><input type="text" name="w2Office" class="form-control form-control-sm" value="${currentWarden.w2Office}"></div>
                                 <div class="col-12"><button type="submit" class="btn btn-sm btn-success w-100 mt-2">दोनों वार्डन सेव करें</button></div>
                             </form>
                         </div>
                     </div>
                 </div>
                 <div class="bg-white border p-4 rounded shadow-sm">
-                    <h2 class="text-center text-primary mb-4">🔒 हॉस्टल एडमिन पैनल - छात्र सूची</h2>
-                    <table class="table table-bordered table-striped text-dark">
-                        <thead class="table-dark"><tr><th>S.No</th><th>छात्र</th><th>माता/पिता</th><th>मोबाइल</th><th>स्थायी पता</th><th>संस्थान</th><th>पिछला Result</th><th>कार्रवाई</th></tr></thead>
+                    <h2 class="text-center text-primary mb-4">🔒 हॉस्टल एडमिन पैनल</h2>
+                    <table class="table table-bordered table-striped">
+                        <thead class="table-dark"><tr><th>S.No</th><th>छात्र</th><th>माता/पिता</th><th>मोबाइल</th><th>स्थायी पता</th><th>संस्थान</th><th>Result</th><th>कार्रवाई</th></tr></thead>
                         <tbody>${tableRows || '<tr><td colspan="8">कोई छात्र पंजीकृत नहीं है।</td></tr>'}</tbody>
                     </table>
                 </div>
@@ -453,13 +454,13 @@ app.post('/post-notice', (req, res) => {
 
 app.post('/update-warden', (req, res) => {
     const updatedWarden = {
-        w1Name: req.body.w1Name, w1Desig: "छात्रावास अधीक्षक (A)", w1Mobile: req.body.w1Mobile, w1Office: req.body.w1Office, w1Photo: "https://via.placeholder.com/150",
-        w2Name: req.body.w2Name, w2Desig: "छात्रावास अधीक्षक (B)", w2Mobile: req.body.w2Mobile, w2Office: req.body.w2Office, w2Photo: "https://via.placeholder.com/150"
+        w1Name: req.body.w1Name, w1Desig: "छात्रावास अधीक्षक (A)", w1Mobile: req.body.w1Mobile, w1Office: "कार्यालय कक्ष 01", w1Photo: "https://via.placeholder.com/150",
+        w2Name: req.body.w2Name, w2Desig: "छात्रावास अधीक्षक (B)", w2Mobile: req.body.w2Mobile, w2Office: "कार्यालय कक्ष 02", w2Photo: "https://via.placeholder.com/150"
     };
     fs.writeFile(wardenFile, JSON.stringify(updatedWarden, null, 2), () => { res.send("<h1>👨‍💼 दोनों वार्डन अपडेट हो गए!</h1><a href='/view-students'>वापस जाएँ</a>"); });
 });
 
-app.get('/get-warden', (req, res) => { fs.readFile(wardenFile, 'utf8', (err, data) => { res.json(err || !data ? defaultWarden : JSON.parse(data)); }); });
+app.get('/get-warden', (req, res) => { res.json(readWardenSafe()); });
 app.get('/get-logo', (req, res) => { fs.readFile(logoFile, 'utf8', (err, data) => { res.json(err || !data ? defaultLogo : JSON.parse(data)); }); });
 app.get('/get-notices', (req, res) => { fs.readFile(noticesFile, 'utf8', (err, data) => { res.json(err || !data ? [] : JSON.parse(data)); }); });
 app.get('/check-room-status', (req, res) => {
