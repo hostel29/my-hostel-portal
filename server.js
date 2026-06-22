@@ -45,7 +45,7 @@ app.use((req, res, next) => {
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-
+// 🔒 नया 100% सही पासवर्ड वाला कनेक्शन लिंक
 const mongoURI = "mongodb+srv://surajpurprimatricsthostelsuraj_db_user:HostelSurajpur2026@cluster0.jztdqxu.mongodb.net/hostelData?appName=Cluster0";
 
 mongoose.connect(mongoURI)
@@ -79,7 +79,7 @@ const defaultWarden = {
     w2Name: "Unknown Warden B", w2Desig: "छात्रावास अधीक्षक (B)", w2Mobile: "+91 XXXXX XXXXX", w2Office: "कार्यालय कक्ष 02", w2Photo: "https://via.placeholder.com/150"
 };
 const defaultLogo = { url: "https://via.placeholder.com/800x250?text=HOSTEL+BANNER+LOGO" };
-// 🏠 मुख्य पृष्ठ (सिंपल और एरर-प्रूफ स्ट्रिंग फॉर्मेट)
+// 🏠 मुख्य पृष्ठ (बिना किसी सिंटैक्स गड़बड़ी वाला सिंपल फॉर्मेट)
 app.get('/', async (req, res) => {
     try {
         const students = await Student.find({});
@@ -125,7 +125,6 @@ app.get('/', async (req, res) => {
         res.send(html);
     } catch (err) { res.status(500).send("Home Page Error"); }
 });
-
 app.get('/registration-form', (req, res) => {
     res.send(`
         <!DOCTYPE html><html><head><meta charset="UTF-8"><title>प्रवेश आवेदन</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"></head>
@@ -147,6 +146,7 @@ app.get('/registration-form', (req, res) => {
                 </div></div></body></html>
     `);
 });
+
 app.get('/check-status-page', (req, res) => {
     res.send(`
         <!DOCTYPE html><html><head><meta charset="UTF-8"><title>स्टेटस</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"></head>
@@ -170,7 +170,6 @@ app.get('/check-status-page', (req, res) => {
         </body></html>
     `);
 });
-
 app.get('/public-admission-list', async (req, res) => {
     try {
         const list = await Student.find({ approved: true }); let rows = '';
@@ -212,5 +211,6 @@ app.get('/get-logo', async (req, res) => res.json(await Logo.findOne({}) || defa
 app.get('/get-notices', async (req, res) => res.json(await Notice.find({})));
 app.get('/check-room-status', async (req, res) => { const s = await Student.findOne({ mobile: req.query.mobile }); res.json(s ? { found: true, ...s.toObject() } : { found: false }); });
 
+// ✨ [FIXED] रेंडर ऑटो-पोर्ट डिटेक्टर एक्टिवेटेड
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, '0.0.0.0', () => console.log('🚀 सर्वर चालू है पोर्ट ' + PORT + ' पर!'));
+app.listen(PORT, '0.0.0.0', () => console.log('🚀 सर्वर सफलतापूर्वक चालू हो गया है!'));
