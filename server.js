@@ -121,7 +121,7 @@ app.get('/', (req, res) => {
                 </div>
                 <div class="col-md-4">
                     <div class="card border-top border-danger border-3 p-3 shadow-sm text-center mb-4">
-                        <div class="card-header bg-light text-danger fw-bold rounded mb-3 border-0 fs-5">👨‍💼 हॉस्टल वार्डन कॉर्नर</div>
+                        <div class="card-header bg-light text-danger fw-bold rounded mb-3 border-0 fs-5">👨‍💼 हॉस्टल वॉर्डन कॉर्नर</div>
                         <div class="row">
                             <div class="col-6 border-end">
                                 <img id="w1-img" src="" class="rounded border mb-2 shadow-sm" style="width: 90px; height: 90px; object-fit: cover;">
@@ -169,7 +169,7 @@ app.get('/', (req, res) => {
         </html>
     `);
 });
-// 📝 लिंक 1: रजिस्ट्रेशन फॉर्म पेज (सारे डॉक्यूमेंट्स अपलोड के साथ)
+// 📝 लिंक 1: रजिस्ट्रेशन फॉर्म पेज (सारे प्रमाण पत्रों की फोटो अपलोड व्यवस्था)
 app.get('/registration-form', (req, res) => {
     res.send(`
         <!DOCTYPE html>
@@ -325,9 +325,11 @@ app.get('/public-admission-list', (req, res) => {
         `);
     });
 });
+// 🛠️ मल्टी-फ़ाइल अपलोड कॉन्फ़िगरेशन
 const cpUpload = upload.fields([
     { name: 'studentPhoto', maxCount: 1 }, { name: 'casteCertFile', maxCount: 1 },
-    { name: 'residenceCertFile', maxCount: 1 }, { name: 'rationCardFile', maxCount: 1 }
+    { name: 'residenceCertFile', maxCount: 1 }, { name: 'rationCardFile', maxCount: 1 },
+    { name: 'w1PhotoFile', maxCount: 1 }, { name: 'w2PhotoFile', maxCount: 1 }
 ]);
 
 app.post('/submit-form', cpUpload, (req, res) => {
@@ -406,13 +408,15 @@ app.get('/view-students', (req, res) => {
                     </div>
                     <div class="col-md-4">
                         <div class="bg-white border p-3 rounded h-100 shadow-sm">
-                            <h4>⚙️ दोनों वार्डन की जानकारी बदलें</h4>
-                            <form action="/update-warden" method="POST" class="row g-2">
-                                <div class="col-6"><input type="text" name="w1Name" class="form-control form-control-sm" value="${currentWarden.w1Name}"></div>
-                                <div class="col-6"><input type="text" name="w2Name" class="form-control form-control-sm" value="${currentWarden.w2Name}"></div>
-                                <div class="col-6"><input type="text" name="w1Mobile" class="form-control form-control-sm" value="${currentWarden.w1Mobile}"></div>
-                                <div class="col-6"><input type="text" name="w2Mobile" class="form-control form-control-sm" value="${currentWarden.w2Mobile}"></div>
-                                <div class="col-12"><button type="submit" class="btn btn-sm btn-success w-100 mt-2">दोनों वार्डन सेव करें</button></div>
+                            <h4 class="text-success">⚙️ दोनों वॉर्डन की जानकारी एवं फ़ोटो बदलें</h4>
+                            <form action="/update-warden" method="POST" enctype="multipart/form-data" class="row g-2">
+                                <div class="col-6"><input type="text" name="w1Name" class="form-control form-control-sm" value="${currentWarden.w1Name}" placeholder="वॉर्डन A नाम"></div>
+                                <div class="col-6"><input type="text" name="w2Name" class="form-control form-control-sm" value="${currentWarden.w2Name}" placeholder="वॉर्डन B नाम"></div>
+                                <div class="col-6"><input type="text" name="w1Mobile" class="form-control form-control-sm" value="${currentWarden.w1Mobile}" placeholder="मोबाइल"></div>
+                                <div class="col-6"><input type="text" name="w2Mobile" class="form-control form-control-sm" value="${currentWarden.w2Mobile}" placeholder="मोबाइल"></div>
+                                <div class="col-6"><small class="text-muted">वॉर्डन A फ़ोटो:</small><input type="file" name="w1PhotoFile" class="form-control form-control-sm" accept="image/*"></div>
+                                <div class="col-6"><small class="text-muted">वॉर्डन B फ़ोटो:</small><input type="file" name="w2PhotoFile" class="form-control form-control-sm" accept="image/*"></div>
+                                <div class="col-12"><button type="submit" class="btn btn-sm btn-success w-100 mt-2">दोनों वॉर्डन सेव करें</button></div>
                             </form>
                         </div>
                     </div>
@@ -452,12 +456,18 @@ app.post('/post-notice', (req, res) => {
     });
 });
 
-app.post('/update-warden', (req, res) => {
+app.post('/update-warden', cpUpload, (req, res) => {
+    const files = req.files || {};
+    let currentWarden = readWardenSafe();
+    
+    const w1PhotoPath = files.w1PhotoFile ? files.w1PhotoFile[0].path : currentWarden.w1Photo;
+    const w2PhotoPath = files.w2PhotoFile ? files.w2PhotoFile[0].path : currentWarden.w2Photo;
+
     const updatedWarden = {
-        w1Name: req.body.w1Name, w1Desig: "छात्रावास अधीक्षक (A)", w1Mobile: req.body.w1Mobile, w1Office: "कार्यालय कक्ष 01", w1Photo: "https://via.placeholder.com/150",
-        w2Name: req.body.w2Name, w2Desig: "छात्रावास अधीक्षक (B)", w2Mobile: req.body.w2Mobile, w2Office: "कार्यालय कक्ष 02", w2Photo: "https://via.placeholder.com/150"
+        w1Name: req.body.w1Name || currentWarden.w1Name, w1Desig: "छात्रावास अधीक्षक (A)", w1Mobile: req.body.w1Mobile || currentWarden.w1Mobile, w1Office: "कार्यालय कक्ष 01", w1Photo: w1PhotoPath,
+        w2Name: req.body.w2Name || currentWarden.w2Name, w2Desig: "छात्रावास अधीक्षक (B)", w2Mobile: req.body.w2Mobile || currentWarden.w2Mobile, w2Office: "कार्यालय कक्ष 02", w2Photo: w2PhotoPath
     };
-    fs.writeFile(wardenFile, JSON.stringify(updatedWarden, null, 2), () => { res.send("<h1>👨‍💼 दोनों वार्डन अपडेट हो गए!</h1><a href='/view-students'>वापस जाएँ</a>"); });
+    fs.writeFile(wardenFile, JSON.stringify(updatedWarden, null, 2), () => { res.send("<h1>🎉 दोनों वॉर्डन की जानकारी एवं फ़ोटो अपडेट हो गए!</h1><a href='/view-students'>वापस जाएँ</a>"); });
 });
 
 app.get('/get-warden', (req, res) => { res.json(readWardenSafe()); });
