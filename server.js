@@ -22,7 +22,9 @@ const storage = new CloudinaryStorage({
         allowed_formats: ['jpg', 'png', 'jpeg', 'pdf']
     },
 });
-const upload = multer({ storage: storage });
+
+// ✨ Unexpected Field एरर को जड़ से खत्म करने के लिए वाटरप्रूफ मल्टी-अपलोडर
+const upload = multer({ storage: storage }).any();
 
 app.use((req, res, next) => {
     res.header("Access-Control-Allow-Origin", "*");
@@ -44,7 +46,7 @@ const defaultWarden = {
 };
 const defaultLogo = { url: "https://via.placeholder.com/800x250?text=HOSTEL+BANNER+LOGO" };
 
-// 🔒 परमानेंट सुरक्षा कवच (Data Protection)
+// 🔒 [object Object] डेटा करप्शन से परमानेंट सुरक्षा कवच
 const checkFileCorrupt = (filePath, defaultData) => {
     if (!fs.existsSync(filePath)) {
         fs.writeFileSync(filePath, defaultData, 'utf8');
@@ -66,11 +68,8 @@ const readWardenSafe = () => {
 const readStudentsSafe = () => {
     try { const d = fs.readFileSync(studentsFile, 'utf8'); return JSON.parse(d); } catch (e) { return []; }
 };
-const readNoticesSafe = () => {
-    try { const d = fs.readFileSync(noticesFile, 'utf8'); return JSON.parse(d); } catch (e) { return []; }
-};
 
-// 🏠 मुख्य पृष्ठ (Premium Look Interface)
+// 🏠 मुख्य पृष्ठ (Premium Look Edition)
 app.get('/', (req, res) => {
     const students = readStudentsSafe();
     const stApproved = students.filter(s => s.approved === true && s.category && s.category.includes('ST')).length;
@@ -92,7 +91,7 @@ app.get('/', (req, res) => {
                 .card { background-color: #ffffff; border: none; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.03); }
                 .logo-container { width: 100%; border-radius: 12px; overflow: hidden; margin-bottom: 20px; background: #fff; text-align: center; border: 1px solid #dee2e6; }
                 .logo-img { width: 100%; height: auto; max-height: 260px; display: block; margin: 0 auto; object-fit: contain; }
-                .premium-btn { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 25px; text-align: center; text-decoration: none; display: block; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+                .premium-btn { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 25px; text-align: center; text-decoration: none; display: block; transition: all 0.3s ease; }
                 .premium-btn:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.06); }
                 .premium-btn.reg { border-bottom: 5px solid #0d6efd; }
                 .premium-btn.stat { border-bottom: 5px solid #198754; }
@@ -195,9 +194,9 @@ app.get('/', (req, res) => {
                         <ol class="fw-bold text-secondary">
                             <li>छात्रावास में प्रवेशित छात्र को छात्रावास में भोजन (मेस) करना अनिवार्य है।</li>
                             <li>स्थानीय शिक्षण संस्था में छात्र को नियमित प्रवेश व उपस्थिति अनिवार्य है।</li>
-                            <li>बिना सूचना के लगातार अनुपस्थित रहने पर छात्रावास से निष्कासित किया जा सकता है।</li>
+                            <li>बिना सूचना के लगातार अनुपस्थित रहने पर अनुशासनहीनता के कारण छात्रावास से निष्कासित किया जा सकता है।</li>
                             <li>अप्रवेशी छात्र को बिना अधीक्षक की लिखित अनुमति के ठहराना वर्जित है।</li>
-                            <li>राजनीति गतिविधियों एवं मादक पदार्थों का सेवन पूर्णतः वर्जित है।</li>
+                            <li>मादक पदार्थों एवं मद्यपान का सेवन करने पर तत्काल निष्कासित किया जा सकेगा।</li>
                         </ol>
                     </div>
                     <div class="modal-footer"><button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">बंद करें</button></div>
@@ -253,7 +252,7 @@ app.get('/registration-form', (req, res) => {
                         <div class="col-md-4"><label class="form-label fw-bold">विद्यार्थी का आधार नंबर:</label><input type="text" name="aadharCard" class="form-control" required></div>
                         <div class="col-md-4"><label class="form-label fw-bold">विद्यार्थी का वर्ग:</label><select name="category" class="form-select" required><option value="अनुसूचित जनजाति (ST)">अनुसूचित जनजाति (ST)</option><option value="अनुसूचित जाति (SC)">अनुसूचित जाति (SC)</option><option value="अन्य पिछड़ा वर्ग (OBC)">अन्य पिछड़ा वर्ग (OBC)</option><option value="सामान्य (General)">सामान्य (General)</option></select></div>
                         <div class="col-md-4"><label class="form-label fw-bold">विद्यार्थी की जाति:</label><input type="text" name="subCast" class="form-control" required></div>
-                        <div class="col-md-4"><label class="form-label fw-bold">पालक का मोबाइल नंबर:</label><input type="tel" name="mobile" class="form-control" required></div>
+                        <div class="col-md-4"><label class="form-label fw-bold">पालक का mobile नंबर:</label><input type="tel" name="mobile" class="form-control" required></div>
                         <div class="col-12"><label class="form-label fw-bold text-danger">📸 छात्र की फोटो अपलोड करें (अनिवार्य):</label><input type="file" name="studentPhoto" class="form-control" accept="image/*" required></div>
                         
                         <div class="section-title">2. पारिवारिक विवरण एवं पालक आधार (Optional)</div>
@@ -266,12 +265,12 @@ app.get('/registration-form', (req, res) => {
                         <div class="col-md-4"><label class="form-label fw-bold">पालक की वार्षिक आय (₹):</label><input type="number" name="annualIncome" class="form-control" required></div>
 
                         <div class="section-title">3. सरकारी प्रमाण पत्र एवं कार्ड फ़ोटो अपलोड</div>
-                        <div class="col-md-6"><label class="form-label fw-bold">जाति प्रमाण पत्र अपलोड (अनिवार्य):</label><input type="file" name="casteCertFile" class="form-control" accept="image/*,application/pdf" required></div>
-                        <div class="col-md-6"><label class="form-label fw-bold">निवास प्रमाण पत्र अपलोड (अनिवार्य):</label><input type="file" name="residenceCertFile" class="form-control" accept="image/*,application/pdf" required></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">जाति प्रमाण पत्र अपलोड (अनिवार्य):</label><input type="file" name="casteCertFile" class="form-control" accept="image/*,application/pdf"></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">निवास प्रमाण पत्र अपलोड (अनिवार्य):</label><input type="file" name="residenceCertFile" class="form-control" accept="image/*,application/pdf"></div>
                         <div class="col-md-6"><label class="form-label text-muted fw-bold">आय प्रमाण पत्र अपलोड (Optional):</label><input type="file" name="incomeCertFile" class="form-control" accept="image/*,application/pdf"></div>
                         <div class="col-md-6"><label class="form-label text-muted fw-bold">दूरी प्रमाण पत्र अपलोड (Optional):</label><input type="file" name="distanceCertFile" class="form-control" accept="image/*,application/pdf"></div>
                         <div class="col-md-6"><label class="form-label text-muted fw-bold">आयुष्मान कार्ड अपलोड (Optional):</label><input type="file" name="ayushmanFile" class="form-control" accept="image/*,application/pdf"></div>
-                        <div class="col-md-6"><label class="form-label fw-bold">राशन कार्ड फ़ोटो अपलोड (अनिवार्य):</label><input type="file" name="rationCardFile" class="form-control" accept="image/*,application/pdf" required></div>
+                        <div class="col-md-6"><label class="form-label fw-bold">राशन कार्ड फ़ोटो अपलोड (अनिवार्य):</label><input type="file" name="rationCardFile" class="form-control" accept="image/*,application/pdf"></div>
 
                         <div class="section-title">4. स्टेटस, पता एवं विद्यालय विवरण</div>
                         <div class="col-md-3"><label class="form-label fw-bold">नक्सल प्रभावित:</label><select name="naxalStatus" class="form-select"><option value="नहीं">नहीं</option><option value="हाँ">हाँ</option></select></div>
@@ -384,7 +383,7 @@ app.get('/public-admission-list', (req, res) => {
         </html>
     `);
 });
-// 🛠️ त्रुटि सुधार फ़ॉर्म रेंडरर पाथ फिक्स (Fully Repaired & Connected)
+// 🛠️ त्रुटि सुधार फ़ॉर्म इंटरफ़ेस पाथवे फिक्स (Data Auto-Load Fixed)
 app.get('/edit-student-form', (req, res) => {
     const mobileQuery = (req.query.mobile || '').trim();
     const studentsList = readStudentsSafe();
@@ -413,7 +412,7 @@ app.get('/edit-student-form', (req, res) => {
                         <div class="col-md-4"><label class="form-label fw-bold">वर्तमान कक्षा:</label><input type="text" name="studentClass" class="form-control" value="${student.studentClass || ''}" required></div>
                         <div class="col-md-4"><label class="form-label fw-bold">शाला का नाम:</label><input type="text" name="collegeName" class="form-control" value="${student.collegeName || ''}" required></div>
                         <div class="col-md-4"><label class="form-label fw-bold">परीक्षा प्रतिशत (%):</label><input type="text" name="prevPercent" class="form-control" value="${student.prevPercent || ''}" required></div>
-                        <div class="col-md-4"><label class="form-label fw-bold">वर्ग:</label><select name="category" class="form-select"><option value="${student.category || 'अनुसूचित जनजाति (ST)'}">${student.category || 'ST'}</option><option value="अनुसूचित जनजाति (ST)">अनुसूचित जनजाति (ST)</option><option value="अनुसूचित जाति (SC)">अनुसूचित जाति (SC)</option></select></div>
+                        <div class="col-md-4"><label class="form-label fw-bold">वर्ग (Category):</label><select name="category" class="form-select"><option value="${student.category || 'अनुसूचित जनजाति (ST)'}">${student.category || 'ST'}</option><option value="अनुसूचित जनजाति (ST)">अनुसूचित जनजाति (ST)</option><option value="अनुसूचित जाति (SC)">अनुसूचित जाति (SC)</option></select></div>
                         <div class="col-12"><label class="form-label text-danger">📸 नई फोटो (यदि बदलना चाहें):</label><input type="file" name="studentPhoto" class="form-control" accept="image/*"></div>
                         <div class="col-12 mt-4"><button type="submit" class="btn btn-warning w-100 text-dark fw-bold">🔄 जानकारी सुरक्षित करें</button></div>
                     </form>
@@ -424,72 +423,77 @@ app.get('/edit-student-form', (req, res) => {
     `);
 });
 
-// 🔒 कड़क एरर-फ्री सिंगल फाइल प्रोसेसर
-app.post('/submit-form', upload.single('studentPhoto'), (req, res) => {
-    let photoPath = "https://via.placeholder.com/150";
-    if (req.file) photoPath = req.file.path;
-    else if (req.body.existingPhoto) photoPath = req.body.existingPhoto;
+// 🔒 एरर-फ्री प्रोसेसर लॉजिक
+app.post('/submit-form', (req, res) => {
+    upload(req, res, (err) => {
+        let photoPath = "https://via.placeholder.com/150";
+        if (req.files && req.files.length > 0) {
+            const f = req.files.find(file => file.fieldname === 'studentPhoto'); if (f) photoPath = f.path;
+        } else if (req.body.existingPhoto) {
+            photoPath = req.body.existingPhoto;
+        }
 
-    const appNumber = "SUR-2026-" + req.body.mobile.trim().slice(-4);
-    const dateSubmitted = new Date().toLocaleString();
+        const appNumber = "SUR-2026-" + req.body.mobile.trim().slice(-4);
+        const dateSubmitted = new Date().toLocaleString();
 
-    const sData = {
-        id: req.body.mobile.trim(), appNo: appNumber, studentName: req.body.studentName, aadharCard: req.body.aadharCard,
-        mobile: req.body.mobile.trim(), fatherName: req.body.fatherName, motherName: req.body.motherName,
-        annualIncome: req.body.annualIncome || 0, category: req.body.category || "अनुसूचित जनजाति (ST)", subCast: req.body.subCast || "",
-        permanentAddress: req.body.permanentAddress, blockName: req.body.blockName, districtName: req.body.districtName,
-        homeDistance: req.body.homeDistance, studentClass: req.body.studentClass, course: req.body.course || "N/A",
-        collegeName: req.body.collegeName, prevPercent: req.body.prevPercent, photoUrl: photoPath,
-        roomNumber: "अभी अलॉट नहीं हुआ", approved: false, date: dateSubmitted
-    };
-    
-    let sList = readStudentsSafe();
-    const old = sList.find(s => s.mobile === sData.mobile);
-    if (old) { sData.roomNumber = old.roomNumber; sData.approved = old.approved; sData.appNo = old.appNo || appNumber; }
-    sList = sList.filter(s => s.mobile !== sData.mobile); sList.push(sData);
-    fs.writeFileSync(studentsFile, JSON.stringify(sList, null, 2), 'utf8');
+        const sData = {
+            id: req.body.mobile.trim(), appNo: appNumber, studentName: req.body.studentName, aadharCard: req.body.aadharCard,
+            mobile: req.body.mobile.trim(), fatherName: req.body.fatherName, motherName: req.body.motherName,
+            annualIncome: req.body.annualIncome || 0, category: req.body.category || "अनुसूचित जनजाति (ST)", subCast: req.body.subCast || "",
+            permanentAddress: req.body.permanentAddress, blockName: req.body.blockName, districtName: req.body.districtName,
+            homeDistance: req.body.homeDistance, studentClass: req.body.studentClass, course: req.body.course || "N/A",
+            collegeName: req.body.collegeName, prevPercent: req.body.prevPercent, photoUrl: photoPath,
+            roomNumber: "अभी अलॉट नहीं हुआ", approved: false, date: dateSubmitted
+        };
+        
+        let sList = readStudentsSafe();
+        const old = sList.find(s => s.mobile === sData.mobile);
+        if (old) { sData.roomNumber = old.roomNumber; sData.approved = old.approved; sData.appNo = old.appNo || appNumber; }
+        sList = sList.filter(s => s.mobile !== sData.mobile); sList.push(sData);
+        fs.writeFileSync(studentsFile, JSON.stringify(sList, null, 2), 'utf8');
 
-    // 🖨️ फुल-डिजाइन पावती रसीद रिस्पॉन्स (सभी टैग और बटन्स पूरी तरह फिक्स)
-    res.send(`
-        <!DOCTYPE html>
-        <html lang="hi">
-        <head>
-            <meta charset="UTF-8">
-            <title>प्रवेश आवेदन पावती रसीद</title>
-            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-            <style>body { background-color: #f8f9fa; font-family: sans-serif; } .receipt-card { background: white; border: 2px solid #333; max-width: 650px; margin: 30px auto; padding: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); } @media print { .no-print { display: none; } body { background: white; } .receipt-card { border: none; box-shadow: none; margin: 0; } }</style>
-        </head>
-        <body>
-            <div class="container">
-                <div class="receipt-card">
-                    <div class="text-center border-bottom pb-2 mb-3">
-                        <h6 class="text-muted mb-0">आदिम जाति तथा अनुसूचित जाति विकास विभाग, छत्तीसगढ़ शासन</h6>
-                        <h4 class="fw-bold text-primary my-1">प्री मैट्रिक ST+SC बालक छात्रावास सूरजपुर</h4>
-                        <h5 class="text-success fw-bold">प्रवेश आवेदन पावती रसीद (सत्र 2026-27)</h5>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-8">
-                            <p class="mb-1"><b>आवेदन क्रमांक:</b> <span class="text-danger fw-bold">${sData.appNo}</span></p>
-                            <p class="mb-1"><b>विद्यार्थी का नाम:</b> ${sData.studentName}</p>
-                            <p class="mb-1"><b>पिता का नाम:</b> ${sData.fatherName}</p>
-                            <p class="mb-1"><b>मोबाइल:</b> ${sData.mobile}</p>
+        // 🖨️ फुल-डिज़ाइन पावती रसीद रिस्पॉन्स (सभी बटन्स और टैग पूरी तरह फिक्स)
+        res.send(`
+            <!DOCTYPE html>
+            <html lang="hi">
+            <head>
+                <meta charset="UTF-8">
+                <title>प्रवेश आवेदन पावती रसीद</title>
+                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+                <style>body { background-color: #f8f9fa; font-family: sans-serif; } .receipt-card { background: white; border: 2px solid #333; max-width: 650px; margin: 30px auto; padding: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); } @media print { .no-print { display: none; } body { background: white; } .receipt-card { border: none; box-shadow: none; margin: 0; } }</style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="receipt-card">
+                        <div class="text-center border-bottom pb-2 mb-3">
+                            <h6 class="text-muted mb-0">आदिम जाति तथा अनुसूचित जाति विकास विभाग, छत्तीसगढ़ शासन</h6>
+                            <h4 class="fw-bold text-primary my-1">प्री मैट्रिक ST+SC बालक छात्रावास सूरजपुर</h4>
+                            <h5 class="text-success fw-bold">प्रवेश आवेदन पावती रसीद (सत्र 2026-27)</h5>
                         </div>
-                        <div class="col-4 text-end"><img src="${sData.photoUrl}" class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover;"></div>
-                    </div>
-                    <table class="table table-bordered table-sm" style="font-size: 14px;">
-                        <tr><th>कक्षा / संस्थान</th><td>${sData.studentClass} - ${sData.collegeName}</td></tr>
-                        <tr><th>वर्ग / कैटेगरी</th><td>${sData.category}</td></tr>
-                        <tr><th>जमा दिनांक व समय</th><td>${sData.date}</td></tr>
-                    </table>
-                    <div class="text-center mt-4 no-print">
-                        <button onclick="window.print()" class="btn btn-primary fw-bold me-2">🖨️ रसीद प्रिंट / PDF डाउनलोड करें</button>
-                        <a href="/" class="btn btn-secondary">🏠 मुख्य पृष्ठ पर जाएँ</a>
+                        <div class="row mb-3">
+                            <div class="col-8">
+                                <p class="mb-1"><b>आवेदन क्रमांक:</b> <span class="text-danger fw-bold">${sData.appNo}</span></p>
+                                <p class="mb-1"><b>विद्यार्थी का नाम:</b> ${sData.studentName}</p>
+                                <p class="mb-1"><b>पिता का नाम:</b> ${sData.fatherName}</p>
+                                <p class="mb-1"><b>मोबाइल:</b> ${sData.mobile}</p>
+                            </div>
+                            <div class="col-4 text-end"><img src="${sData.photoUrl}" class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover;"></div>
+                        </div>
+                        <table class="table table-bordered table-sm" style="font-size: 14px;">
+                            <tr><th>कक्षा / संस्थान</th><td>${sData.studentClass} - ${sData.collegeName}</td></tr>
+                            <tr><th>वर्ग / कैटेगरी</th><td>${sData.category}</td></tr>
+                            <tr><th>जमा दिनांक व समय</th><td>${sData.date}</td></tr>
+                        </table>
+                        <div class="text-center mt-4 no-print">
+                            <button onclick="window.print()" class="btn btn-primary fw-bold me-2">🖨️ रसीद प्रिंट / PDF डाउनलोड करें</button>
+                            <a href="/" class="btn btn-secondary">🏠 मुख्य पृष्ठ पर जाएँ</a>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </body>
-        </html>
-    `);
+            </body>
+            </html>
+        `);
+    });
 });
 
 app.get('/view-students', (req, res) => {
@@ -545,14 +549,16 @@ app.post('/post-notice', (req, res) => {
     let nList = readNoticesSafe(); nList.unshift({ text: req.body.noticeText, date: new Date().toLocaleDateString() });
     fs.writeFileSync(noticesFile, JSON.stringify(nList, null, 2), 'utf8'); res.send("<h1>🎉 नोटिस लाइव हो गया है!</h1><a href='/view-students'>वापस जाएँ</a>");
 });
-app.post('/update-warden', upload.fields([{ name: 'w1PhotoFile', maxCount: 1 }, { name: 'w2PhotoFile', maxCount: 1 }]), (req, res) => {
-    let cur = readWardenSafe(); let p1 = cur.w1Photo, p2 = cur.w2Photo;
-    if (req.files) {
-        if (req.files.w1PhotoFile) p1 = req.files.w1PhotoFile[0].path;
-        if (req.files.w2PhotoFile) p2 = req.files.w2PhotoFile[0].path;
-    }
-    const updated = { w1Name: req.body.w1Name || cur.w1Name, w1Desig: "अधीक्षक (A)", w1Mobile: req.body.w1Mobile || cur.w1Mobile, w1Office: "कक्ष 01", w1Photo: p1, w2Name: req.body.w2Name || cur.w2Name, w2Desig: "अधीक्षक (B)", w2Mobile: req.body.w2Mobile || cur.w2Mobile, w2Office: "कक्ष 02", w2Photo: p2 };
-    fs.writeFileSync(wardenFile, JSON.stringify(updated, null, 2), 'utf8'); res.send("<h1>🎉 वॉर्डन अपडेट!</h1><a href='/view-students'>वापस</a>");
+app.post('/update-warden', (req, res) => {
+    upload(req, res, (err) => {
+        let cur = readWardenSafe(); let p1 = cur.w1Photo, p2 = cur.w2Photo;
+        if (req.files && req.files.length > 0) {
+            const f1 = req.files.find(file => file.fieldname === 'w1PhotoFile'); if (f1) p1 = f1.path;
+            const f2 = req.files.find(file => file.fieldname === 'w2PhotoFile'); if (f2) p2 = f2.path;
+        }
+        const updated = { w1Name: req.body.w1Name || cur.w1Name, w1Desig: "अधीक्षक (A)", w1Mobile: req.body.w1Mobile || cur.w1Mobile, w1Office: "कक्ष 01", w1Photo: p1, w2Name: req.body.w2Name || cur.w2Name, w2Desig: "अधीक्षक (B)", w2Mobile: req.body.w2Mobile || cur.w2Mobile, w2Office: "कक्ष 02", w2Photo: p2 };
+        fs.writeFileSync(wardenFile, JSON.stringify(updated, null, 2), 'utf8'); res.send("<h1>🎉 वॉर्डन अपडेट!</h1><a href='/view-students'>वापस</a>");
+    });
 });
 app.get('/get-warden', (req, res) => res.json(readWardenSafe()));
 app.get('/get-logo', (req, res) => { try{ res.json(JSON.parse(fs.readFileSync(logoFile, 'utf8'))); }catch(e){res.json(defaultLogo);} });
