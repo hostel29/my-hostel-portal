@@ -22,7 +22,7 @@ const storage = new CloudinaryStorage({
         allowed_formats: ['jpg', 'png', 'jpeg', 'pdf']
     },
 });
-const upload = multer({ storage: storage }).any();
+const upload = multer({ storage: storage });
 
 app.use((req, res, next) => {
     res.header("Access-Control-Allow-Origin", "*");
@@ -44,6 +44,7 @@ const defaultWarden = {
 };
 const defaultLogo = { url: "https://via.placeholder.com/800x250?text=HOSTEL+BANNER+LOGO" };
 
+// 🔒 [object Object] डेटा करप्शन से परमानेंट सुरक्षा चक्र
 const checkFileCorrupt = (filePath, defaultData) => {
     if (!fs.existsSync(filePath)) {
         fs.writeFileSync(filePath, defaultData, 'utf8');
@@ -66,7 +67,7 @@ const readStudentsSafe = () => {
     try { const d = fs.readFileSync(studentsFile, 'utf8'); return JSON.parse(d); } catch (e) { return []; }
 };
 
-// 🏠 मुख्य पृष्ठ
+// 🏠 मुख्य पृष्ठ (Premium Smooth UI)
 app.get('/', (req, res) => {
     const students = readStudentsSafe();
     const stApproved = students.filter(s => s.approved === true && s.category && s.category.includes('ST')).length;
@@ -86,15 +87,15 @@ app.get('/', (req, res) => {
                 body { background-color: #f4f6f9; color: #212529; font-family: 'Segoe UI', system-ui, sans-serif; }
                 .navbar { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important; }
                 .card { background-color: #ffffff; border: none; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.03); }
-                .logo-container { width: 100%; border-radius: 12px; overflow: hidden; margin-bottom: 20px; text-align: center; border: 1px solid #dee2e6; }
+                .logo-container { width: 100%; border-radius: 12px; overflow: hidden; margin-bottom: 20px; background: #fff; text-align: center; border: 1px solid #dee2e6; }
                 .logo-img { width: 100%; height: auto; max-height: 260px; display: block; margin: 0 auto; object-fit: contain; }
-                .premium-btn { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 25px; text-align: center; text-decoration: none; display: block; transition: all 0.3s ease; }
-                .premium-btn:hover { transform: translateY(-5px); box-shadow: 0 15px 25px rgba(0,0,0,0.05); }
+                .premium-btn { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 25px; text-align: center; text-decoration: none; display: block; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+                .premium-btn:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.06); }
                 .premium-btn.reg { border-bottom: 5px solid #0d6efd; }
                 .premium-btn.stat { border-bottom: 5px solid #198754; }
-                .tracker-card { background: #ffffff; border-radius: 14px; border-top: 4px solid #3b82f6; }
+                .tracker-card { background: #ffffff; border-radius: 14px; border-top: 4px solid #3b82f6; box-shadow: 0 4px 6px rgba(0,0,0,0.01); }
                 .tracker-card.sc { border-top: 4px solid #10b981; }
-                .whatsapp-float { position: fixed; bottom: 25px; right: 25px; background: linear-gradient(135deg, #25d366 0%, #128c7e 100%); color: white; border-radius: 30px; text-align: center; font-weight: 600; box-shadow: 0 10px 20px rgba(37,211,102,0.3); z-index: 1000; text-decoration: none; padding: 12px 24px; }
+                .whatsapp-float { position: fixed; bottom: 25px; right: 25px; background: linear-gradient(135deg, #25d366 0%, #128c7e 100%); color: white; border-radius: 30px; text-align: center; font-weight: 600; box-shadow: 0 10px 20px rgba(37,211,102,0.3); z-index: 1000; text-decoration: none; padding: 12px 24px; display: flex; align-items: center; gap: 8px; }
             </style>
         </head>
         <body>
@@ -118,7 +119,7 @@ app.get('/', (req, res) => {
 
             <div class="card p-3 mb-4 border-start border-primary border-4 bg-white shadow-sm">
                 <h6 class="fw-bold text-primary mb-1">ℹ️ संक्षिप्त परिचय (Short Intro)</h6>
-                <p class="text-muted small mb-0">यह छात्रावास आदिम जाति तथा अनुसूचित जाति विकास विभाग, छत्तीसगढ़ शासन द्वारा संचालित है, जहाँ सूरजपुर जिले के छात्रों को उत्कृष्ट आवासीय सुविधाएँ प्रदान की जाती हैं।</p>
+                <p class="text-muted small mb-0">यह छात्रावास आदिम जाति तथा अनुसूचित जाति विकास विभाग, छत्तीसगढ़ शासन द्वारा संचालित है, जहाँ सूरजपुर जिले के ग्रामीण क्षेत्रों के छात्रों को उत्कृष्ट आवासीय सुविधाएँ प्रदान की जाती हैं।</p>
             </div>
             <div class="row g-4">
                 <div class="col-md-8">
@@ -141,7 +142,7 @@ app.get('/', (req, res) => {
                         <div class="col-md-6">
                             <a href="/check-status-page" class="premium-btn stat text-dark">
                                 <span style="font-size: 45px; display:block;" class="mb-2">🔍</span>
-                                <h4 class="fw-bold text-success">प्रोفाइल / रूम अलॉटमेंट स्टेटस</h4>
+                                <h4 class="fw-bold text-success">प्रोफाइल / रूम अलॉटमेंट स्टेटस</h4>
                                 <span class="badge bg-success px-3 py-2 my-2 fs-6">एडमिन द्वारा जारी रिजल्ट</span>
                                 <p class="text-muted small mb-0 mt-1">अपना अलॉटेड रूम और स्टेटस देखने के लिए यहाँ क्लिक करें</p>
                             </a>
@@ -192,9 +193,9 @@ app.get('/', (req, res) => {
                             <li>छात्रावास में प्रवेशित छात्र को छात्रावास में भोजन (मेस) करना अनिवार्य है।</li>
                             <li>स्थानीय शिक्षण संस्था में छात्र को नियमित प्रवेश व उपस्थिति अनिवार्य है।</li>
                             <li>बिना सूचना के लगातार अनुपस्थित रहने पर छात्रावास से निष्कासित किया जा सकता है।</li>
-                            <li>अप्रवेशी छात्र को बिना अधीक्षक की लिखित अनुमति के अपने कमरों में ठहराना पूर्णतः वर्जित है।</li>
-                            <li>राजनीति गतिविधियों एवं मादक पदार्थों का सेवन पूर्णतः वर्जित है।</li>
-                            <li>छात्रावास में सस्ते दर पर उपलब्ध कराए गए बी.पी.एल. खाद्यान्न चावल सभी छात्रों को खाना अनिवार्य होगा।</li>
+                            <li>अप्रवेशी छात्र को बिना अधीक्षक की लिखित अनुमति के ठहराना वर्जित है।</li>
+                            <li>मादक पदार्थों एवं मद्यपान का सेवन करने पर तत्काल निष्कासित किया जा सकेगा।</li>
+                            <li>छात्रावास में बी.पी.एल. खाद्यान्न चावल सभी छात्रों को खाना अनिवार्य होगा।</li>
                         </ol>
                     </div>
                     <div class="modal-footer"><button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">बंद करें</button></div>
@@ -294,7 +295,7 @@ app.get('/registration-form', (req, res) => {
         </html>
     `);
 });
-// 🔍 लिंक 2: अलॉटमेंट स्टेटस चेक करने वाला पेज (त्रुटि सुधार / Edit Form पाथ फिक्स के साथ)
+// 🔍 लिंक 2: अलॉटमेंट स्टेटस चेक करने वाला पेज
 app.get('/check-status-page', (req, res) => {
     res.send(`
         <!DOCTYPE html>
@@ -348,9 +349,7 @@ app.get('/check-status-page', (req, res) => {
                     });
                 }
                 function openEditForm() {
-                    const m = document.getElementById('editMobile').value; 
-                    if(!m) { alert('नंबर लिखें!'); return; }
-                    window.location.href = '/edit-student-form?mobile=' + m;
+                    const m = document.getElementById('editMobile').value; if(!m) return alert('नंबर लिखें!'); window.location.href = '/edit-student-form?mobile=' + m;
                 }
             </script>
         </body>
@@ -383,12 +382,12 @@ app.get('/public-admission-list', (req, res) => {
         </html>
     `);
 });
-// 🛠️ त्रुटि सुधार इंटरफ़ेस (Edit Page Interface Route Fixed)
+// 🛠️ त्रुटि सुधार फ़ॉर्म रेंडरर पाथ फिक्स
 app.get('/edit-student-form', (req, res) => {
     const mobileQuery = (req.query.mobile || '').trim();
     const studentsList = readStudentsSafe();
     const student = studentsList.find(s => s.mobile === mobileQuery);
-    if (!student) return res.send("<h1 style='text-align:center;color:red;margin-top:50px;'>❌ इस नंबर से कोई फॉर्म पंजीकृत नहीं है!</h1><br><a href='/check-status-page' style='display:block;text-align:center;'>वापस जाएँ</a>");
+    if (!student) return res.send("<h1 style='text-align:center;color:red;margin-top:50px;'>❌ रिकॉर्ड नहीं मिला!</h1>");
 
     res.send(`
         <!DOCTYPE html>
@@ -397,7 +396,7 @@ app.get('/edit-student-form', (req, res) => {
         <body class="p-4 bg-light">
             <div class="container" style="max-width: 900px;">
                 <div class="card p-4 bg-white border border-warning shadow-sm">
-                    <h2 class="text-center text-warning fw-bold mb-4">🛠️ आवेदन पत्र में त्रुटि सुधार (Edit Form)</h2>
+                    <h2 class="text-center text-warning fw-bold mb-4">🛠️ आवेदन पत्र में त्रुटि सुधार</h2>
                     <form action="/submit-form" method="POST" enctype="multipart/form-data" class="row g-3">
                         <input type="hidden" name="mobile" value="${student.mobile}">
                         <input type="hidden" name="existingPhoto" value="${student.photoUrl}">
@@ -412,8 +411,9 @@ app.get('/edit-student-form', (req, res) => {
                         <div class="col-md-4"><label class="form-label fw-bold">वर्तमान कक्षा:</label><input type="text" name="studentClass" class="form-control" value="${student.studentClass || ''}" required></div>
                         <div class="col-md-4"><label class="form-label fw-bold">शाला का नाम:</label><input type="text" name="collegeName" class="form-control" value="${student.collegeName || ''}" required></div>
                         <div class="col-md-4"><label class="form-label fw-bold">परीक्षा प्रतिशत (%):</label><input type="text" name="prevPercent" class="form-control" value="${student.prevPercent || ''}" required></div>
-                        <div class="col-12"><label class="form-label fw-bold text-danger">📸 नई फोटो (बदलने के लिए अपलोड करें, अन्यथा खाली छोड़ें):</label><input type="file" name="studentPhoto" class="form-control" accept="image/*"></div>
-                        <div class="col-12 mt-4"><button type="submit" class="btn btn-warning w-100 fw-bold fs-5 text-dark">🔄 सुधार की हुई जानकारी सुरक्षित करें</button></div>
+                        <div class="col-md-4"><label class="form-label fw-bold">वर्ग:</label><select name="category" class="form-select"><option value="${student.category}">${student.category}</option><option value="अनुसूचित जनजाति (ST)">ST</option><option value="अनुसूचित जाति (SC)">SC</option></select></div>
+                        <div class="col-12"><label class="form-label text-danger">📸 नई फोटो (यदि बदलना चाहें):</label><input type="file" name="studentPhoto" class="form-control" accept="image/*"></div>
+                        <div class="col-12 mt-4"><button type="submit" class="btn btn-warning w-100 text-dark fw-bold">🔄 जानकारी सुरक्षित करें</button></div>
                     </form>
                 </div>
             </div>
@@ -422,84 +422,72 @@ app.get('/edit-student-form', (req, res) => {
     `);
 });
 
-app.post('/submit-form', (req, res) => {
-    upload(req, res, (err) => {
-        if (err) return res.send("<h1>❌ अपलोड त्रुटि!</h1>");
-        
-        let photoPath = "https://via.placeholder.com/150";
-        if (req.files && req.files.length > 0) {
-            const f = req.files.find(file => file.fieldname === 'studentPhoto'); if (f) photoPath = f.path;
-        } else if (req.body.existingPhoto) {
-            photoPath = req.body.existingPhoto;
-        }
+// 🔒 एरर-फ्री सिक्योर मुलतेर सिंगल प्रोसेसर
+app.post('/submit-form', upload.single('studentPhoto'), (req, res) => {
+    let photoPath = "https://via.placeholder.com/150";
+    if (req.file) photoPath = req.file.path;
+    else if (req.body.existingPhoto) photoPath = req.body.existingPhoto;
 
-        const appNumber = "SUR-2026-" + req.body.mobile.trim().slice(-4);
-        const dateSubmitted = new Date().toLocaleString();
+    const appNumber = "SUR-2026-" + req.body.mobile.trim().slice(-4);
+    const dateSubmitted = new Date().toLocaleString();
 
-        const sData = {
-            id: req.body.mobile.trim(), appNo: appNumber, studentName: req.body.studentName, aadharCard: req.body.aadharCard,
-            mobile: req.body.mobile.trim(), fatherName: req.body.fatherName, motherName: req.body.motherName,
-            annualIncome: req.body.annualIncome || 0, category: req.body.category || "ST", subCast: req.body.subCast || "",
-            permanentAddress: req.body.permanentAddress, blockName: req.body.blockName, districtName: req.body.districtName,
-            homeDistance: req.body.homeDistance, studentClass: req.body.studentClass, course: req.body.course || "N/A",
-            collegeName: req.body.collegeName, prevPercent: req.body.prevPercent, photoUrl: photoPath,
-            roomNumber: "अभी अलॉट नहीं हुआ", approved: false, date: dateSubmitted
-        };
-        
-        let sList = readStudentsSafe();
-        const old = sList.find(s => s.mobile === sData.mobile);
-        if (old) { sData.roomNumber = old.roomNumber; sData.approved = old.approved; sData.appNo = old.appNo || appNumber; }
-        sList = sList.filter(s => s.mobile !== sData.mobile); sList.push(sData);
-        fs.writeFileSync(studentsFile, JSON.stringify(sList, null, 2), 'utf8');
+    const sData = {
+        id: req.body.mobile.trim(), appNo: appNumber, studentName: req.body.studentName, aadharCard: req.body.aadharCard,
+        mobile: req.body.mobile.trim(), fatherName: req.body.fatherName, motherName: req.body.motherName,
+        annualIncome: req.body.annualIncome || 0, category: req.body.category || "ST", subCast: req.body.subCast || "",
+        permanentAddress: req.body.permanentAddress, blockName: req.body.blockName, districtName: req.body.districtName,
+        homeDistance: req.body.homeDistance, studentClass: req.body.studentClass, course: req.body.course || "N/A",
+        collegeName: req.body.collegeName, prevPercent: req.body.prevPercent, photoUrl: photoPath,
+        roomNumber: "अभी अलॉट नहीं हुआ", approved: false, date: dateSubmitted
+    };
+    
+    let sList = readStudentsSafe();
+    const old = sList.find(s => s.mobile === sData.mobile);
+    if (old) { sData.roomNumber = old.roomNumber; sData.approved = old.approved; sData.appNo = old.appNo || appNumber; }
+    sList = sList.filter(s => s.mobile !== sData.mobile); sList.push(sData);
+    fs.writeFileSync(studentsFile, JSON.stringify(sList, null, 2), 'utf8');
 
-        // 🖨️ फुल-डिज़ाइन पावती रसीद रिस्पॉन्स (प्रिंट और डाउनलोड बटन फिक्स)
-        res.send(`
-            <!DOCTYPE html>
-            <html lang="hi">
-            <head>
-                <meta charset="UTF-8">
-                <title>प्रवेश आवेदन पावती रसीद</title>
-                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-                <style>
-                    body { background-color: #f8f9fa; font-family: sans-serif; }
-                    .receipt-card { background: white; border: 2px solid #333; max-width: 650px; margin: 30px auto; padding: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-                    @media print { .no-print { display: none; } body { background: white; } .receipt-card { border: none; box-shadow: none; margin: 0; } }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="receipt-card">
-                        <div class="text-center border-bottom pb-2 mb-3">
-                            <h6 class="text-muted mb-0">आदिम जाति तथा अनुसूचित जाति विकास विभाग, छत्तीसगढ़ शासन</h6>
-                            <h4 class="fw-bold text-primary my-1">प्री मैट्रिक ST+SC बालक छात्रावास सूरजपुर</h4>
-                            <h5 class="text-success fw-bold">प्रवेश आवेदन पावती रसीद (सत्र 2026-27)</h5>
+    // 🖨️ रसीद इंटरफ़ेस रेंडरर
+    res.send(`
+        <!DOCTYPE html>
+        <html lang="hi">
+        <head>
+            <meta charset="UTF-8">
+            <title>प्रवेश आवेदन पावती रसीद</title>
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+            <style>body { background-color: #f8f9fa; font-family: sans-serif; } .receipt-card { background: white; border: 2px solid #333; max-width: 650px; margin: 30px auto; padding: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); } @media print { .no-print { display: none; } body { background: white; } .receipt-card { border: none; box-shadow: none; margin: 0; } }</style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="receipt-card">
+                    <div class="text-center border-bottom pb-2 mb-3">
+                        <h6 class="text-muted mb-0">आदिम जाति तथा अनुसूचित जाति विकास विभाग, छत्तीसगढ़ शासन</h6>
+                        <h4 class="fw-bold text-primary my-1">प्री मैट्रिक ST+SC बालक छात्रावास सूरजपुर</h4>
+                        <h5 class="text-success fw-bold">प्रवेश आवेदन पावती रसीद (सत्र 2026-27)</h5>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-8">
+                            <p class="mb-1"><b>आवेदन क्रमांक:</b> <span class="text-danger fw-bold">${sData.appNo}</span></p>
+                            <p class="mb-1"><b>विद्यार्थी का नाम:</b> ${sData.studentName}</p>
+                            <p class="mb-1"><b>पिता का नाम:</b> ${sData.fatherName}</p>
+                            <p class="mb-1"><b>मोबाइल:</b> ${sData.mobile}</p>
                         </div>
-                        <div class="row mb-3">
-                            <div class="col-8">
-                                <p class="mb-1"><b>आवेदन क्रमांक:</b> <span class="text-danger fw-bold">${sData.appNo}</span></p>
-                                <p class="mb-1"><b>विद्यार्थी का नाम:</b> ${sData.studentName}</p>
-                                <p class="mb-1"><b>पिता का नाम:</b> ${sData.fatherName}</p>
-                                <p class="mb-1"><b>मोबाइल:</b> ${sData.mobile}</p>
-                            </div>
-                            <div class="col-4 text-end">
-                                <img src="${sData.photoUrl}" class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover;">
-                            </div>
-                        </div>
-                        <table class="table table-bordered table-sm" style="font-size: 14px;">
-                            <tr><th>कक्षा / संस्थान</th><td>${sData.studentClass} - ${sData.collegeName}</td></tr>
-                            <tr><th>वर्ग / कैटेगरी</th><td>${sData.category}</td></tr>
-                            <tr><th>जमा दिनांक व समय</th><td>${sData.date}</td></tr>
-                        </table>
-                        <div class="text-center mt-4 no-print">
-                            <button onclick="window.print()" class="btn btn-primary fw-bold me-2">🖨️ रसीद प्रिंट / PDF डाउनलोड करें</button>
-                            <a href="/" class="btn btn-secondary">🏠 मुख्य पृष्ठ पर जाएँ</a>
-                        </div>
+                        <div class="col-4 text-end"><img src="${sData.photoUrl}" class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover;"></div>
+                    </div>
+                    <table class="table table-bordered table-sm" style="font-size: 14px;">
+                        <tr><th>कक्षा / संस्थान</th><td>${sData.studentClass} - ${sData.collegeName}</td></tr>
+                        <tr><th>वर्ग / कैटेगरी</th><td>${sData.category}</td></tr>
+                        <tr><th>जमा दिनांक व समय</th><td>${sData.date}</td></tr>
+                    </table>
+                    <div class="text-center mt-4 no-print">
+                        <button onclick="window.print()" class="btn btn-primary fw-bold me-2">🖨️ रसीद प्रिंट / PDF डाउनलोड</button>
+                        <a href="/" class="btn btn-secondary">🏠 मुख्य पृष्ठ</a>
                     </div>
                 </div>
-            </body>
-            </html>
-        `);
-    });
+            </div>
+        </body>
+        </html>
+    `);
 });
 
 app.get('/view-students', (req, res) => {
@@ -535,13 +523,9 @@ app.get('/view-students', (req, res) => {
     `);
 });
 
-app.post('/update-logo', (req, res) => {
-    upload(req, res, (err) => {
-        if (req.files && req.files.length > 0) {
-            const f = req.files.find(file => file.fieldname === 'hostelLogo'); if (f) fs.writeFileSync(logoFile, JSON.stringify({ url: f.path }, null, 2), 'utf8');
-        }
-        res.send("<h1>🎉 लोगो अपडेट!</h1><a href='/view-students'>वापस</a>");
-    });
+app.post('/update-logo', upload.single('hostelLogo'), (req, res) => {
+    if (req.file) fs.writeFileSync(logoFile, JSON.stringify({ url: req.file.path }, null, 2), 'utf8');
+    res.send("<h1>🎉 लोगो अपडेट!</h1><a href='/view-students'>वापस</a>");
 });
 app.post('/assign-room', (req, res) => {
     let list = readStudentsSafe(); list = list.map(s => { if (s.id === req.body.studentId) s.roomNumber = req.body.roomNumber; return s; });
@@ -560,16 +544,14 @@ app.post('/post-notice', (req, res) => {
     nList.unshift({ text: req.body.noticeText, date: new Date().toLocaleDateString() });
     fs.writeFileSync(noticesFile, JSON.stringify(nList, null, 2), 'utf8'); res.send("<h1>🎉 नोटिस लाइव हो गया है!</h1><a href='/view-students'>वापस जाएँ</a>");
 });
-app.post('/update-warden', (req, res) => {
-    upload(req, res, (err) => {
-        let cur = readWardenSafe(); let p1 = cur.w1Photo, p2 = cur.w2Photo;
-        if (req.files && req.files.length > 0) {
-            const f1 = req.files.find(file => file.fieldname === 'w1PhotoFile'); if (f1) p1 = f1.path;
-            const f2 = req.files.find(file => file.fieldname === 'w2PhotoFile'); if (f2) p2 = f2.path;
-        }
-        const updated = { w1Name: req.body.w1Name || cur.w1Name, w1Desig: "अधीक्षक (A)", w1Mobile: req.body.w1Mobile || cur.w1Mobile, w1Office: "कक्ष 01", w1Photo: p1, w2Name: req.body.w2Name || cur.w2Name, w2Desig: "अधीक्षक (B)", w2Mobile: req.body.w2Mobile || cur.w2Mobile, w2Office: "कक्ष 02", w2Photo: p2 };
-        fs.writeFileSync(wardenFile, JSON.stringify(updated, null, 2), 'utf8'); res.send("<h1>🎉 वॉर्डन अपडेट!</h1><a href='/view-students'>वापस</a>");
-    });
+app.post('/update-warden', upload.fields([{ name: 'w1PhotoFile', maxCount: 1 }, { name: 'w2PhotoFile', maxCount: 1 }]), (req, res) => {
+    let cur = readWardenSafe(); let p1 = cur.w1Photo, p2 = cur.w2Photo;
+    if (req.files) {
+        if (req.files.w1PhotoFile) p1 = req.files.w1PhotoFile[0].path;
+        if (req.files.w2PhotoFile) p2 = req.files.w2PhotoFile[0].path;
+    }
+    const updated = { w1Name: req.body.w1Name || cur.w1Name, w1Desig: "अधीक्षक (A)", w1Mobile: req.body.w1Mobile || cur.w1Mobile, w1Office: "कक्ष 01", w1Photo: p1, w2Name: req.body.w2Name || cur.w2Name, w2Desig: "अधीक्षक (B)", w2Mobile: req.body.w2Mobile || cur.w2Mobile, w2Office: "कक्ष 02", w2Photo: p2 };
+    fs.writeFileSync(wardenFile, JSON.stringify(updated, null, 2), 'utf8'); res.send("<h1>🎉 वॉर्डन अपडेट!</h1><a href='/view-students'>वापस</a>");
 });
 app.get('/get-warden', (req, res) => res.json(readWardenSafe()));
 app.get('/get-logo', (req, res) => { try{ res.json(JSON.parse(fs.readFileSync(logoFile, 'utf8'))); }catch(e){res.json(defaultLogo);} });
