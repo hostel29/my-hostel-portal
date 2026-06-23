@@ -269,7 +269,7 @@ app.post('/submit-form', (req, res) => {
             if (req.files) {
                 if (req.files['studentPhoto']) sData.photoUrl = req.files['studentPhoto'][0].path;
                 if (req.files['studentSignature']) sData.signatureUrl = req.files['studentSignature'][0].path;
-                if (req.files['studentAadharFile']) sData.studentAadharUrl = req.files['studentAadharFile'][0].path; // 📄 छात्र आधार फ़ाइल अपलोड सेव मैकेनिज्म
+                if (req.files['studentAadharFile']) sData.studentAadharUrl = req.files['studentAadharFile'][0].path;
                 if (req.files['fatherAadharFile']) sData.fatherAadharUrl = req.files['fatherAadharFile'][0].path;
                 if (req.files['motherAadharFile']) sData.motherAadharUrl = req.files['motherAadharFile'][0].path;
                 if (req.files['casteCertFile']) sData.casteCertUrl = req.files['casteCertFile'][0].path;
@@ -301,11 +301,10 @@ app.get('/view-students', async (req, res) => {
     sList.forEach((s, idx) => {
         let actionBtn = s.approved ? '<span class="badge bg-success">Approved</span>' : '<button onclick="approveStudent(\'' + s.id + '\')" class="btn btn-sm btn-primary py-0 px-1">Approve</button>';
         
-        // 🔒 [ALL DOCUMENTS BUTTON MATRIX] छात्र आधार बटन सहित पूरा सेट
         let docsLinks = '<div style="display: flex; flex-wrap: wrap; gap: 3px; justify-content: center;">';
         if(s.photoUrl) docsLinks += '<a href="' + s.photoUrl + '" target="_blank" class="btn btn-xs btn-outline-dark p-1" style="font-size:9px; font-weight:bold;">फ़ोटो</a>';
         if(s.signatureUrl) docsLinks += '<a href="' + s.signatureUrl + '" target="_blank" class="btn btn-xs btn-outline-secondary p-1" style="font-size:9px; font-weight:bold;">हस्ताक्षर</a>';
-        if(s.studentAadharUrl) docsLinks += '<a href="' + s.studentAadharUrl + '" target="_blank" class="btn btn-xs btn-outline-primary p-1" style="font-size:9px; font-weight:bold; background-color:#eef2ff;">छात्र आधार</a>'; // 📄 छात्र आधार देखें बटन
+        if(s.studentAadharUrl) docsLinks += '<a href="' + s.studentAadharUrl + '" target="_blank" class="btn btn-xs btn-outline-primary p-1" style="font-size:9px; font-weight:bold; background-color:#eef2ff;">छात्र आधार</a>';
         if(s.fatherAadharUrl) docsLinks += '<a href="' + s.fatherAadharUrl + '" target="_blank" class="btn btn-xs btn-outline-primary p-1" style="font-size:9px; font-weight:bold;">पिता आधार</a>';
         if(s.motherAadharUrl) docsLinks += '<a href="' + s.motherAadharUrl + '" target="_blank" class="btn btn-xs btn-outline-primary p-1" style="font-size:9px; font-weight:bold;">माता आधार</a>';
         if(s.casteCertUrl) docsLinks += '<a href="' + s.casteCertUrl + '" target="_blank" class="btn btn-xs btn-outline-info p-1" style="font-size:9px; font-weight:bold;">जाति</a>';
@@ -316,7 +315,6 @@ app.get('/view-students', async (req, res) => {
 
         let typeBadge = s.isRenewal ? '<span class="badge bg-warning text-dark" style="font-size:10px;">रिन्यूअल</span>' : '<span class="badge bg-primary" style="font-size:10px;">नवीन</span>';
         
-        // 📸 नाम के ठीक पहले गोल फोटो थंबनेल डिस्प्ले बैक (पहले जैसा कड़क लुक)
         rows += '<tr class="align-middle" style="font-size:12px;"><td>' + (idx + 1) + '</td><td class="text-start"><img src="' + (s.photoUrl || 'https://via.placeholder.com/150') + '" class="rounded-circle me-2" style="width:35px; height:35px; object-fit:cover; border:1px solid #ccc;"><b>' + s.studentName + '</b><br>' + typeBadge + '</td><td>' + s.fatherName + '</td><td>' + s.mobile + '</td><td>' + docsLinks + '</td><td><div class="d-flex justify-content-center"><input type="text" id="room-' + s.id + '" class="form-control form-control-sm me-1" value="' + (s.roomNumber || '') + '" style="width:45px; height:24px; font-size:11px;"><button onclick="saveRoom(\'' + s.id + '\')" class="btn btn-sm btn-dark py-0 px-1" style="font-size:11px;">सेव</button></div></td><td>' + actionBtn + '</td><td><button onclick="secureRemoveStudent(\'' + s.id + '\',\'' + s.studentName + '\')" class="btn btn-sm btn-danger py-0 px-1" style="font-size:11px;">Remove</button></td></tr>';
     });
 
@@ -325,7 +323,7 @@ app.get('/view-students', async (req, res) => {
     admHtml += '<div class="col-lg-3 col-md-6"><div class="bg-white border p-3 rounded shadow-sm"><h5>🎛️ रिन्यूअल दस्तावेज़ मैट्रिक्स कंट्रोल</h5>';
     admHtml += '<button onclick="toggleF(\'photoActive\')" class="btn btn-xs w-100 mb-1 btn-' + (config.photoActive?'success':'danger') + '">फ़ोटो: ' + (config.photoActive?'ON':'OFF') + '</button>';
     admHtml += '<button onclick="toggleF(\'signatureActive\')" class="btn btn-xs w-100 mb-1 btn-' + (config.signatureActive?'success':'danger') + '">हस्ताक्षर: ' + (config.signatureActive?'ON':'OFF') + '</button>';
-    admHtml += '<button onclick="toggleF(\ 'aadharActive\')" class="btn btn-xs w-100 mb-1 btn-' + (config.aadharActive?'success':'danger') + '">आधार कार्ड: ' + (config.aadharActive?'ON':'OFF') + '</button>';
+    admHtml += '<button onclick="toggleF(\'aadharActive\')" class="btn btn-xs w-100 mb-1 btn-' + (config.aadharActive?'success':'danger') + '">आधार कार्ड: ' + (config.aadharActive?'ON':'OFF') + '</button>';
     admHtml += '<button onclick="toggleF(\'resultActive\')" class="btn btn-xs w-100 mb-1 btn-' + (config.resultActive?'success':'danger') + '">मार्कशीट: ' + (config.resultActive?'ON':'OFF') + '</button>';
     admHtml += '<button onclick="toggleF(\'casteActive\')" class="btn btn-xs w-100 mb-1 btn-' + (config.casteActive?'success':'danger') + '">जाति: ' + (config.casteActive?'ON':'OFF') + '</button>';
     admHtml += '<button onclick="toggleF(\'resActive\')" class="btn btn-xs w-100 mb-1 btn-' + (config.resActive?'success':'danger') + '">निवास: ' + (config.resActive?'ON':'OFF') + '</button>';
@@ -361,5 +359,7 @@ app.post('/update-warden', uploadMiddleware, async (req, res) => {
     await Warden.deleteMany({}); const nw = new Warden(updated); await nw.save(); res.redirect('/view-students');
 });
 
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, '0.0.0.0', () => console.log('🚀 भव्य क्लाउड सिंक सर्वर पूरी तरह से एक्टिव है!'));
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, '0.0.0.0', () => console.log('🚀 भव्य क्लाउड सिंक सर्वर पूरी तरह से एक्टिव है!'));
