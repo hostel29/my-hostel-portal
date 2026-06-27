@@ -225,7 +225,7 @@ app.get('/renewal-form', async (req, res) => {
     if (config.rationActive) { rf += '<div class="col-md-4"><label class="form-label fw-bold">राशन कार्ड फ़ोटो:</label><input type="file" name="rationCardFile" class="form-control" onchange="validateFile(this)" required></div>'; }
     rf += '<div class="col-md-12 mt-4"><button type="submit" class="btn btn-warning text-dark w-100 fw-bold fs-5 py-3 rounded-3 shadow">🔄 नवीनीकरण आवेदन सबमिट करें</button></div></form><div class="text-center mt-3"><a href="/" class="btn btn-link text-decoration-none fw-bold text-dark">🏠 मुख्य पृष्ठ</a></div></div></div>' + fileValidationScript;
     
-    rf += '<script>function fetchOldData(){ const key=document.getElementById("searchKey").value; if(!key) return alert("कृपया नंबर दर्ज करें!"); fetch("/api/get-old-student?key="+key).then(r=>r.json()).then(d=>{ if(d.error){ alert("❌ पुराना रिकॉर्ड नहीं मिला!"); } else { document.getElementById("r_studentName").value=d.studentName||""; document.getElementById("r_mobile").value=d.mobile||""; document.getElementById("r_fatherName").value=d.fatherName||""; document.getElementById("r_aadharCard").value=d.aadharCard||""; document.getElementById("r_collegeName").value=d.collegeName||""; document.getElementById("r_permanentAddress").value=d.permanentAddress||""; document.getElementById("r_blockName").value=d.blockName||""; document.getElementById("r_districtName").value=d.districtName||""; document.getElementById("r_category").value=d.category||"ST"; document.getElementById("r_subCast").value=d.subCast||""; alert("✅ पुराना डेटा लोड कर दिया गया है!"); } }).catch(()=>alert("सर्वर कनेक्टिविटी एरर")); }</script></body></html>';
+    rf += '<script>function fetchOldData(){ const key=document.getElementById("searchKey").value; if(!key) return alert("कृपया नंबर दर्ज करें!"); fetch("/api/get-old-student?key="+key).then(r=>r.json()).then(d=>{ if(d.error){ alert("❌ पुराना रिकॉर्ड नहीं मिला!"); } else { document.getElementById("r_studentName").value=d.studentName||""; document.getElementById("r_mobile").value=d.mobile||""; document.getElementById("r_fatherName").value=d.fatherName||""; document.getElementById("r_aadharCard").value=d.aadharCard||""; document.getElementById("r_collegeName").value=d.collegeName||""; document.getElementById("r_permanentAddress").value=d.permanentAddress||""; document.getElementById("r_blockName").value=d.blockName||""; document.getElementById("r_districtName").value=d.districtName||""; document.getElementById("r_category").value=d.category||"ST"; document.getElementById("r_subCast").value=d.subCast||""; alert("✅ डेटा लोड कर दिया गया है!"); } }).catch(()=>alert("सर्वर कनेक्टिविटी एरर")); }</script></body></html>';
     res.send(rf);
 });
 
@@ -284,7 +284,7 @@ app.get('/edit-student-form', async (req, res) => {
 });
 
 app.get('/public-admission-list', async (req, res) => {
-    res.send('<h2>📋 सूची अभी लोड हो रही है।</h2><br><a href="/">मुख्य पृष्ठ</a>');
+    res.send('<h2>📋 चयन सूची अभी एडमिन पैनल पर लिंक लोड की जा रही है। कृपया स्टेटस पेज चेक करें।</h2><br><a href="/">मुख्य पृष्ठ</a>');
 });
 app.post('/submit-form', (req, res) => {
     uploadMiddleware(req, res, async (err) => {
@@ -300,8 +300,7 @@ app.post('/submit-form', (req, res) => {
                 permanentAddress: req.body.permanentAddress || (old ? old.permanentAddress : ""), blockName: req.body.blockName || (old ? old.blockName : ""), districtName: req.body.districtName || (old ? old.districtName : ""),
                 homeDistance: req.body.homeDistance || (old ? old.homeDistance : 0), studentClass: req.body.studentClass, course: req.body.course || "N/A",
                 collegeName: req.body.collegeName, prevPercent: req.body.prevPercent || (old ? old.prevPercent : ""),
-                isRenewal: req.body.isRenewal === 'true', 
-                photoUrl: old ? old.photoUrl : "", signatureUrl: old ? old.signatureUrl : "", studentAadharUrl: old ? old.studentAadharUrl : "", fatherAadharUrl: old ? old.fatherAadharUrl : "", motherAadharUrl: old ? old.motherAadharUrl : "", casteCertUrl: old ? old.casteCertUrl : "", residenceCertUrl: old ? old.residenceCertUrl : "", incomeCertUrl: old ? old.incomeCertUrl : "", distanceCertUrl: old ? old.distanceCertUrl : "", ayushmanUrl: old ? old.ayushmanUrl : "", rationCardUrl: old ? old.rationCardUrl : "", resultUrl: old ? old.resultUrl : "",
+                isRenewal: req.body.isRenewal === 'true', photoUrl: old ? old.photoUrl : "", signatureUrl: old ? old.signatureUrl : "", studentAadharUrl: old ? old.studentAadharUrl : "", fatherAadharUrl: old ? old.fatherAadharUrl : "", motherAadharUrl: old ? old.motherAadharUrl : "", casteCertUrl: old ? old.casteCertUrl : "", residenceCertUrl: old ? old.residenceCertUrl : "", incomeCertUrl: old ? old.incomeCertUrl : "", distanceCertUrl: old ? old.distanceCertUrl : "", ayushmanUrl: old ? old.ayushmanUrl : "", rationCardUrl: old ? old.rationCardUrl : "", resultUrl: old ? old.resultUrl : "",
                 date: new Date().toLocaleString()
             };
 
@@ -322,14 +321,9 @@ app.post('/submit-form', (req, res) => {
 
             sData.appNo = "SUR-" + (sData.category || "ST") + "-" + cleanMobile.slice(-4);
 
-            if (old) { 
-                await Student.updateOne({ mobile: cleanMobile }, { $set: sData }); 
-            } else { 
-                const newStudent = new Student(sData); 
-                await newStudent.save(); 
-            }
+            if (old) { await Student.updateOne({ mobile: cleanMobile }, { $set: sData }); }
+            else { const newStudent = new Student(sData); await newStudent.save(); }
 
-            // 🗄️ डेटा रिकॉर्ड ऑटो-सिंक आर्काइव लॉजिक
             let archiveRecord = await Archive.findOne({ studentMobile: cleanMobile });
             const historyEntry = {
                 session: currentSession,
@@ -345,11 +339,8 @@ app.post('/submit-form', (req, res) => {
 
             if (archiveRecord) {
                 const sessionIdx = archiveRecord.history.findIndex(h => h.session === currentSession);
-                if (sessionIdx === -1) {
-                    archiveRecord.history.push(historyEntry);
-                } else {
-                    archiveRecord.history[sessionIdx] = historyEntry;
-                }
+                if (sessionIdx === -1) { archiveRecord.history.push(historyEntry); }
+                else { archiveRecord.history[sessionIdx] = historyEntry; }
                 archiveRecord.yearsActive = archiveRecord.history.length;
                 await archiveRecord.save();
             } else {
@@ -387,7 +378,6 @@ app.get('/view-students', async (req, res) => {
     sList.forEach((s, idx) => {
         let actionBtn = s.approved ? '<span class="badge bg-success">Approved</span>' : '<button onclick="approveStudent(\'' + s.mobile + '\')" class="btn btn-sm btn-primary py-0 px-1">Approve</button>';
         
-        // 📁 [मूल दस्तावेज़ मैट्रिक्स रीस्टोर] आपके पुराने कोड के सभी दस्तावेज़ वापस लाइव कर दिए गए हैं
         let docsLinks = '<div style="display: flex; flex-wrap: wrap; gap: 3px; justify-content: center;">';
         docsLinks += s.photoUrl ? '<a href="' + s.photoUrl + '" target="_blank" class="btn btn-xs btn-outline-dark p-1" style="font-size:9px; font-weight:bold;">फ़ोटो</a>' : '<a href="#" class="btn btn-xs btn-danger text-white p-1" style="font-size:9px; font-weight:bold;" onclick="alert(\'अपलोड नहीं है!\'); return false;">फ़ोटो</a>';
         docsLinks += s.signatureUrl ? '<a href="' + s.signatureUrl + '" target="_blank" class="btn btn-xs btn-outline-secondary p-1" style="font-size:9px; font-weight:bold;">हस्ताक्षर</a>' : '<a href="#" class="btn btn-xs btn-danger text-white p-1" style="font-size:9px; font-weight:bold;" onclick="alert(\'अपलोड नहीं है!\'); return false;">हस्ताक्षर</a>';
@@ -406,7 +396,7 @@ app.get('/view-students', async (req, res) => {
         let typeBadge = s.isRenewal ? '<span class="badge bg-warning text-dark" style="font-size:10px;">रिन्यूअल</span>' : '<span class="badge bg-primary" style="font-size:10px;">नवीन</span>';
         let fullAddressText = `<small class="text-muted d-block mt-1" style="font-size:10px; background:#f1f5f9; padding:2px 5px; border-radius:4px; max-width:180px; word-wrap:break-word;">📍 <b>पता:</b> ${s.permanentAddress || 'N/A'}, ${s.blockName || ''}, ${s.districtName || ''}</small>`;
 
-        rows += '<tr class="align-middle" style="font-size:12px;"><td>' + (idx + 1) + '</td><td class="text-start"><b>' + s.studentName + '</b><br>' + typeBadge + '</td><td>' + s.fatherName + '</td><td><b>' + s.mobile + '</b>' + fullAddressText + '</td><td>' + docsLinks + '</td><td><div class="d-flex justify-content-center"><input type="text" id="room-' + s.mobile + '" class="form-control form-control-sm me-1" value="' + (s.roomNumber || '') + '" style="width:45px; height:24px; font-size:11px;"><button onclick="saveRoom(\'' + s.mobile + '\')" class="btn btn-sm btn-dark py-0 px-1" style="font-size:11px;">सेव</button></div></td><td>' + actionBtn + '</td><td><button onclick="secureRemoveStudent(\'' + s.mobile + '\',\'' + s.studentName + '\')" class="btn btn-sm btn-danger py-0 px-1" style="font-size:11px;">Remove</button></td></tr>';
+        rows += '<tr class="align-middle" style="font-size:12px;"><td>' + (idx + 1) + '</td><td class="text-start"><img src="' + (s.photoUrl || 'https://via.placeholder.com/150') + '" class="rounded-circle me-2" style="width:35px; height:35px; object-fit:cover; border:1px solid #ccc;"><b>' + s.studentName + '</b><br>' + typeBadge + '</td><td>' + s.fatherName + '</td><td><b>' + s.mobile + '</b>' + fullAddressText + '</td><td>' + docsLinks + '</td><td><div class="d-flex justify-content-center"><input type="text" id="room-' + s.mobile + '" class="form-control form-control-sm me-1" value="' + (s.roomNumber || '') + '" style="width:45px; height:24px; font-size:11px;"><button onclick="saveRoom(\'' + s.mobile + '\')" class="btn btn-sm btn-dark py-0 px-1" style="font-size:11px;">सेव</button></div></td><td>' + actionBtn + '</td><td><button onclick="secureRemoveStudent(\'' + s.mobile + '\',\'' + s.studentName + '\')" class="btn btn-sm btn-danger py-0 px-1" style="font-size:11px;">Remove</button></td></tr>';
     });
 
     let archiveRows = '';
@@ -428,7 +418,7 @@ app.get('/view-students', async (req, res) => {
     admHtml += '<div class="col-lg-3 col-md-6"><div class="bg-white border p-3 rounded shadow-sm"><h5>🎛️ रिन्यूअल दस्तावेज़ मैट्रिक्स कंट्रोल</h5>';
     admHtml += '<button onclick="toggleF(\'photoActive\')" class="btn btn-xs w-100 mb-1 btn-' + (config.photoActive?'success':'danger') + '">फ़ोटो: ' + (config.photoActive?'ON':'OFF') + '</button>';
     admHtml += '<button onclick="toggleF(\'signatureActive\')" class="btn btn-xs w-100 mb-1 btn-' + (config.signatureActive?'success':'danger') + '">हस्ताक्षर: ' + (config.signatureActive?'ON':'OFF') + '</button>';
-    admHtml += '<button onclick="toggleF(\'aadharActive\')" class="btn btn-xs w-100 mb-1 btn-' + (config.aadharActive?'success':'danger') + '">आधार कार्ड: ' + (config.aadharActive?'ON':'OFF') + '</button>';
+    admHtml += '<button onclick="toggleF(\ 'aadharActive\')" class="btn btn-xs w-100 mb-1 btn-' + (config.aadharActive?'success':'danger') + '">आधार कार्ड: ' + (config.aadharActive?'ON':'OFF') + '</button>';
     admHtml += '<button onclick="toggleF(\'resultActive\')" class="btn btn-xs w-100 mb-1 btn-' + (config.resultActive?'success':'danger') + '">मार्कशीट: ' + (config.resultActive?'ON':'OFF') + '</button>';
     admHtml += '<button onclick="toggleF(\'casteActive\')" class="btn btn-xs w-100 mb-1 btn-' + (config.casteActive?'success':'danger') + '">जाति: ' + (config.casteActive?'ON':'OFF') + '</button>';
     admHtml += '<button onclick="toggleF(\'resActive\')" class="btn btn-xs w-100 mb-1 btn-' + (config.resActive?'success':'danger') + '">निवास: ' + (config.resActive?'ON':'OFF') + '</button>';
@@ -437,7 +427,7 @@ app.get('/view-students', async (req, res) => {
 
     admHtml += '<div class="card p-3 mb-4 shadow-sm border-start border-primary border-4 bg-white"><div class="d-flex justify-content-between align-items-center mb-3 flex-wrap"><div><h4 class="text-primary fw-bold mb-0 fs-5">🗄️ डेटा रिकॉर्ड हब (सत्र अनुसार आर्काइव फ़ाइलें)</h4></div><div><form method="GET" action="/view-students" class="d-flex gap-2 align-items-center"><label class="fw-bold small mb-0 text-secondary">सत्र चुनें:</label><select name="filterSession" onchange="this.form.submit()" class="form-select form-select-sm" style="width:140px;"><option value="2026-27" ${selectedSession==="2026-27"?"selected":""}>2026-27</option><option value="2027-28" ${selectedSession==="2027-28"?"selected":""}>2027-28</option><option value="2028-29" ${selectedSession==="2028-29"?"selected":""}>2028-29</option></select></form></div></div><div class="table-responsive" style="max-height:280px; overflow-y:auto;"><table class="table table-bordered table-striped table-sm text-center align-middle"><thead class="table-secondary"><tr><th>क्र.</th><th>छात्र एवं पता</th><th>सत्र स्थिति (Status)</th><th>कक्षा</th><th>स्कूल/कॉलेज का नाम</th></tr></thead><tbody>' + (archiveRows || `<tr><td colspan="5" class="p-3 text-muted">सत्र ${selectedSession} में कोई आर्काइव रिकॉर्ड नहीं मिला।</td></tr>`) + '</tbody></table></div></div>';
 
-    admHtml += '<div class="bg-white border p-2 rounded shadow-sm table-responsive"><h4 class="text-center text-primary fw-bold mb-3 fs-5">🔒 हॉस्टल लाइव छात्र सूची</h4><table class="table table-bordered table-striped text-center align-middle" style="min-width: 950px;"><thead class="table-dark"><tr><th>S.No</th><th>छात्र</th><th>पिता</th><th>मोबाइल व पता</th><th style="width:280px;">📁 दस्तावेज़ मैट्रिक्स</th><th>ROOM अलॉट</th><th>Approval</th><th>हटाएं</th></tr></thead><tbody>' + (rows || '<tr><td colspan="8">कोई छात्र रिकॉर्ड नहीं है।</td></tr>') + '</tbody></table></div>';
+    admHtml += '<div class="bg-white border p-2 rounded shadow-sm table-responsive"><h4 class="text-center text-primary fw-bold mb-3 fs-5">🔒 हॉस्टल लाइव छात्र सूची</h4><table class="table table-bordered table-striped text-center align-middle" style="min-width: 950px;"><thead class="table-dark"><tr><th>S.No</th><th>छात्र</th><th>पिता</th><th>मोबाइल व पता</th><th>📁 दस्तावेज़ Matrix</th><th>ROOM अलॉट</th><th>Approval</th><th>हटाएं</th></tr></thead><tbody>' + (rows || '<tr><td colspan="8">कोई छात्र रिकॉर्ड नहीं है।</td></tr>') + '</tbody></table></div>';
     
     admHtml += '<script>function saveRoom(id){ const val=document.getElementById("room-"+id).value; fetch("/assign-room",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({studentId:id,roomNumber:val})}).then(()=>location.reload())} function approveStudent(id){ fetch("/approve-student",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({studentId:id})}).then(()=>location.reload())} function secureRemoveStudent(id, name){ const reason = prompt("⚠️ छात्र \'" + name + "\' का रिकॉर्ड हटाने का मुख्य कारण (Reason) दर्ज करें:"); if(!reason) { alert("❌ कारण लिखना अनिवार्य है!"); return; } const doubleCheck = prompt("💥 सुरक्षा जांच! रिकॉर्ड हटाने के लिए बड़े अक्षरों में YES टाइप करें:"); if(doubleCheck === "YES"){ fetch("/remove-student",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({studentId:id, removeReason: reason})}).then(()=>location.reload()); } else { alert("❌ निरस्त कर दिया गया है।"); } } function toggleF(field){ fetch("/toggle-field-setting",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({field:field})}).then(()=>location.reload()); }</script></body></html>';
     res.send(admHtml);
