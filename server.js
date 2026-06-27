@@ -6,8 +6,12 @@ const mongoose = require('mongoose');
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
-// .env फ़ाइल से वेरिएबल्स लोड करने के लिए (प्रोजेक्ट रूट में .env फ़ाइल बनाएं)
-require('dotenv').config(); 
+// 🔐 सुरक्षित लोड: अगर dotenv नहीं भी होगा, तो सर्वर क्रैश नहीं होगा
+try {
+    require('dotenv').config();
+} catch (e) {
+    console.log("ℹ️ Local dotenv फ़ाइल नहीं मिली, लाइव एनवायरनमेंट वेरिएबल्स का उपयोग किया जा रहा है।");
+}
 
 const app = express();
 
