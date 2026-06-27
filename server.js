@@ -6,13 +6,10 @@ const mongoose = require('mongoose');
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
-// Safe Environment Parsing Without Crash Risks
-if (process.env.NODE_ENV !== 'production') {
-    try {
-        require('dotenv').config();
-    } catch (e) {
-        console.log("ℹ️ Local configuration registry omitted.");
-    }
+try {
+    require('dotenv').config();
+} catch (e) {
+    console.log("ℹ️ Live Environment Variables used.");
 }
 
 const app = express();
@@ -47,7 +44,8 @@ const uploadMiddleware = multer({ storage: storage }).fields([
     { name: 'resultFile', maxCount: 1 },
     { name: 'hostelLogo', maxCount: 1 },
     { name: 'w1PhotoFile', maxCount: 1 },
-    { name: 'w2PhotoFile', maxCount: 1 }
+    { name: 'w2PhotoFile', maxCount: 1 },
+    { name: 'meritFile', maxCount: 1 } // 📋 मेरिट लिस्ट PDF अपलोड के लिए नई फ़ील्ड
 ]);
 
 app.use((req, res, next) => {
@@ -81,6 +79,7 @@ const StudentSchema = new mongoose.Schema({
 });
 const Student = mongoose.model('Student', StudentSchema);
 
+// 🗄️ डेटा रिकॉर्ड हब (इयरली सत्र आर्काइव)
 const ArchiveSchema = new mongoose.Schema({
     studentMobile: String,
     studentName: String,
@@ -93,7 +92,6 @@ const ArchiveSchema = new mongoose.Schema({
         blockName: String,
         districtName: String,
         dateArchived: String,
-        removeReason: { type: String, default: "" },
         fullSnapshot: Object
     }],
     yearsActive: { type: Number, default: 1 }
@@ -173,6 +171,7 @@ app.get('/', async (req, res) => {
         h += '<div class="col-6 col-md-4"><a href="/renewal-form" class="premium-btn ren text-dark shadow-sm"><span style="font-size: 45px; display:block;" class="mb-1">🔄</span><h5 class="fw-bold text-dark">हॉस्टल नवीनीकरण</h5><span class="badge bg-warning text-dark px-3 py-1 my-1 rounded-pill">पुराने छात्र</span></a></div>';
         h += '<div class="col-12 col-md-4"><a href="/check-status-page" class="premium-btn stat text-dark shadow-sm"><span style="font-size: 45px; display:block;" class="mb-1">🔍</span><h5 class="fw-bold text-success">अलॉटमेंट स्टेटस</h5><span class="badge bg-success px-3 py-1 my-1 rounded-pill">प्रोफाइल / रसीद</span></a></div></div></div>';
         
+        // 👨‍💼 मूल असली नाम एवं वॉर्डन कॉर्नर डिज़ाइन वापस रीस्टोर
         h += '<div class="col-md-4"><div class="card p-4 text-center mb-4 border-top border-warning border-5 shadow-sm"><div class="card-header bg-light text-dark fw-bold rounded mb-3 border-0 fs-6">👨‍💼 छात्रावास प्रबंधन प्रशासन</div><div class="row g-2">';
         h += '<div class="col-6 border-end"><img src="' + warden.w1Photo + '" class="rounded-3 border mb-2 shadow-sm" style="width: 85px; height: 85px; object-fit: cover;" onerror="this.src=\'https://via.placeholder.com/150\'\"><h6 class="fw-bold text-dark mb-0 small">' + warden.w1Name + '</h6><small class="text-muted block d-block" style="font-size:9px;">' + warden.w1Desig + '</small><div class="text-start bg-light p-2 rounded border mt-2" style="font-size:9px; font-weight:500;"><b>📞:</b> ' + warden.w1Mobile + '<br><b>🏢:</b> ' + warden.w1Office + '</div></div>';
         h += '<div class="col-6"><img src="' + warden.w2Photo + '" class="rounded-3 border mb-2 shadow-sm" style="width: 85px; height: 85px; object-fit: cover;" onerror="this.src=\'https://via.placeholder.com/150\'\"><h6 class="fw-bold text-dark mb-0 small">' + warden.w2Name + '</h6><small class="text-muted block d-block" style="font-size:9px;">' + warden.w2Desig + '</small><div class="text-start bg-light p-2 rounded border mt-2" style="font-size:9px; font-weight:500;"><b>📞:</b> ' + warden.w2Mobile + '<br><b>🏢:</b> ' + warden.w2Office + '</div></div></div></div>';
@@ -184,7 +183,7 @@ app.get('/', async (req, res) => {
         
         h += '<div class="modal fade" id="helpCenterModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content rounded-4 border-0 shadow"><div class="modal-header bg-success text-white rounded-top-4"><h5 class="modal-title fw-bold">🤝 डिजिटल हेल्पडेस्क सहायता केंद्र</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body p-3 text-center"><h6 class="text-secondary fw-bold mb-3">आपको किस प्रकार की सहायता चाहिए? नीचे संबंधित विषय चुनें:</h6><div class="list-group shadow-sm">';
         h += '<a href="https://wa.me/91' + helpNum + '?text=नमस्ते सर, मुझे नए प्रवेश फॉर्म भरने में समस्या आ रही है, कृपया सहायता करें।" target="_blank" class="list-group-item list-group-item-action text-start fw-bold p-3 text-primary">➔ 📝 नए प्रवेश फॉर्म भरने में समस्या है</a>';
-        h += '<a href="https://wa.me/91' + helpNum + '?text=नमस्ते सर, मुझे डॉक्यूमेंट अपलोड करने में आकार का एरर आ रहा है, कृपया मदद करें।" target="_blank" class="list-group-item list-group-item-action text-start fw-bold p-3 text-primary">➔ 📂 दस्तावेज़ अपलोड (साइज) एरर है</a>';
+        h += '<a href="https://wa.me/91' + helpNum + '?text=नमस्ते सर, मुझे डॉक्यूमेंट अपलोड करने में साइज का एरर आ रहा है, कृपया मदद करें।" target="_blank" class="list-group-item list-group-item-action text-start fw-bold p-3 text-primary">➔ 📂 दस्तावेज़ अपलोड (साइज) एरर है</a>';
         h += '<a href="https://wa.me/91' + helpNum + '?text=नमस्ते सर, मेरा ROOM अलॉटमेंट स्टेटस नहीं दिख रहा है, कृपया चेक कर दीजिए।" target="_blank" class="list-group-item list-group-item-action text-start fw-bold p-3 text-primary">➔ 🔍 रूम अलॉटमेंट / स्टेटस संबंधी प्रश्न</a>';
         h += '<a href="https://wa.me/91' + helpNum + '?text=नमस्ते सर, मुझे छात्रावास नवीनीकरण फॉर्म (Renewal Form) की जानकारी चाहिए।" target="_blank" class="list-group-item list-group-item-action text-start fw-bold p-3 text-primary">➔ 🔄 नवीनीकरण फॉर्म संबंधी जानकारी</a>';
         h += '</div></div><div class="modal-footer border-0"><button type="button" class="btn btn-secondary w-100 fw-bold rounded-pill py-2" data-bs-dismiss="modal">बंद करें</button></div></div></div></div>';
@@ -228,7 +227,7 @@ app.get('/renewal-form', async (req, res) => {
     if (config.rationActive) { rf += '<div class="col-md-4"><label class="form-label fw-bold">राशन कार्ड फ़ोटो:</label><input type="file" name="rationCardFile" class="form-control" onchange="validateFile(this)" required></div>'; }
     rf += '<div class="col-md-12 mt-4"><button type="submit" class="btn btn-warning text-dark w-100 fw-bold fs-5 py-3 rounded-3 shadow">🔄 नवीनीकरण आवेदन सबमिट करें</button></div></form><div class="text-center mt-3"><a href="/" class="btn btn-link text-decoration-none fw-bold text-dark">🏠 मुख्य पृष्ठ</a></div></div></div>' + fileValidationScript;
     
-    rf += '<script>function fetchOldData(){ const key=document.getElementById("searchKey").value; if(!key) return alert("कृपया नंबर दर्ज करें!"); fetch("/api/get-old-student?key="+key).then(r=>r.json()).then(d=>{ if(d.error){ alert("❌ पुराना रिकॉर्ड नहीं मिला!"); } else { document.getElementById("r_studentName").value=d.studentName||""; document.getElementById("r_mobile").value=d.mobile||""; document.getElementById("r_fatherName").value=d.fatherName||""; document.getElementById("r_aadharCard").value=d.aadharCard||""; document.getElementById("r_collegeName").value=d.collegeName||""; document.getElementById("r_permanentAddress").value=d.permanentAddress||""; document.getElementById("r_blockName").value=d.blockName||""; document.getElementById("r_districtName").value=d.districtName||""; document.getElementById("r_category").value=d.category||"ST"; document.getElementById("r_subCast").value=d.subCast||""; alert("✅ पुराना डेटा लोड कर दिया गया है!"); } }).catch(()=>alert("सर्वर कनेक्टिविटी एरर")); }</script></body></html>';
+    rf += '<script>function fetchOldData(){ const key=document.getElementById("searchKey").value; if(!key) return alert("कृपया नंबर दर्ज करें!"); fetch("/api/get-old-student?key="+key).then(r=>r.json()).then(d=>{ if(d.error){ alert("❌ पुराना रिकॉर्ड नहीं मिला!"); } else { document.getElementById("r_studentName").value=d.studentName||""; document.getElementById("r_mobile").value=d.mobile||""; document.getElementById("r_fatherName").value=d.fatherName||""; document.getElementById("r_aadharCard").value=d.aadharCard||""; document.getElementById("r_collegeName").value=d.collegeName||""; document.getElementById("r_permanentAddress").value=d.permanentAddress||""; document.getElementById("r_blockName").value=d.blockName||""; document.getElementById("r_districtName").value=d.districtName||""; document.getElementById("r_category").value=d.category||"ST"; document.getElementById("r_subCast").value=d.subCast||""; alert("✅ डेटा लोड कर दिया गया है!"); } }).catch(()=>alert("सर्वर कनेक्टिविटी एरर")); }</script></body></html>';
     res.send(rf);
 });
 
@@ -299,11 +298,12 @@ app.post('/submit-form', (req, res) => {
                 permanentAddress: req.body.permanentAddress || (old ? old.permanentAddress : ""), blockName: req.body.blockName || (old ? old.blockName : ""), districtName: req.body.districtName || (old ? old.districtName : ""),
                 homeDistance: req.body.homeDistance || (old ? old.homeDistance : 0), studentClass: req.body.studentClass, course: req.body.course || "N/A",
                 collegeName: req.body.collegeName, prevPercent: req.body.prevPercent || (old ? old.prevPercent : ""),
-                isRenewal: req.body.isRenewal === 'true', photoUrl: old ? old.photoUrl : "", signatureUrl: old ? old.signatureUrl : "", studentAadharUrl: old ? old.studentAadharUrl : "", fatherAadharUrl: old ? old.fatherAadharUrl : "", motherAadharUrl: old ? old.motherAadharUrl : "", casteCertUrl: old ? old.casteCertUrl : "", residenceCertUrl: old ? old.residenceCertUrl : "", incomeCertUrl: old ? old.incomeCertUrl : "", distanceCertUrl: old ? old.distanceCertUrl : "", ayushmanUrl: old ? old.ayushmanUrl : "", rationCardUrl: old ? old.rationCardUrl : "", resultUrl: old ? old.resultUrl : "",
+                isRenewal: req.body.isRenewal === 'true', 
+                photoUrl: old ? old.photoUrl : "", signatureUrl: old ? old.signatureUrl : "", studentAadharUrl: old ? old.studentAadharUrl : "", fatherAadharUrl: old ? old.fatherAadharUrl : "", motherAadharUrl: old ? old.motherAadharUrl : "", casteCertUrl: old ? old.casteCertUrl : "", residenceCertUrl: old ? old.residenceCertUrl : "", incomeCertUrl: old ? old.incomeCertUrl : "", distanceCertUrl: old ? old.distanceCertUrl : "", ayushmanUrl: old ? old.ayushmanUrl : "", rationCardUrl: old ? old.rationCardUrl : "", resultUrl: old ? old.resultUrl : "",
                 date: new Date().toLocaleString()
             };
 
-            // Non-destructive safe parsing checks for file buffers
+            // फ़ाइल सबमिशन के लिए कंडीशनल ओवरराइड (अपलोड एरर का अंत)
             if (req.files) {
                 if (req.files['studentPhoto']) sData.photoUrl = req.files['studentPhoto'][0].path;
                 if (req.files['studentSignature']) sData.signatureUrl = req.files['studentSignature'][0].path;
@@ -379,18 +379,18 @@ app.get('/view-students', async (req, res) => {
         let actionBtn = s.approved ? '<span class="badge bg-success">Approved</span>' : '<button onclick="approveStudent(\'' + s.mobile + '\')" class="btn btn-sm btn-primary py-0 px-1">Approve</button>';
         
         let docsLinks = '<div style="display: flex; flex-wrap: wrap; gap: 3px; justify-content: center;">';
-        docsLinks += s.photoUrl ? '<a href="' + s.photoUrl + '" target="_blank" class="btn btn-xs btn-outline-dark p-1" style="font-size:9px; font-weight:bold;">फ़ोटो</a>' : '<a href="#" class="btn btn-xs btn-danger text-white p-1" style="font-size:9px; font-weight:bold;" onclick="alert(\'N/A\'); return false;">फ़ोटो</a>';
-        docsLinks += s.signatureUrl ? '<a href="' + s.signatureUrl + '" target="_blank" class="btn btn-xs btn-outline-secondary p-1" style="font-size:9px; font-weight:bold;">हस्ताक्षर</a>' : '<a href="#" class="btn btn-xs btn-danger text-white p-1" style="font-size:9px; font-weight:bold;" onclick="alert(\'N/A\'); return false;">हस्ताक्षर</a>';
+        docsLinks += s.photoUrl ? '<a href="' + s.photoUrl + '" target="_blank" class="btn btn-xs btn-outline-dark p-1" style="font-size:9px; font-weight:bold;">फ़ोटो</a>' : '<a href="#" class="btn btn-xs btn-danger text-white p-1" style="font-size:9px; font-weight:bold;" onclick="alert(\'अपलोड नहीं है!\'); return false;">फ़ोटो</a>';
+        docsLinks += s.signatureUrl ? '<a href="' + s.signatureUrl + '" target="_blank" class="btn btn-xs btn-outline-secondary p-1" style="font-size:9px; font-weight:bold;">हस्ताक्षर</a>' : '<a href="#" class="btn btn-xs btn-danger text-white p-1" style="font-size:9px; font-weight:bold;" onclick="alert(\'अपलोड नहीं है!\'); return false;">हस्ताक्षर</a>';
         docsLinks += s.studentAadharUrl ? '<a href="' + s.studentAadharUrl + '" target="_blank" class="btn btn-xs btn-outline-primary p-1" style="font-size:9px; font-weight:bold;">छात्र आधार</a>' : '<a href="#" class="btn btn-xs btn-danger text-white p-1" style="font-size:9px; font-weight:bold;">छात्र आधार</a>';
         docsLinks += s.fatherAadharUrl ? '<a href="' + s.fatherAadharUrl + '" target="_blank" class="btn btn-xs btn-outline-primary p-1" style="font-size:9px; font-weight:bold;">पिता आधार</a>' : '<a href="#" class="btn btn-xs btn-danger text-white p-1" style="font-size:9px; font-weight:bold;">पिता आधार</a>';
         docsLinks += s.motherAadharUrl ? '<a href="' + s.motherAadharUrl + '" target="_blank" class="btn btn-xs btn-outline-primary p-1" style="font-size:9px; font-weight:bold;">माता आधार</a>' : '<a href="#" class="btn btn-xs btn-danger text-white p-1" style="font-size:9px; font-weight:bold;">माता आधार</a>';
-        docsLinks += s.casteCertUrl ? '<a href="' + s.casteCertUrl + '" target="_blank" class="btn btn-xs btn-outline-info p-1" style="font-size:9px; font-weight:bold;">जाति</a>' : '<a href="#" class="btn btn-xs btn-danger text-white p-1" style="font-size:9px; font-weight:bold;">जाति</a>';
-        docsLinks += s.residenceCertUrl ? '<a href="' + s.residenceCertUrl + '" target="_blank" class="btn btn-xs btn-outline-info p-1" style="font-size:9px; font-weight:bold;">निवास</a>' : '<a href="#" class="btn btn-xs btn-danger text-white p-1" style="font-size:9px; font-weight:bold;">निवास</a>';
-        docsLinks += s.incomeCertUrl ? '<a href="' + s.incomeCertUrl + '" target="_blank" class="btn btn-xs btn-outline-info p-1" style="font-size:9px; font-weight:bold;">आय</a>' : '<a href="#" class="btn btn-xs btn-danger text-white p-1" style="font-size:9px; font-weight:bold;">आय</a>';
-        docsLinks += s.distanceCertUrl ? '<a href="' + s.distanceCertUrl + '" target="_blank" class="btn btn-xs btn-outline-info p-1" style="font-size:9px; font-weight:bold;">दूरी</a>' : '<a href="#" class="btn btn-xs btn-danger text-white p-1" style="font-size:9px; font-weight:bold;">दूरी</a>';
-        docsLinks += s.ayushmanUrl ? '<a href="' + s.ayushmanUrl + '" target="_blank" class="btn btn-xs btn-outline-info p-1" style="font-size:9px; font-weight:bold;">आयुष्मान</a>' : '<a href="#" class="btn btn-xs btn-danger text-white p-1" style="font-size:9px; font-weight:bold;">आयुष्मान</a>';
-        docsLinks += s.rationCardUrl ? '<a href="' + s.rationCardUrl + '" target="_blank" class="btn btn-xs btn-outline-info p-1" style="font-size:9px; font-weight:bold;">राशन</a>' : '<a href="#" class="btn btn-xs btn-danger text-white p-1" style="font-size:9px; font-weight:bold;">राशन</a>';
-        docsLinks += s.resultUrl ? '<a href="' + s.resultUrl + '" target="_blank" class="btn btn-xs btn-outline-success p-1" style="font-size:9px; font-weight:bold;">रिजल्ट</a>' : '<a href="#" class="btn btn-xs btn-danger text-white p-1" style="font-size:9px; font-weight:bold;">रिजल्ट</a>';
+        docsLinks += s.casteCertUrl ? '<a href="' + s.casteCertUrl + '" target="_blank" class="btn btn-xs btn-outline-info p-1" style="font-size:9px; font-weight:bold;">जाति</a>' : '<a href="#" class="btn btn-xs btn-danger text-white p-1" style="font-size:9px; font-weight:bold;" onclick="alert(\'अपलोड नहीं है!\'); return false;">जाति</a>';
+        docsLinks += s.residenceCertUrl ? '<a href="' + s.residenceCertUrl + '" target="_blank" class="btn btn-xs btn-outline-info p-1" style="font-size:9px; font-weight:bold;">निवास</a>' : '<a href="#" class="btn btn-xs btn-danger text-white p-1" style="font-size:9px; font-weight:bold;" onclick="alert(\'अपलोड नहीं है!\'); return false;">निवास</a>';
+        docsLinks += s.incomeCertUrl ? '<a href="' + s.incomeCertUrl + '" target="_blank" class="btn btn-xs btn-outline-info p-1" style="font-size:9px; font-weight:bold;">आय</a>' : '<a href="#" class="btn btn-xs btn-danger text-white p-1" style="font-size:9px; font-weight:bold;" onclick="alert(\'अपलोड नहीं है!\'); return false;">आय</a>';
+        docsLinks += s.distanceCertUrl ? '<a href="' + s.distanceCertUrl + '" target="_blank" class="btn btn-xs btn-outline-info p-1" style="font-size:9px; font-weight:bold;">दूरी</a>' : '<a href="#" class="btn btn-xs btn-danger text-white p-1" style="font-size:9px; font-weight:bold;" onclick="alert(\'अपलोड नहीं है!\'); return false;">दूरी</a>';
+        docsLinks += s.ayushmanUrl ? '<a href="' + s.ayushmanUrl + '" target="_blank" class="btn btn-xs btn-outline-info p-1" style="font-size:9px; font-weight:bold;">आयुष्मान</a>' : '<a href="#" class="btn btn-xs btn-danger text-white p-1" style="font-size:9px; font-weight:bold;" onclick="alert(\'अपलोड नहीं है!\'); return false;">आयुष्मान</a>';
+        docsLinks += s.rationCardUrl ? '<a href="' + s.rationCardUrl + '" target="_blank" class="btn btn-xs btn-outline-info p-1" style="font-size:9px; font-weight:bold;">राशन</a>' : '<a href="#" class="btn btn-xs btn-danger text-white p-1" style="font-size:9px; font-weight:bold;" onclick="alert(\'अपलोड नहीं है!\'); return false;">राशन</a>';
+        docsLinks += s.resultUrl ? '<a href="' + s.resultUrl + '" target="_blank" class="btn btn-xs btn-outline-success p-1" style="font-size:9px; font-weight:bold;">रिजल्ट</a>' : '<a href="#" class="btn btn-xs btn-danger text-white p-1" style="font-size:9px; font-weight:bold;" onclick="alert(\'अपलोड नहीं है!\'); return false;">रिजल्ट</a>';
         docsLinks += '</div>';
 
         let typeBadge = s.isRenewal ? '<span class="badge bg-warning text-dark" style="font-size:10px;">रिन्यूअल</span>' : '<span class="badge bg-primary" style="font-size:10px;">नवीन</span>';
@@ -405,15 +405,14 @@ app.get('/view-students', async (req, res) => {
         let matchingHistories = arc.history.filter(h => h.session === selectedSession);
         matchingHistories.forEach(h => {
             let badgeColor = h.type === 'Renewal' ? 'bg-warning text-dark' : h.type === 'Removed' ? 'bg-danger text-white' : 'bg-primary';
-            let reasonText = h.type === 'Removed' ? `<br><small class="text-danger">💥 <b>कारण:</b> ${h.removeReason}</small>` : '';
             let locInfo = `<small class="text-secondary d-block" style="font-size:10px;">📍 ${h.permanentAddress || 'N/A'}, ब्लॉक: ${h.blockName || ''}, जिला: ${h.districtName || ''}</small>`;
-
-            archiveRows += `<tr style="font-size:12px;"><td>${archCounter++}</td><td><b>${arc.studentName}</b><br><small class="text-muted">ID: ${arc.studentMobile}</small>${locInfo}</td><td><span class="badge ${badgeColor}">सत्र ${h.session} (${h.type})</span>${reasonText}</td><td>${h.studentClass || 'N/A'}</td><td>${h.collegeName || 'N/A'}</td></tr>`;
+            archiveRows += `<tr style="font-size:12px;"><td>${archCounter++}</td><td><b>${arc.studentName}</b><br><small class="text-muted">ID: ${arc.studentMobile}</small>${locInfo}</td><td><span class="badge ${badgeColor}">सत्र ${h.session} (${h.type})</span></td><td>${h.studentClass || 'N/A'}</td><td>${h.collegeName || 'N/A'}</td></tr>`;
         });
     });
 
-    let admHtml = '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>प्रशासनिक कंट्रोल हब</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"></head><body class="bg-light p-2 p-md-4"><div class="row g-3 mb-4"><div class="col-lg-3 col-md-6"><div class="bg-white border p-3 rounded shadow-sm"><h5>⚙️ लोगो बदलें</h5><form action="/update-logo" method="POST" enctype="multipart/form-data"><input type="file" name="hostelLogo" class="form-control form-control-sm mb-2" required><button type="submit" class="btn btn-sm btn-primary w-100">अपलोड</button></form><hr><form action="/update-merit" method="POST"><h5>📋 Merit Link</h5><input type="url" name="meritListLink" class="form-control form-control-sm mb-2" value="' + (config.meritListLink || '') + '"><button type="submit" class="btn btn-sm btn-success w-100">सेव</button></form></div></div><div class="col-lg-3 col-md-6"><div class="bg-white border p-3 rounded shadow-sm"><h5>📢 नया नोटिस</h5><form action="/post-notice" method="POST"><input type="text" name="noticeText" class="form-control form-control-sm mb-2" required><button type="submit" class="btn btn-sm btn-danger w-100">लाइव करें</button></form></div></div>';
-    admHtml += '<div class="col-lg-3 col-md-6"><div class="bg-white border p-3 rounded shadow-sm"><h5>⚙️ वॉर्डन विवरण व फ़ोटो</h5><form action="/update-warden" method="POST" enctype="multipart/form-data" class="row g-2"><input type="text" name="w1Name" class="form-control form-control-sm" value="' + currentWarden.w1Name + '"><input type="text" name="w1Mobile" class="form-control form-control-sm" value="' + currentWarden.w1Mobile + '"><input type="file" name="w1PhotoFile" class="form-control form-control-sm" accept="image/*"><input type="text" name="helpLineNumber" class="form-control form-control-sm" value="' + (currentWarden.helpLineNumber || "9329088615") + '"><button type="submit" class="btn btn-sm btn-warning w-100 mt-2">संरक्षित करें</button></form></div></div>';
+    // ⚙️ लोगो और मेरिट लिस्ट PDF अपलोड फॉर्म
+    let admHtml = '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>प्रशासनिक कंट्रोल हब</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"></head><body class="bg-light p-2 p-md-4"><div class="row g-3 mb-4"><div class="col-lg-3 col-md-6"><div class="bg-white border p-3 rounded shadow-sm"><h5>⚙️ लोगो बदलें</h5><form action="/update-logo" method="POST" enctype="multipart/form-data"><input type="file" name="hostelLogo" class="form-control form-control-sm mb-2" required><button type="submit" class="btn btn-sm btn-primary w-100">अपलोड</button></form><hr><form action="/update-merit" method="POST" enctype="multipart/form-data"><h5>📋 मेरिट सूची अपलोड (PDF/Link)</h5><input type="url" name="meritListLink" class="form-control form-control-sm mb-2" value="' + (config.meritListLink || '') + '" placeholder="ड्राइव लिंक यहाँ पेस्ट करें..."><input type="file" name="meritFile" class="form-control form-control-sm mb-2" accept="application/pdf"><button type="submit" class="btn btn-sm btn-success w-100">डेटा सेव करें</button></form></div></div><div class="col-lg-3 col-md-6"><div class="bg-white border p-3 rounded shadow-sm"><h5>📢 नया नोटिस</h5><form action="/post-notice" method="POST"><input type="text" name="noticeText" class="form-control form-control-sm mb-2" required><button type="submit" class="btn btn-sm btn-danger w-100">लाइव करें</button></form></div></div>';
+    admHtml += '<div class="col-lg-3 col-md-6"><div class="bg-white border p-3 rounded shadow-sm"><h5>⚙️ वॉर्डन विवरण व फ़ोटो</h5><form action="/update-warden" method="POST" enctype="multipart/form-data" class="row g-2"><h6>वॉर्डन (A)</h6><input type="text" name="w1Name" class="form-control form-control-sm" value="' + currentWarden.w1Name + '"><input type="text" name="w1Mobile" class="form-control form-control-sm" value="' + currentWarden.w1Mobile + '"><input type="file" name="w1PhotoFile" class="form-control form-control-sm" accept="image/*"><hr class="my-1"><h6>वॉर्डन (B)</h6><input type="text" name="w2Name" class="form-control form-control-sm" value="' + currentWarden.w2Name + '"><input type="text" name="w2Mobile" class="form-control form-control-sm" value="' + currentWarden.w2Mobile + '"><input type="file" name="w2PhotoFile" class="form-control form-control-sm" accept="image/*"><hr class="my-1"><h6 class="text-success">💬 लाइव हेल्पलाइन नंबर</h6><input type="text" name="helpLineNumber" class="form-control form-control-sm border-success fw-bold text-success" value="' + (currentWarden.helpLineNumber || "9329088615") + '"><button type="submit" class="btn btn-sm btn-warning w-100 mt-2">सभी डेटा सुरक्षित करें</button></form></div></div>';
     
     admHtml += '<div class="col-lg-3 col-md-6"><div class="bg-white border p-3 rounded shadow-sm"><h5>🎛️ रिन्यूअल दस्तावेज़ मैट्रिक्स कंट्रोल</h5>';
     admHtml += '<button onclick="toggleF(\'photoActive\')" class="btn btn-xs w-100 mb-1 btn-' + (config.photoActive?'success':'danger') + '">फ़ोटो: ' + (config.photoActive?'ON':'OFF') + '</button>';
@@ -429,7 +428,8 @@ app.get('/view-students', async (req, res) => {
 
     admHtml += '<div class="bg-white border p-2 rounded shadow-sm table-responsive"><h4 class="text-center text-primary fw-bold mb-3 fs-5">🔒 हॉस्टल लाइव छात्र सूची</h4><table class="table table-bordered table-striped text-center align-middle" style="min-width: 950px;"><thead class="table-dark"><tr><th>S.No</th><th>छात्र</th><th>पिता</th><th>मोबाइल व पता</th><th style="width:280px;">📁 दस्तावेज़ मैट्रिक्स</th><th>ROOM अलॉट</th><th>Approval</th><th>हटाएं</th></tr></thead><tbody>' + (rows || '<tr><td colspan="8">कोई छात्र रिकॉर्ड नहीं है।</td></tr>') + '</tbody></table></div>';
     
-    admHtml += '<script>function saveRoom(id){ const val=document.getElementById("room-"+id).value; fetch("/assign-room",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({studentId:id,roomNumber:val})}).then(()=>location.reload())} function approveStudent(id){ fetch("/approve-student",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({studentId:id})}).then(()=>location.reload())} function secureRemoveStudent(id, name){ const reason = prompt("⚠️ छात्र \'" + name + "\' का रिकॉर्ड हटाने का मुख्य कारण (Reason) दर्ज करें:"); if(!reason) { alert("❌ कारण लिखना अनिवार्य है!"); return; } const doubleCheck = prompt("💥 सुरक्षा जांच! रिकॉर्ड हटाने के लिए बड़े अक्षरों में YES टाइप करें:"); if(doubleCheck === "YES"){ fetch("/remove-student",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({studentId:id, removeReason: reason})}).then(()=>location.reload()); } else { alert("❌ निरस्त कर दिया गया है।"); } } function toggleF(field){ fetch("/toggle-field-setting",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({field:field})}).then(()=>location.reload()); }</script></body></html>';
+    // 💥 रिमूव रीज़न पूरी तरह से हटा दिया गया है
+    admHtml += '<script>function saveRoom(id){ const val=document.getElementById("room-"+id).value; fetch("/assign-room",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({studentId:id,roomNumber:val})}).then(()=>location.reload())} function approveStudent(id){ fetch("/approve-student",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({studentId:id})}).then(()=>location.reload())} function secureRemoveStudent(id, name){ const doubleCheck = prompt("⚠️ क्या आप सच में छात्र \'" + name + "\' का पूरा रिकॉर्ड डिलीट करना चाहते हैं? पुष्टि के लिए बड़े अक्षरों में YES टाइप करें:"); if(doubleCheck === "YES"){ fetch("/remove-student",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({studentId:id})}).then(()=>location.reload()); } else { alert("❌ डिलीट प्रक्रिया निरस्त कर दी गई है।"); } } function toggleF(field){ fetch("/toggle-field-setting",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({field:field})}).then(()=>location.reload()); }</script></body></html>';
     res.send(admHtml);
 });
 
@@ -438,9 +438,15 @@ app.post('/toggle-field-setting', async (req, res) => {
     const field = req.body.field; config[field] = !config[field]; await config.save(); res.json({ success: true });
 });
 
-app.post('/update-merit', async (req, res) => {
+// 📋 मेरिट लिस्ट PDF अपलोड और लिंक एंडपॉइंट्स
+app.post('/update-merit', uploadMiddleware, async (req, res) => {
     let config = await Setting.findOne({}); if(!config) { config = new Setting(defaultSetting); }
-    config.meritListLink = req.body.meritListLink; await config.save(); res.redirect('/view-students');
+    if (req.files && req.files['meritFile']) {
+        config.meritListLink = req.files['meritFile'][0].path;
+    } else if (req.body.meritListLink) {
+        config.meritListLink = req.body.meritListLink;
+    }
+    await config.save(); res.redirect('/view-students');
 });
 
 app.post('/update-logo', uploadMiddleware, async (req, res) => { if (req.files && req.files['hostelLogo']) { await Logo.deleteMany({}); const l = new Logo({ url: req.files['hostelLogo'][0].path }); await l.save(); } res.redirect('/view-students'); });
@@ -451,7 +457,6 @@ app.post('/approve-student', async (req, res) => { await Student.updateOne({ mob
 app.post('/remove-student', async (req, res) => {
     try {
         const studentId = req.body.studentId;
-        const reason = req.body.removeReason || "निष्कासित";
         const currentSession = getDynamicSession();
         const s = await Student.findOne({ mobile: studentId });
         if(s) {
@@ -465,7 +470,6 @@ app.post('/remove-student', async (req, res) => {
                 blockName: s.blockName,
                 districtName: s.districtName,
                 dateArchived: new Date().toLocaleDateString(),
-                removeReason: reason,
                 fullSnapshot: s
             };
             if (archiveRecord) {
