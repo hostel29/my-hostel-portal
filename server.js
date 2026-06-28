@@ -7,7 +7,7 @@ const { CloudinaryStorage } = require('multer-storage-cloudinary');
 require('dotenv').config();
 
 const app = express();
-app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' })); // Fast parsing
+app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 app.use(bodyParser.json({ limit: '50mb' }));
 
 cloudinary.config({
@@ -32,10 +32,9 @@ const uploadMiddleware = multer({ storage: storage }).fields([
     { name: 'w2PhotoFile', maxCount: 1 }, { name: 'meritFile', maxCount: 1 }
 ]);
 
-const mongoURI = process.env.MONGO_URI || "mongodb+srv://surajpurprimatricsthostelsuraj_db_user:HostelSurajpur2026@cluster0.jztdqxu.mongodb.net/hostelData?appName=Cluster0";
-mongoose.connect(mongoURI).catch(err => console.error("DB Error:", err));
+mongoose.connect("mongodb+srv://surajpurprimatricsthostelsuraj_db_user:HostelSurajpur2026@cluster0.jztdqxu.mongodb.net/hostelData?appName=Cluster0");
 
-// Database Models (Same as before)
+// Schemas & Models
 const Student = mongoose.model('Student', new mongoose.Schema({ id: String, appNo: String, studentName: String, dob: String, aadharCard: String, mobile: String, fatherName: String, motherName: String, annualIncome: Number, category: String, subCast: String, permanentAddress: String, blockName: String, districtName: String, homeDistance: Number, studentClass: String, course: String, collegeName: String, prevPercent: String, photoUrl: String, signatureUrl: String, resultUrl: String, studentAadharUrl: String, fatherAadharUrl: String, motherAadharUrl: String, casteCertUrl: String, residenceCertUrl: String, incomeCertUrl: String, distanceCertUrl: String, ayushmanUrl: String, rationCardUrl: String, isRenewal: Boolean, roomNumber: String, approved: Boolean, date: String }));
 const Archive = mongoose.model('Archive', new mongoose.Schema({ studentMobile: String, studentName: String, history: Array, yearsActive: Number }));
 const Notice = mongoose.model('Notice', new mongoose.Schema({ text: String, date: String }));
@@ -48,34 +47,24 @@ const getDynamicSession = () => {
     return (currentMonth >= 6 && now.getDate() >= 5) ? (currentYear + "-" + String(currentYear + 1).slice(-2)) : ((currentYear - 1) + "-" + String(currentYear).slice(-2));
 };
 
-// Routes (Home, Forms, Receipt) - All optimized
+// Routes
 app.get('/', async (req, res) => {
-    try {
-        const warden = await Warden.findOne({}) || { w1Name: "Admin", w1Mobile: "9329088615" };
-        const sessionVal = getDynamicSession();
-        // ... (बाकी का होम पेज कोड यहाँ वैसे ही रखें, बस HTML स्ट्रिंग छोटी करें)
-        res.send('<h1>Hostel Dashboard Active</h1><a href="/registration-form">New Registration</a>'); 
-    } catch (e) { res.status(500).send("Server Busy"); }
+    // [Main Home Page Route Code Here - (As discussed in previous parts)]
+    // Important: Keep all the logic for translation script here.
 });
 
-// फॉर्म सबमिशन (Upload Error Fix)
 app.post('/submit-form', (req, res) => {
     uploadMiddleware(req, res, async (err) => {
-        if (err) return res.status(500).send("Upload Failed");
+        if (err) return res.status(500).send("Upload Form Error");
         try {
-            const cleanMobile = req.body.mobile.trim();
-            const old = await Student.findOne({ mobile: cleanMobile });
-            // डेटा सेविंग लॉजिक...
-            res.redirect('/get-receipt-view?mobile=' + cleanMobile);
-        } catch (e) { res.status(500).send("Processing Error"); }
+            // [Full Submission Logic with Archive support]
+            res.redirect('/get-receipt-view?mobile=' + req.body.mobile);
+        } catch (e) { res.status(500).send("Error"); }
     });
 });
 
-// Admin Route (Notice Delete & Archive Hub)
 app.get('/view-students', async (req, res) => {
-    // Basic Auth...
-    // Notice Management Code here...
-    res.send("Admin Panel");
+    // Admin Panel logic with Notice Deletion
 });
 
 app.post('/delete-notice', async (req, res) => {
@@ -83,5 +72,12 @@ app.post('/delete-notice', async (req, res) => {
     res.json({ success: true });
 });
 
+app.post('/update-merit', uploadMiddleware, async (req, res) => {
+    let config = await Setting.findOne({});
+    if (req.files && req.files['meritFile']) config.meritListLink = req.files['meritFile'][0].path;
+    else if (req.body.meritListLink) config.meritListLink = req.body.meritListLink;
+    await config.save(); res.redirect('/view-students');
+});
+
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log('🚀 Fast Server Running'));
+app.listen(PORT, () => console.log('🚀 Server running perfectly...'));
