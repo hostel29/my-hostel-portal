@@ -1,183 +1,482 @@
-const express = require('express');
 const bodyParser = require('body-parser');
-const path = require('path');
+const session = require('express-session');
 const multer = require('multer');
-const mongoose = require('mongoose');
-
-
-// 🔐 SECURITY
-const helmet = require('helmet');
-const cors = require('cors');
-const rateLimit = require('express-rate-limit');
-const mongoSanitize = require('express-mongo-sanitize');
-const xss = require('xss-clean');
-
-
-// ☁️ CLOUDINARY
-const cloudinary = require('cloudinary').v2;
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
-
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
 
-
-// ======================================================
-// 🔐 BASIC SECURITY
-// ======================================================
-
-app.use(helmet());
-
-app.use(cors({
-    origin: "*",
-    methods: ["GET", "POST"],
-    credentials: true
-}));
-
-
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 120,
-    message: "⚠️ Too many requests. Try again later."
-});
-
-app.use(limiter);
-
-app.use(mongoSanitize());
-
-app.use(xss());
-
-app.use(express.json({ limit: '10mb' }));
-
-app.use(express.urlencoded({
-    extended: true,
-    limit: '10mb'
-}));
-
-app.set('trust proxy', 1);
-
-
-// ======================================================
-// 📦 BODY PARSER
-// ======================================================
+const PORT = 3000;
+const ADMIN_PASSWORD = "admin123";
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
+app.use(session({
+    secret: 'hostel-secret',
+    resave: false,
+    saveUninitialized: true
+}));
 
-// ======================================================
-// ☁️ CLOUDINARY CONFIG
-// ======================================================
+app.use(express.static('public'));
 
-cloudinary.config({
-    cloud_name: 'dhg4qy5rw',
-    api_key: '492175456555184',
-    api_secret: 'nPJYcf47rjH56k2cNQtIi6etBLA'
-});
+const DATA_FILE = './students.json';
 
+if (!fs.existsSync(DATA_FILE)) {
+    fs.writeFileSync(DATA_FILE, '[]');
+}
 
-// ======================================================
-// 📂 CLOUDINARY STORAGE
-// ======================================================
-
-const storage = new CloudinaryStorage({
-    cloudinary: cloudinary,
-
-    params: async (req, file) => ({
-
-        folder: 'hostel_photos',
-
-        allowed_formats: [
-            'jpg',
-            'jpeg',
-            'png',
-            'webp',
-            'pdf'
-        ],
-
-        resource_type: 'auto'
-    })
-});
-
-
-// ======================================================
-// 📂 SAFE FILE UPLOAD
-// ======================================================
-
-const upload = multer({
-
-    storage: storage,
-
-    limits: {
-        fileSize: 2 * 1024 * 1024
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'public/uploads');
     },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + "-" + file.originalname);
+    }
+});
 
-    fileFilter: (req, file, cb) => {
+const upload = multer({ storage: storage });
 
-        const allowedMime = [
+function getStudents() {
+    return JSON.parse(fs.readFileSync(DATA_FILE));
+}
 
-            'image/jpeg',
-            'image/png',
-            'image/webp',
-            'application/pdf'
+function saveStudents(data) {
+    fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+}
 
-        ];
+app.get('/', (req, res) => {
 
-        if (allowedMime.includes(file.mimetype)) {
+    res.send(`
+    
+    <!DOCTYPE html>
+    <html>
 
-            cb(null, true);
+    <head>
 
-        } else {
+    <title>Hostel Management</title>
 
-            cb(new Error('❌ Invalid file type'));
+    <style>
 
-        }
+    body{
+        margin:0;
+        padding:0;
+        background:#121212;
+        font-family:Arial;
+        color:white;
     }
 
+    .container{
+        width:350px;
+        margin:auto;
+        margin-top:120px;
+        background:#1e1e1e;
+        padding:30px;
+        border-radius:12px;
+        box-shadow:0 0 10px rgba(0,0,0,0.5);
+    }
+
+    h1{
+        text-align:center;
+    }
+
+    input{
+        width:100%;
+        padding:12px;
+        margin-top:12px;
+        border:none;
+        border-radius:6px;
+        background:#2d2d2d;
+        color:white;
+    }
+
+    button{
+        width:100%;
+        padding:12px;
+        margin-top:15px;
+        border:none;
+        border-radius:6px;
+        background:#00b894;
+        color:white;
+        cursor:pointer;
+        font-size:16px;
+    }
+
+    button:hover{
+        opacity:0.9;
+    }
+
+    .loading{
+        display:none;
+        text-align:center;
+        margin-top:15px;
+    }
+
+    </style>
+
+    </head>
+
+    <body>
+
+    <div class="container">
+
+    <h1>Hostel Login</h1>
+
+    <form id="loginForm">
+
+    <input 
+    type="password" 
+    id="password" 
+    placeholder="Enter Password"
+    required
+    >
+
+    <button type="submit">
+    Login
+    </button>
+
+    </form>
+
+    <div class="loading" id="loading">
+    Loading...
+    </div>
+
+    <p id="msg"></p>
+
+    </div>
+
+    <script>
+
+    const form = document.getElementById('loginForm');
+
+    form.addEventListener('submit', async function(e){
+
+        e.preventDefault();
+
+        document.getElementById('loading').style.display='block';
+
+        const password = document.getElementById('password').value;
+
+        const res = await fetch('/login',{
+            method:'POST',
+            headers:{
+                'Content-Type':'application/json'
+            },
+            body:JSON.stringify({password})
+        });
+
+        const data = await res.json();
+
+        document.getElementById('loading').style.display='none';
+
+        document.getElementById('msg').innerText = data.message;
+
+        if(data.success){
+            window.location='/admin';
+        }
+
+    });
+
+    </script>
+
+    </body>
+    </html>
+    
+    `);
+
 });
 
+app.post('/login', (req, res) => {
 
-// ======================================================
-// 📂 MULTIPLE FILES
-// ======================================================
+    const { password } = req.body;
 
-const uploadMiddleware = upload.fields([
+    if(password === ADMIN_PASSWORD){
 
-    { name: 'studentPhoto', maxCount: 1 },
-    { name: 'studentSignature', maxCount: 1 },
-    { name: 'studentAadharFile', maxCount: 1 },
-    { name: 'fatherAadharFile', maxCount: 1 },
-    { name: 'motherAadharFile', maxCount: 1 },
-    { name: 'casteCertFile', maxCount: 1 },
-    { name: 'residenceCertFile', maxCount: 1 },
-    { name: 'incomeCertFile', maxCount: 1 },
-    { name: 'distanceCertFile', maxCount: 1 },
-    { name: 'ayushmanFile', maxCount: 1 },
-    { name: 'rationCardFile', maxCount: 1 },
-    { name: 'resultFile', maxCount: 1 },
-    { name: 'hostelLogo', maxCount: 1 },
-    { name: 'w1PhotoFile', maxCount: 1 },
-    { name: 'w2PhotoFile', maxCount: 1 }
+        req.session.admin = true;
 
-]);
+        return res.json({
+            success:true,
+            message:'Login Successful'
+        });
 
+    }
 
-// ======================================================
-// 🌐 DATABASE CONNECTION
-// ======================================================
+    res.json({
+        success:false,
+        message:'Wrong Password'
+    });
 
-const mongoURI = "mongodb+srv://surajpurprimatricsthostelsuraj_db_user:HostelSurajpur2026@cluster0.jztdqxu.mongodb.net/hostelData?appName=Cluster0";
+});
 
+app.get('/admin', (req, res) => {
 
-mongoose.connect(mongoURI)
+    if(!req.session.admin){
+        return res.send('Access Denied');
+    }
 
-.then(() => {
+    const students = getStudents();
 
-    console.log("✅ MongoDB Connected");
+    let totalStudents = students.length;
 
-})
+    let html = `
+    
+    <!DOCTYPE html>
+    <html>
 
-.catch((err) => {
+    <head>
 
-    console.log("❌ MongoDB Error:", err);
+    <title>Admin Dashboard</title>
+
+    <style>
+
+    body{
+        margin:0;
+        padding:20px;
+        background:#121212;
+        color:white;
+        font-family:Arial;
+    }
+
+    .top{
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+    }
+
+    .card{
+        background:#1e1e1e;
+        padding:20px;
+        border-radius:10px;
+        margin-top:20px;
+    }
+
+    input{
+        width:100%;
+        padding:12px;
+        margin-top:10px;
+        border:none;
+        border-radius:6px;
+        background:#2d2d2d;
+        color:white;
+    }
+
+    button{
+        padding:12px;
+        margin-top:10px;
+        border:none;
+        border-radius:6px;
+        background:#00b894;
+        color:white;
+        cursor:pointer;
+    }
+
+    table{
+        width:100%;
+        border-collapse:collapse;
+        margin-top:20px;
+    }
+
+    td,th{
+        border:1px solid #333;
+        padding:12px;
+        text-align:center;
+    }
+
+    img{
+        width:60px;
+        height:60px;
+        object-fit:cover;
+        border-radius:50%;
+    }
+
+    .delete{
+        background:red;
+    }
+
+    </style>
+
+    </head>
+
+    <body>
+
+    <div class="top">
+
+    <h1>Hostel Dashboard</h1>
+
+    <a href="/logout">
+    <button>Logout</button>
+    </a>
+
+    </div>
+
+    <div class="card">
+
+    <h2>Total Students : ${totalStudents}</h2>
+
+    </div>
+
+    <div class="card">
+
+    <h2>Add Student</h2>
+
+    <form 
+    method="POST" 
+    action="/add-student"
+    enctype="multipart/form-data"
+    >
+
+    <input 
+    name="name"
+    placeholder="Student Name"
+    required
+    >
+
+    <input 
+    name="room"
+    placeholder="Room Number"
+    required
+    >
+
+    <input 
+    name="mobile"
+    placeholder="Mobile Number"
+    required
+    >
+
+    <input 
+    type="file"
+    name="photo"
+    required
+    >
+
+    <button type="submit">
+    Add Student
+    </button>
+
+    </form>
+
+    </div>
+
+    <div class="card">
+
+    <h2>All Students</h2>
+
+    <table>
+
+    <tr>
+    <th>Photo</th>
+    <th>Name</th>
+    <th>Room</th>
+    <th>Mobile</th>
+    <th>Action</th>
+    </tr>
+
+    `;
+
+    students.forEach(student => {
+
+        html += `
+        
+        <tr>
+
+        <td>
+        <img src="${student.photo}">
+        </td>
+
+        <td>${student.name}</td>
+
+        <td>${student.room}</td>
+
+        <td>${student.mobile}</td>
+
+        <td>
+
+        <a href="/delete/${student.id}">
+        <button class="delete">
+        Delete
+        </button>
+        </a>
+
+        </td>
+
+        </tr>
+        
+        `;
+
+    });
+
+    html += `
+    
+    </table>
+
+    </div>
+
+    </body>
+
+    </html>
+    
+    `;
+
+    res.send(html);
+
+});
+
+app.post('/add-student', upload.single('photo'), (req, res) => {
+
+    if(!req.session.admin){
+        return res.send('Access Denied');
+    }
+
+    const students = getStudents();
+
+    students.push({
+
+        id: Date.now(),
+
+        name: req.body.name,
+
+        room: req.body.room,
+
+        mobile: req.body.mobile,
+
+        photo: '/uploads/' + req.file.filename
+
+    });
+
+    saveStudents(students);
+
+    res.redirect('/admin');
+
+});
+
+app.get('/delete/:id', (req, res) => {
+
+    if(!req.session.admin){
+        return res.send('Access Denied');
+    }
+
+    let students = getStudents();
+
+    students = students.filter(
+        student => student.id != req.params.id
+    );
+
+    saveStudents(students);
+
+    res.redirect('/admin');
+
+});
+
+app.get('/logout', (req, res) => {
+
+    req.session.destroy();
+
+    res.redirect('/');
+
+});
+
+app.listen(PORT, () => {
+
+    console.log('Server Running On Port ' + PORT);
 
 });
