@@ -356,6 +356,28 @@ app.get('/edit-student-form', async (req, res) => {
         res.send(editHtml);
     } catch(err) { res.status(500).send("Error"); }
 });
+// ... ऊपर के सभी रूट्स ...
+app.get('/edit-student-form', async (req, res) => {
+   // ... आपका एडिट वाला कोड ...
+});
+
+// ✅ यहाँ पेस्ट करें यह नया रूट
+app.get('/public-admission-list', async (req, res) => {
+    try {
+        const config = await Setting.findOne({});
+        if (config && config.meritListLink) {
+            return res.redirect(config.meritListLink);
+        }
+        res.send('<h2>📋 चयन सूची (Merit List) अभी अपलोड नहीं हुई है।</h2><br><a href="/">🏠 मुख्य पृष्ठ</a>');
+    } catch (e) {
+        res.status(500).send("Error loading merit list");
+    }
+});
+
+// ... इसके बाद बाकी app.post वाले रूट्स शुरू करें ...
+app.post('/submit-form', (req, res) => {
+   // ...
+});
 app.post('/submit-form', (req, res) => {
     uploadMiddleware(req, res, async (err) => {
         try {
