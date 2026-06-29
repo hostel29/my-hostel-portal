@@ -502,7 +502,7 @@ app.get('/view-students', async (req, res) => {
         docsLinks += '</div>';
 
         let typeBadge = s.isRenewal ? '<span class="badge bg-warning text-dark" style="font-size:10px;">रिन्यूअल</span>' : '<span class="badge bg-primary" style="font-size:10px;">नवीन</span>';
-        let fullAddressText = <small class="text-muted d-block mt-1" style="font-size:10px; background:#f1f5f9; padding:2px 5px; border-radius:4px; max-width:180px; word-wrap:break-word;">📍 <b>पता:</b> ${s.permanentAddress || 'N/A'}, ${s.blockName || ''}, ${s.districtName || ''}</small>;
+        let fullAddressText = '<small class="text-muted d-block mt-1" style="font-size:10px; background:#f1f5f9; padding:2px 5px; border-radius:4px; max-width:180px; word-wrap:break-word;">📍 <b>पता:</b> ' + (s.permanentAddress || 'N/A') + ', ' + (s.blockName || '') + ', ' + (s.districtName || '') + '</small>';
 
         rows += '<tr class="align-middle" style="font-size:12px;"><td>' + (idx + 1) + '</td><td class="text-start"><img src="' + (s.photoUrl || 'https://via.placeholder.com/150') + '" class="rounded-circle me-2" style="width:35px; height:35px; object-fit:cover; border:1px solid #ccc;"><b>' + s.studentName + '</b><br>' + typeBadge + '</td><td>' + s.fatherName + '</td><td><b>' + s.mobile + '</b>' + fullAddressText + '</td><td>' + docsLinks + '</td><td><div class="d-flex justify-content-center"><input type="text" id="room-' + s.mobile + '" class="form-control form-control-sm me-1" value="' + (s.roomNumber || '') + '" style="width:45px; height:24px; font-size:11px;"><button onclick="saveRoom(\'' + s.mobile + '\')" class="btn btn-sm btn-dark py-0 px-1" style="font-size:11px;">सेव</button></div></td><td>' + actionBtn + '</td><td><button onclick="secureRemoveStudent(\'' + s.mobile + '\',\'' + s.studentName + '\')" class="btn btn-sm btn-danger py-0 px-1" style="font-size:11px;">Remove</button></td></tr>';
     });
@@ -522,57 +522,57 @@ app.get('/view-students', async (req, res) => {
         matchingHistories.forEach((h, hIdx) => {
             let snap = h.fullSnapshot || {};
             let badgeColor = h.type === 'Renewal' ? 'bg-warning text-dark' : 'bg-primary';
-            let profileModalId = modal-${arc.studentMobile}-${hIdx};
+            let profileModalId = 'modal-' + arc.studentMobile + '-' + hIdx;
             
-            archiveRows += `<tr style="font-size:12px;" class="align-middle">
-                <td>${archCounter++}</td>
-                <td><img src="${snap.photoUrl || 'https://via.placeholder.com/150'}" class="rounded border me-2" style="width:40px; height:45px; object-fit:cover;"><b>${arc.studentName}</b></td>
-                <td><b>${arc.studentMobile}</b></td>
-                <td><small class="text-muted">📍 ${h.permanentAddress || 'N/A'}, ${h.blockName || ''}</small></td>
-                <td><span class="badge ${badgeColor}">${h.type}</span></td>
-                <td><span class="badge bg-light text-dark border border-secondary">05 जून से अप्रैल तक</span></td>
-                <td><button class="btn btn-xs btn-dark py-1 px-2 fw-bold" style="font-size:11px;" data-bs-toggle="modal" data-bs-target="#${profileModalId}">📄 View Profile</button></td>
-            </tr>`;
+            archiveRows += '<tr style="font-size:12px;" class="align-middle">' +
+                '<td>' + (archCounter++) + '</td>' +
+                '<td><img src="' + (snap.photoUrl || 'https://via.placeholder.com/150') + '" class="rounded border me-2" style="width:40px; height:45px; object-fit:cover;"><b>' + arc.studentName + '</b></td>' +
+                '<td><b>' + arc.studentMobile + '</b></td>' +
+                '<td><small class="text-muted">📍 ' + (h.permanentAddress || 'N/A') + ', ' + (h.blockName || '') + '</small></td>' +
+                '<td><span class="badge ' + badgeColor + '">' + h.type + '</span></td>' +
+                '<td><span class="badge bg-light text-dark border border-secondary">05 जून से अप्रैल तक</span></td>' +
+                '<td><button class="btn btn-xs btn-dark py-1 px-2 fw-bold" style="font-size:11px;" data-bs-toggle="modal" data-bs-target="#' + profileModalId + '">📄 View Profile</button></td>' +
+            '</tr>';
 
-            modalsHtml += `<div class="modal fade" id="${profileModalId}" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered modal-lg text-dark">
-                    <div class="modal-content rounded-3">
-                        <div class="modal-header bg-dark text-warning">
-                            <h5 class="modal-title fw-bold">📋 छात्र संपूर्ण प्रोफ़ाइल रिकॉर्ड (${h.session})</h5>
-                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body p-4" style="font-size:14px;">
-                            <div class="row mb-3 border-bottom pb-3">
-                                <div class="col-md-3 text-center"><img src="${snap.photoUrl || 'https://via.placeholder.com/150'}" class="img-thumbnail img-fluid mb-2" style="max-height:150px; object-fit:cover;"></div>
-                                <div class="col-md-9 row g-2">
-                                    <div class="col-6"><b>नाम:</b> ${snap.studentName || 'N/A'}</div>
-                                    <div class="col-6"><b>mobile:</b> ${snap.mobile || 'N/A'}</div>
-                                    <div class="col-6"><b>पिता का नाम:</b> ${snap.fatherName || 'N/A'}</div>
-                                    <div class="col-6"><b>माता का नाम:</b> ${snap.motherName || 'N/A'}</div>
-                                    <div class="col-6"><b>जन्मतिथि:</b> ${snap.dob || 'N/A'}</div>
-                                    <div class="col-6"><b>वर्ग:</b> ${snap.category || 'ST'} (${snap.subCast || 'N/A'})</div>
-                                </div>
-                            </div>
-                            <div class="row g-2 mb-3">
-                                <div class="col-md-6"><b>स्थायी पता:</b> ${snap.permanentAddress || 'N/A'}, ${snap.blockName || ''}, ${snap.districtName || ''}</div>
-                                <div class="col-md-6"><b>स्कूल / कॉलेज:</b> ${snap.collegeName || 'N/A'} (कक्षा: ${snap.studentClass || 'N/A'})</div>
-                                <div class="col-md-6"><b>वार्षिक आय:</b> ₹${snap.annualIncome || 0}</div>
-                                <div class="col-md-6"><b>घर से दूरी:</b> ${snap.homeDistance || 0} किमी</div>
-                            </div>
-                            <h6 class="fw-bold border-bottom pb-1 text-primary">📁 अपलोड किए गए दस्तावेज़ बैकअप सूची:</h6>
-                            <div class="d-flex flex-wrap gap-2 mt-2">
-                                ${snap.studentAadharUrl ? <a href="${snap.studentAadharUrl}" target="_blank" class="btn btn-sm btn-outline-primary">छात्र आधार</a> : ''}
-                                ${snap.fatherAadharUrl ? <a href="${snap.fatherAadharUrl}" target="_blank" class="btn btn-sm btn-outline-secondary">पिता आधार</a> : ''}
-                                ${snap.motherAadharUrl ? <a href="${snap.motherAadharUrl}" target="_blank" class="btn btn-sm btn-outline-secondary">माता आधार</a> : ''}
-                                ${snap.casteCertUrl ? <a href="${snap.casteCertUrl}" target="_blank" class="btn btn-sm btn-outline-info">जाति प्रमाण पत्र</a> : ''}
-                                ${snap.residenceCertUrl ? <a href="${snap.residenceCertUrl}" target="_blank" class="btn btn-sm btn-outline-info">निवास प्रमाण पत्र</a> : ''}
-                                ${snap.rationCardUrl ? <a href="${snap.rationCardUrl}" target="_blank" class="btn btn-sm btn-outline-info">राशन कार्ड</a> : ''}
-                                ${snap.resultUrl ? <a href="${snap.resultUrl}" target="_blank" class="btn btn-sm btn-outline-success">रिजल्ट मार्कशीट</a> : ''}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>`;
+            modalsHtml += '<div class="modal fade" id="' + profileModalId + '" tabindex="-1" aria-hidden="true">' +
+                '<div class="modal-dialog modal-dialog-centered modal-lg text-dark">' +
+                    '<div class="modal-content rounded-3">' +
+                        '<div class="modal-header bg-dark text-warning">' +
+                            '<h5 class="modal-title fw-bold">📋 छात्र संपूर्ण प्रोफ़ाइल रिकॉर्ड (' + h.session + ')</h5>' +
+                            '<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>' +
+                        '</div>' +
+                        '<div class="modal-body p-4" style="font-size:14px;">' +
+                            '<div class="row mb-3 border-bottom pb-3">' +
+                                '<div class="col-md-3 text-center"><img src="' + (snap.photoUrl || 'https://via.placeholder.com/150') + '" class="img-thumbnail img-fluid mb-2" style="max-height:150px; object-fit:cover;"></div>' +
+                                '<div class="col-md-9 row g-2">' +
+                                    '<div class="col-6"><b>नाम:</b> ' + (snap.studentName || 'N/A') + '</div>' +
+                                    '<div class="col-6"><b>mobile:</b> ' + (snap.mobile || 'N/A') + '</div>' +
+                                    '<div class="col-6"><b>पिता का नाम:</b> ' + (snap.fatherName || 'N/A') + '</div>' +
+                                    '<div class="col-6"><b>माता का नाम:</b> ' + (snap.motherName || 'N/A') + '</div>' +
+                                    '<div class="col-6"><b>जन्मतिथि:</b> ' + (snap.dob || 'N/A') + '</div>' +
+                                    '<div class="col-6"><b>वर्ग:</b> ' + (snap.category || 'ST') + ' (' + (snap.subCast || 'N/A') + ')</div>' +
+                                '</div>' +
+                            '</div>' +
+                            '<div class="row g-2 mb-3">' +
+                                '<div class="col-md-6"><b>स्थायी पता:</b> ' + (snap.permanentAddress || 'N/A') + ', ' + (snap.blockName || '') + ', ' + (snap.districtName || '') + '</div>' +
+                                '<div class="col-md-6"><b>स्कूल / कॉलेज:</b> ' + (snap.collegeName || 'N/A') + ' (कक्षा: ' + (snap.studentClass || 'N/A') + ')</div>' +
+                                '<div class="col-md-6"><b>वार्षिक आय:</b> ₹' + (snap.annualIncome || 0) + '</div>' +
+                                '<div class="col-md-6"><b>घर से दूरी:</b> ' + (snap.homeDistance || 0) + ' किमी</div>' +
+                            '</div>' +
+                            '<h6 class="fw-bold border-bottom pb-1 text-primary">📁 अपलोड किए गए दस्तावेज़ बैकअप सूची:</h6>' +
+                            '<div class="d-flex flex-wrap gap-2 mt-2">' +
+                                (snap.studentAadharUrl ? '<a href="' + snap.studentAadharUrl + '" target="_blank" class="btn btn-sm btn-outline-primary">छात्र आधार</a>' : '') +
+                                (snap.fatherAadharUrl ? '<a href="' + snap.fatherAadharUrl + '" target="_blank" class="btn btn-sm btn-outline-secondary">पिता आधार</a>' : '') +
+                                (snap.motherAadharUrl ? '<a href="' + snap.motherAadharUrl + '" target="_blank" class="btn btn-sm btn-outline-secondary">माता आधार</a>' : '') +
+                                (snap.casteCertUrl ? '<a href="' + snap.casteCertUrl + '" target="_blank" class="btn btn-sm btn-outline-info">जाति प्रमाण पत्र</a>' : '') +
+                                (snap.residenceCertUrl ? '<a href="' + snap.residenceCertUrl + '" target="_blank" class="btn btn-sm btn-outline-info">निवास प्रमाण पत्र</a>' : '') +
+                                (snap.rationCardUrl ? '<a href="' + snap.rationCardUrl + '" target="_blank" class="btn btn-sm btn-outline-info">राशन कार्ड</a>' : '') +
+                                (snap.resultUrl ? '<a href="' + snap.resultUrl + '" target="_blank" class="btn btn-sm btn-outline-success">रिजल्ट मार्कशीट</a>' : '') +
+                            '</div>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>' +
+            '</div>';
         });
     });
 
@@ -580,11 +580,11 @@ app.get('/view-students', async (req, res) => {
     
     let noticeListHtml = '<ul class="list-group list-group-flush mt-2" style="max-height:110px; overflow-y:auto; font-size:11px;">';
     dynamicNotices.forEach(nt => {
-        noticeListHtml += <li class="list-group-item d-flex justify-content-between align-items-center p-1 bg-light border-bottom"><span><b>[${nt.date}]:</b> ${nt.text.slice(0,35)}...</span><button onclick="deleteNotice('${nt._id}')" class="btn btn-xs btn-danger p-0 px-1 text-white fw-bold" style="font-size:9px;">X</button></li>;
+        noticeListHtml += '<li class="list-group-item d-flex justify-content-between align-items-center p-1 bg-light border-bottom"><span><b>[' + nt.date + ']:</b> ' + nt.text.slice(0,35) + '...</span><button onclick="deleteNotice(\'' + nt._id + '\')" class="btn btn-xs btn-danger p-0 px-1 text-white fw-bold" style="font-size:9px;">X</button></li>';
     });
     noticeListHtml += '</ul>';
 
-    admHtml += <div class="col-lg-3 col-md-6"><div class="bg-white border p-3 rounded shadow-sm"><h5>📢 नया नोटिस जारी करें</h5><form action="/post-notice" method="POST"><input type="text" name="noticeText" class="form-control form-control-sm mb-2" required><button type="submit" class="btn btn-sm btn-danger w-100">Notice Board लाइव करें</button></form><hr class="my-2"><h6>🗂️ लाइव नोटिस सूची (Delete करें)</h6>${noticeListHtml}</div></div>;
+    admHtml += '<div class="col-lg-3 col-md-6"><div class="bg-white border p-3 rounded shadow-sm"><h5>📢 नया नोटिस जारी करें</h5><form action="/post-notice" method="POST"><input type="text" name="noticeText" class="form-control form-control-sm mb-2" required><button type="submit" class="btn btn-sm btn-danger w-100">Notice Board लाइव करें</button></form><hr class="my-2"><h6>🗂️ लाइव नोटिस सूची (Delete करें)</h6>' + noticeListHtml + '</div></div>';
     
     admHtml += '<div class="col-lg-3 col-md-6"><div class="bg-white border p-3 rounded shadow-sm"><h5>⚙️ वॉर्डन विवरण व फ़ोटो</h5><form action="/update-warden" method="POST" enctype="multipart/form-data" class="row g-2"><h6>वॉर्डन (A)</h6><input type="text" name="w1Name" class="form-control form-control-sm" value="' + currentWarden.w1Name + '"><input type="text" name="w1Mobile" class="form-control form-control-sm" value="' + currentWarden.w1Mobile + '"><input type="file" name="w1PhotoFile" class="form-control form-control-sm" accept="image/"><hr class="my-1"><h6>वॉर्डन (B)</h6><input type="text" name="w2Name" class="form-control form-control-sm" value="' + currentWarden.w2Name + '"><input type="text" name="w2Mobile" class="form-control form-control-sm" value="' + currentWarden.w2Mobile + '"><input type="file" name="w2PhotoFile" class="form-control form-control-sm" accept="image/"><hr class="my-1"><h6 class="text-success">💬 लाइव हेल्पलाइन नंबर</h6><input type="text" name="helpLineNumber" class="form-control form-control-sm border-success fw-bold text-success" value="' + (currentWarden.helpLineNumber || "9329088615") + '"><button type="submit" class="btn btn-sm btn-warning w-100 mt-2">सभी डेटा सुरक्षित करें</button></form></div></div>';
     
@@ -598,37 +598,37 @@ app.get('/view-students', async (req, res) => {
     admHtml += '<button onclick="toggleF(\'rationActive\')" class="btn btn-xs w-100 mb-1 btn-' + (config.rationActive?'success':'danger') + '">राशन: ' + (config.rationActive?'ON':'OFF') + '</button>';
     admHtml += '</div></div></div>';
 
-    admHtml += `<div class="card p-3 mb-4 shadow-sm border-start border-primary border-4 bg-white">
-        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
-            <div><h4 class="text-primary fw-bold mb-0 fs-5">🗄️ डेटा रिकॉर्ड हब</h4></div>
-            <div class="d-flex gap-2">
-                <form method="GET" action="/view-students" class="d-flex gap-2 align-items-center">
-                    <input type="hidden" name="currentTab" value="${currentTab}">
-                    <label class="fw-bold small mb-0 text-secondary">सत्र:</label>
-                    <select name="filterSession" onchange="this.form.submit()" class="form-select form-select-sm" style="width:130px;">
-                        <option value="2026-27" ${selectedSession==="2026-27"?"selected":""}>2026-27</option>
-                        <option value="2027-28" ${selectedSession==="2027-28"?"selected":""}>2027-28</option>
-                        <option value="2028-29" ${selectedSession==="2028-29"?"selected":""}>2028-29</option>
-                    </select>
-                </form>
-            </div>
-        </div>
-        <div class="btn-group mb-3" style="max-width:400px;">
-            <a href="/view-students?filterSession=${selectedSession}&currentTab=all" class="btn btn-sm ${currentTab==='all'?'btn-primary':'btn-outline-primary'}">All Students</a>
-            <a href="/view-students?filterSession=${selectedSession}&currentTab=new" class="btn btn-sm ${currentTab==='new'?'btn-primary':'btn-outline-primary'}">New Student</a>
-            <a href="/view-students?filterSession=${selectedSession}&currentTab=old" class="btn btn-sm ${currentTab==='old'?'btn-primary':'btn-outline-primary'}">Old Student</a>
-        </div>
-        <div class="table-responsive" style="max-height:300px; overflow-y:auto;">
-            <table class="table table-bordered table-striped table-sm text-center align-middle">
-                <thead class="table-dark">
-                    <tr>
-                        <th>क्र.</th><th>नाम व फोटो</th><th>मोबाइल नंबर</th><th>स्थायी पता</th><th>प्रकार</th><th>कब से कब तक रहा</th><th>प्रोफ़ाइल फ़ाइल</th>
-                    </tr>
-                </thead>
-                <tbody>${archiveRows || <tr><td colspan="7" class="p-3 text-muted">सत्र ${selectedSession} में कोई रिकॉर्ड उपलब्ध नहीं है।</td></tr>}</tbody>
-            </table>
-        </div>
-    </div>`;
+    admHtml += '<div class="card p-3 mb-4 shadow-sm border-start border-primary border-4 bg-white">' +
+        '<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">' +
+            '<div><h4 class="text-primary fw-bold mb-0 fs-5">🗄️ डेटा रिकॉर्ड हब</h4></div>' +
+            '<div class="d-flex gap-2">' +
+                '<form method="GET" action="/view-students" class="d-flex gap-2 align-items-center">' +
+                    '<input type="hidden" name="currentTab" value="' + currentTab + '">' +
+                    '<label class="fw-bold small mb-0 text-secondary">सत्र:</label>' +
+                    '<select name="filterSession" onchange="this.form.submit()" class="form-select form-select-sm" style="width:130px;">' +
+                        '<option value="2026-27" ' + (selectedSession==="2026-27"?"selected":"") + '>2026-27</option>' +
+                        '<option value="2027-28" ' + (selectedSession==="2027-28"?"selected":"") + '>2027-28</option>' +
+                        '<option value="2028-29" ' + (selectedSession==="2028-29"?"selected":"") + '>2028-29</option>' +
+                    '</select>' +
+                '</form>' +
+            '</div>' +
+        '</div>' +
+        '<div class="btn-group mb-3" style="max-width:400px;">' +
+            '<a href="/view-students?filterSession=' + selectedSession + '&currentTab=all" class="btn btn-sm ' + (currentTab==='all'?'btn-primary':'btn-outline-primary') + '">All Students</a>' +
+            '<a href="/view-students?filterSession=' + selectedSession + '&currentTab=new" class="btn btn-sm ' + (currentTab==='new'?'btn-primary':'btn-outline-primary') + '">New Student</a>' +
+            '<a href="/view-students?filterSession=' + selectedSession + '&currentTab=old" class="btn btn-sm ' + (currentTab==='old'?'btn-primary':'btn-outline-primary') + '">Old Student</a>' +
+        '</div>' +
+        '<div class="table-responsive" style="max-height:300px; overflow-y:auto;">' +
+            '<table class="table table-bordered table-striped table-sm text-center align-middle">' +
+                '<thead class="table-dark">' +
+                    '<tr>' +
+                        '<th>क्र.</th><th>नाम व फोटो</th><th>मोबाइल नंबर</th><th>स्थायी पता</th><th>प्रकार</th><th>कब से कब तक रहा</th><th>प्रोफ़ाइल फ़ाइल</th>' +
+                    '</tr>' +
+                '</thead>' +
+                '<tbody>' + (archiveRows || ('<tr><td colspan="7" class="p-3 text-muted">सत्र ' + selectedSession + ' में कोई रिकॉर्ड उपलब्ध नहीं है।</td></tr>')) + '</tbody>' +
+            '</table>' +
+        '</div>' +
+    '</div>';
 
     admHtml += '<div class="bg-white border p-2 rounded shadow-sm table-responsive"><h4 class="text-center text-primary fw-bold mb-3 fs-5">🔒 छात्रावास लाइव छात्र सूची (सत्र ' + currentLiveSession + ')</h4><table class="table table-bordered table-striped text-center align-middle" style="min-width: 950px;"><thead class="table-dark"><tr><th>S.No</th><th>छात्र</th><th>पिता</th><th>मोबाइल व पता</th><th style="width:280px;">📁 दस्तावेज़ मैट्रिक्स</th><th>ROOM अलॉट</th><th>Approval</th><th>हटाएं</th></tr></thead><tbody>' + (rows || '<tr><td colspan="8">कोई छात्र रिकॉर्ड नहीं है।</td></tr>') + '</tbody></table></div>';
     admHtml += modalsHtml; 
