@@ -417,43 +417,51 @@ app.post('/submit-form', (req, res) => {
             if (old) { await Student.updateOne({ mobile: cleanMobile }, { $set: sData }); }
             else { const newStudent = new Student(sData); await newStudent.save(); }
 
-            let archiveRecord = await Archive.findOne({ studentMobile: cleanMobile });
-            const historyEntry = {
-                session: currentSession,
-                type: sData.isRenewal ? 'Renewal' : 'New',
-                studentClass: sData.studentClass,
-                collegeName: sData.collegeName,
-                permanentAddress: sData.permanentAddress,
-                blockName: sData.blockName,
-                districtName: sData.districtName,
-                dateArchived: new Date().toLocaleDateString(),
-                fullSnapshot: sData
-            };
+            // 🛠️ [आर्काइव एरर फिक्स] इसे सुरक्षित ट्राई-कैच में डाल दिया ताकि यह मुख्य फॉर्म सबमिशन को न रोके
+            try {
+                let archiveRecord = await Archive.findOne({ studentMobile: cleanMobile });
+                const historyEntry = {
+                    session: currentSession,
+                    type: sData.isRenewal ? 'Renewal' : 'New',
+                    studentClass: sData.studentClass,
+                    collegeName: sData.collegeName,
+                    permanentAddress: sData.permanentAddress,
+                    blockName: sData.blockName,
+                    districtName: sData.districtName,
+                    dateArchived: new Date().toLocaleDateString(),
+                    fullSnapshot: sData
+                };
 
-            if (archiveRecord) {
-                const sessionExists = archiveRecord.history.some(h => h.session === currentSession);
-                if (!sessionExists) {
-                    archiveRecord.history.push(historyEntry);
-                    archiveRecord.yearsActive = archiveRecord.history.length;
-                    await archiveRecord.save();
+                if (archiveRecord) {
+                    const sessionExists = archiveRecord.history.some(h => h.session === currentSession);
+                    if (!sessionExists) {
+                        archiveRecord.history.push(historyEntry);
+                        archiveRecord.yearsActive = archiveRecord.history.length;
+                        await archiveRecord.save();
+                    } else {
+                        await Archive.updateOne(
+                            { studentMobile: cleanMobile, "history.session": currentSession },
+                            { $set: { "history.$": historyEntry } }
+                        );
+                    }
                 } else {
-                    await Archive.updateOne(
-                        { studentMobile: cleanMobile, "history.session": currentSession },
-                        { $set: { "history.$": historyEntry } }
-                    );
+                    const newArchive = new Archive({
+                        studentMobile: cleanMobile,
+                        studentName: sData.studentName,
+                        history: [historyEntry],
+                        yearsActive: 1
+                    });
+                    await newArchive.save();
                 }
-            } else {
-                const newArchive = new Archive({
-                    studentMobile: cleanMobile,
-                    studentName: sData.studentName,
-                    history: [historyEntry],
-                    yearsActive: 1
-                });
-                await newArchive.save();
+            } catch (archiveErr) {
+                console.error("⚠️ Archive Logging Error (Non-blocking):", archiveErr);
             }
 
             res.redirect('/get-receipt-view?mobile=' + cleanMobile);
-        } catch (e) { res.status(500).send("Upload Form Error"); }
+        } catch (e) { 
+            console.error("❌ Form Submission Major Error:", e);
+            res.status(500).send("Upload Form Error"); 
+        }
     });
 });
 
