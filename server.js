@@ -80,13 +80,12 @@ const StudentSchema = new mongoose.Schema({
 });
 const Student = mongoose.model('Student', StudentSchema);
 
-// 🛠️ [Cache Cleaner] पुराने लॉक्ड स्कीमा को डिलीट करके फ्रेश कंपाइल करने के लिए
 if (mongoose.models.Archive) { delete mongoose.models.Archive; }
 
 const ArchiveSchema = new mongoose.Schema({
     studentMobile: String,
     studentName: String,
-    history: mongoose.Schema.Types.Mixed, // ✅ इसे पूर्ण रूप से Mixed किया ताकि कभी validation fail न हो
+    history: mongoose.Schema.Types.Mixed, 
     yearsActive: { type: Number, default: 1 }
 }, { strict: false }); 
 const Archive = mongoose.model('Archive', ArchiveSchema);
@@ -171,7 +170,9 @@ app.get('/', async (req, res) => {
         
         h += '<div class="col-md-4"><div class="card p-4 text-center mb-4 border-top border-warning border-5 shadow-sm"><div class="card-header bg-light text-dark fw-bold rounded mb-3 border-0 fs-6" id="management-title">👨‍💼 छात्रावास प्रबंधन प्रशासन</div><div class="row g-2">';
         h += '<div class="col-6 border-end"><img src="' + warden.w1Photo + '" class="rounded-3 border mb-2 shadow-sm" style="width: 85px; height: 85px; object-fit: cover;" onerror="this.src=\'https://via.placeholder.com/150\'\"><h6 class="fw-bold text-dark mb-0 small">' + warden.w1Name + '</h6><small class="text-muted block d-block" style="font-size:9px;">' + warden.w1Desig + '</small><div class="text-start bg-light p-2 rounded border mt-2" style="font-size:9px; font-weight:500;"><b>📞:</b> ' + warden.w1Mobile + '<br><b class="lang-office">🏢:</b> ' + warden.w1Office + '</div></div>';
-        h += '<div class="col-6"><img src="' + warden.w2Photo + '" class="rounded-3 border mb-2 shadow-sm" style="width: 85px; height: 85px; object-fit: cover;" onerror="this.src=\'https://via.placeholder.com/150\'\"><h6 class="fw-bold text-dark mb-0 small">' + warden.w2Name + '</h6><small class="text-muted block d-block" style="font-size:9px;" class="lang-w2-desig">' + warden.w2Desig + '</small><div class="text-start bg-light p-2 rounded border mt-2" style="font-size:9px; font-weight:500;"><b>📞:</b> ' + warden.w2Mobile + '<br><b class="lang-office">🏢:</b> ' + warden.w2Office + '</div></div></div></div>';
+        
+        // 🛠️ [भाषा फिक्स] क्लास मैट्रिक्स फिक्स किया (Double class हटाया)
+        h += '<div class="col-6"><img src="' + warden.w2Photo + '" class="rounded-3 border mb-2 shadow-sm" style="width: 85px; height: 85px; object-fit: cover;" onerror="this.src=\'https://via.placeholder.com/150\'\"><h6 class="fw-bold text-dark mb-0 small">' + warden.w2Name + '</h6><small class="text-muted block d-block lang-w2-desig" style="font-size:9px;">' + warden.w2Desig + '</small><div class="text-start bg-light p-2 rounded border mt-2" style="font-size:9px; font-weight:500;"><b>📞:</b> ' + warden.w2Mobile + '<br><b class="lang-office">🏢:</b> ' + warden.w2Office + '</div></div></div></div>';
         
         let meritTarget = config.meritListLink ? config.meritListLink : '/public-admission-list';
         h += '<div class="card p-4 shadow-sm border-top border-success border-5 text-center"><div class="card-header bg-light text-success fw-bold rounded mb-2 border-0 fs-6" id="merit-title">📋 छात्रावास फाइनल मेरिट सूची</div><a href="' + meritTarget + '" target="_blank" class="btn btn-success w-100 fw-bold py-2.5 mt-2 rounded-3 shadow" id="merit-btn">चयन सूची देखें ➔</a></div></div></div></div>';
@@ -187,87 +188,89 @@ app.get('/', async (req, res) => {
 
         h += '<div class="modal fade" id="rulesModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content text-dark"><div class="modal-header bg-danger text-white"><h5 class="modal-title fw-bold text-warning" id="rules-modal-title">📜 शासकीय छात्रावास आवश्यक नियम एवं अनिवार्य नियमावली</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body p-4" style="font-size: 15px; line-height: 1.8;"><ol class="fw-bold text-secondary" id="rules-list"><li class="mb-2">छात्रावास में प्रवेशित छात्र को छात्रावास में भोजन (मेस) करना अनिवार्य है।</li><li class="mb-2">स्थानीय शिक्षण संस्था में छात्र को नियमित प्रवेश व उपस्थिति अनिवार्य है।</li><li class="mb-2">बिना सूचना के लगातार अनुपस्थित रहने पर छात्र को छात्रावास से निष्कासित किया जा सकेगा।</li><li class="mb-2">अप्रवेशी छात्र को बिना अधीक्षक की लिखित अनुमति के ठहराना वर्जित है।</li><li class="mb-2">मादक पदार्थों एवं मद्यपान का सेवन करने पर तत्काल निष्कासित किया जा सकेगा।</li></ol></div></div></div></div>';
         
-        h += `<script>
-        function changeLanguage(lang) {
-            const t = {
-                hi: {
-                    navTitle: "🏢 PRE MATRIC ST+SC BOYS HOSTEL SURAJPUR",
-                    rulesBtn: "📜 छात्रावास आवश्यक नियम एवं अनिवार्य अनुशासन निर्देशिका (टच करें) ➔",
-                    stTitle: "अनुसूचित जनजाति (ST) सीट ट्रैकर",
-                    scTitle: "अनुसूचित जाति (SC) सीट ट्रैकर",
-                    total: "कुल सीटें", confirm: "कन्फर्म", vacant: "खाली सीटें",
-                    noticeTitle: "📢 ऑफिशियल नोटिस बोर्ड (Notice Board)",
-                    noNotice: "कोई नया नोटिस जारी नहीं हुआ है।",
-                    btnReg: "नवीन प्रवेश फॉर्म", btnRen: "हॉस्टल नवीनीकरण", btnStat: "अलॉटमेंट स्टेटस",
-                    sessBadge: "सत्र \${sessionVal}", oldBadge: "पुराने छात्र", recBadge: "प्रोफाइल / रसीद",
-                    mgmtTitle: "👨‍💼 छात्रावास प्रबंधन प्रशासन", office: "🏢:",
-                    meritTitle: "📋 छात्रावास फाइनल मेरिट सूची", meritBtn: "चयन सूची देखें ➔",
-                    helpFloat: "💬 सहायता केंद्र", helpTitle: "🤝 डिजिटल हेल्पडेस्क सहायता केंद्र",
-                    helpSub: "आपको किस प्रकार की सहायता चाहिए? नीचे संबंधित विषय चुनें:",
-                    h1: "➔ 📝 नए प्रवेश फॉर्म भरने में समस्या है", h2: "➔ 📂 दस्तावेज़ अपलोड (साइज) एरर है", h3: "➔ 🔍 रूम अलॉटमेंट / स्टेटस संबंधी प्रश्न", h4: "➔ 🔄 नवीनीकरण फॉर्म संबंधी जानकारी",
-                    close: "बंद करें", rTitle: "📜 शासकीय छात्रावास आवश्यक नियम एवं अनिवार्य नियमावली",
-                    r1: "छात्रावास में प्रवेशित छात्र को छात्रावास में भोजन (मेस) करना अनिवार्य है।",
-                    r2: "स्थानीय शिक्षण संस्था में छात्र को नियमित प्रवेश व उपस्थिति अनिवार्य है।",
-                    r3: "बिना सूचना के लगातार अनुपस्थित रहने पर छात्र को छात्रावास से निष्कासित किया जा सकेगा।",
-                    r4: "अप्रवेशी छात्र को बिना अधीक्षक की लिखित अनुमति के ठहराना वर्जित है।",
-                    r5: "मादक पदार्थों एवं मद्यपान का सेवन करने पर तत्काल निष्कासित किया जा सकेगा।"
-                },
-                en: {
-                    navTitle: "🏢 PRE MATRIC ST+SC BOYS HOSTEL SURAJPUR",
-                    rulesBtn: "📜 Hostel Essential Rules & Mandatory Discipline Guidelines (Touch) ➔",
-                    stTitle: "Scheduled Tribe (ST) Seat Tracker",
-                    scTitle: "Scheduled Caste (SC) Seat Tracker",
-                    total: "Total Seats", confirm: "Confirmed", vacant: "Vacant Seats",
-                    noticeTitle: "📢 Official Notice Board",
-                    noNotice: "No new notices have been issued.",
-                    btnReg: "New Admission Form", btnRen: "Hostel Renewal", btnStat: "Allotment Status",
-                    sessBadge: "Session \${sessionVal}", oldBadge: "Old Students", recBadge: "Profile / Receipt",
-                    mgmtTitle: "👨‍💼 Hostel Management Administration", office: "Office:",
-                    meritTitle: "📋 Hostel Final Merit List", meritBtn: "View Merit List ➔",
-                    helpFloat: "💬 Help Center", helpTitle: "🤝 Digital Helpdesk Support Center",
-                    helpSub: "What kind of assistance do you need? Select a topic below:",
-                    h1: "➔ 📝 Issue in filling New Admission Form", h2: "➔ 📂 Document Upload (Size) Error", h3: "➔ 🔍 Room Allotment / Status Queries", h4: "➔ 🔄 Renewal Form Related Information",
-                    close: "Close", rTitle: "📜 Government Hostel Essential Rules & Regulations",
-                    r1: "Students admitted to the hostel must strictly take meals in the mess.",
-                    r2: "Regular admission and attendance in the local educational institution are mandatory.",
-                    r3: "Continuous absence without information may lead to expulsion from the hostel.",
-                    r4: "Staying of non-admitted students is strictly prohibited without written permission.",
-                    r5: "Consumption of intoxicants or alcohol will result in immediate expulsion."
-                }
-            };
-            const data = t[lang];
-            document.getElementById("nav-title").innerHTML = data.navTitle;
-            document.getElementById("rules-btn").innerHTML = data.rulesBtn;
-            document.getElementById("st-tracker-title").innerHTML = data.stTitle;
-            document.getElementById("sc-tracker-title").innerHTML = data.scTitle;
-            document.querySelectorAll(".lang-total").forEach(e => e.innerHTML = data.total);
-            document.querySelectorAll(".lang-confirm").forEach(e => e.innerHTML = data.confirm);
-            document.querySelectorAll(".lang-vacant").forEach(e => e.innerHTML = data.vacant);
-            document.getElementById("notice-title").innerHTML = data.noticeTitle;
-            if(document.getElementById("no-notice")) document.getElementById("no-notice").innerHTML = data.noNotice;
-            document.querySelector(".lang-btn-reg-title").innerHTML = data.btnReg;
-            document.querySelector(".lang-btn-ren-title").innerHTML = data.btnRen;
-            document.querySelector(".lang-btn-stat-title").innerHTML = data.btnStat;
-            document.querySelector(".lang-session-badge").innerHTML = data.sessBadge;
-            document.querySelector(".lang-old-badge").innerHTML = data.oldBadge;
-            document.querySelector(".lang-receipt-badge").innerHTML = data.recBadge;
-            document.getElementById("management-title").innerHTML = data.mgmtTitle;
-            document.querySelectorAll(".lang-office").forEach(e => e.innerHTML = data.office);
-            document.getElementById("merit-title").innerHTML = data.meritTitle;
-            document.getElementById("merit-btn").innerHTML = data.meritBtn;
-            document.getElementById("help-float-btn").innerHTML = data.helpFloat;
-            document.getElementById("help-modal-title").innerHTML = data.helpTitle;
-            document.getElementById("help-modal-sub").innerHTML = data.helpSub;
-            document.getElementById("h-opt1").innerHTML = data.h1;
-            document.getElementById("h-opt2").innerHTML = data.h2;
-            document.getElementById("h-opt3").innerHTML = data.h3;
-            document.getElementById("h-opt4").innerHTML = data.h4;
-            document.getElementById("help-close-btn").innerHTML = data.close;
-            document.getElementById("rules-modal-title").innerHTML = data.rTitle;
-            const rList = document.getElementById("rules-list");
-            rList.innerHTML = \<li class="mb-2">\${data.r1}</li><li class="mb-2">\${data.r2}</li><li class="mb-2">\${data.r3}</li><li class="mb-2">\${data.r4}</li><li class="mb-2">\${data.r5}</li>\;
-        }
-        </script>`;
+        // 🛠️ [भाषा फिक्स] पूरे जावास्क्रिप्ट को सिंपल स्ट्रिंग कॉन्कैट किया ताकि बैकटिक की समस्या हमेशा के लिए ख़त्म हो जाए
+        h += '<script>';
+        h += 'function changeLanguage(lang) {';
+        h += '  const t = {';
+        h += '    hi: {';
+        h += '      navTitle: "🏢 PRE MATRIC ST+SC BOYS HOSTEL SURAJPUR",';
+        h += '      rulesBtn: "📜 छात्रावास आवश्यक नियम एवं अनिवार्य अनुशासन निर्देशिका (टच करें) ➔",';
+        h += '      stTitle: "अनुसूचित जनजाति (ST) सीट ट्रैकर",';
+        h += '      scTitle: "अनुसूचित जाति (SC) सीट ट्रैकर",';
+        h += '      total: "कुल सीटें", confirm: "कन्फर्म", vacant: "खाली सीटें",';
+        h += '      noticeTitle: "📢 ऑफिशियल नोटिस बोर्ड (Notice Board)",';
+        h += '      noNotice: "कोई नया नोटिस जारी नहीं हुआ है।",';
+        h += '      btnReg: "नवीन प्रवेश फॉर्म", btnRen: "हॉस्टल नवीनीकरण", btnStat: "अलॉटमेंट स्टेटस",';
+        h += '      sessBadge: "सत्र ' + sessionVal + '", oldBadge: "पुराने छात्र", recBadge: "प्रोफाइल / रसीद",';
+        h += '      mgmtTitle: "👨‍💼 छात्रावास प्रबंधन प्रशासन", office: "🏢:",';
+        h += '      meritTitle: "📋 छात्रावास फाइनल मेरिट सूची", meritBtn: "चयन सूची देखें ➔",';
+        h += '      helpFloat: "💬 सहायता केंद्र", helpTitle: "🤝 डिजिटल हेल्पडेस्क सहायता केंद्र",';
+        h += '      helpSub: "आपको किस प्रकार की सहायता चाहिए? नीचे संबंधित विषय चुनें:",';
+        h += '      h1: "➔ 📝 नए प्रवेश फॉर्म भरने में समस्या है", h2: "➔ 📂 दस्तावेज़ अपलोड (साइज) एरर है", h3: "➔ 🔍 रूम अलॉटमेंट / स्टेटस संबंधी प्रश्न", h4: "➔ 🔄 नवीनीकरण फॉर्म संबंधी जानकारी",';
+        h += '      close: "बंद करें", rTitle: "📜 शासकीय छात्रावास आवश्यक नियम एवं अनिवार्य नियमावली",';
+        h += '      r1: "छात्रावास में प्रवेशित छात्र को छात्रावास में भोजन (मेस) करना अनिवार्य है।",';
+        h += '      r2: "स्थानीय शिक्षण संस्था में छात्र को नियमित प्रवेश व उपस्थिति अनिवार्य है।",';
+        h += '      r3: "बिना सूचना के लगातार अनुपस्थित रहने पर छात्र को छात्रावास से निष्कासित किया जा सकेगा।",';
+        h += '      r4: "अप्रवेशी छात्र को बिना अधीक्षक की लिखित अनुमति के ठहराना वर्जित है।",';
+        h += '      r5: "मादक पदार्थों एवं मद्यपान का सेवन करने पर तत्काल निष्कासित किया जा सकेगा।"';
+        h += '    },';
+        h += '    en: {';
+        h += '      navTitle: "🏢 PRE MATRIC ST+SC BOYS HOSTEL SURAJPUR",';
+        h += '      rulesBtn: "📜 Hostel Essential Rules & Mandatory Discipline Guidelines (Touch) ➔",';
+        h += '      stTitle: "Scheduled Tribe (ST) Seat Tracker",';
+        h += '      scTitle: "Scheduled Caste (SC) Seat Tracker",';
+        h += '      total: "Total Seats", confirm: "Confirmed", vacant: "Vacant Seats",';
+        h += '      noticeTitle: "📢 Official Notice Board",';
+        h += '      noNotice: "No new notices have been issued.",';
+        h += '      btnReg: "New Admission Form", btnRen: "Hostel Renewal", btnStat: "Allotment Status",';
+        h += '      sessBadge: "Session ' + sessionVal + '", oldBadge: "Old Students", recBadge: "Profile / Receipt",';
+        h += '      mgmtTitle: "👨‍💼 Hostel Management Administration", office: "Office:",';
+        h += '      meritTitle: "📋 Hostel Final Merit List", meritBtn: "View Merit List ➔",';
+        h += '      helpFloat: "💬 Help Center", helpTitle: "🤝 Digital Helpdesk Support Center",';
+        h += '      helpSub: "What kind of assistance do you need? Select a topic below:",';
+        h += '      h1: "➔ 📝 Issue in filling New Admission Form", h2: "➔ 📂 Document Upload (Size) Error", h3: "➔ 🔍 Room Allotment / Status Queries", h4: "➔ 🔄 Renewal Form Related Information",';
+        h += '      close: "Close", rTitle: "📜 Government Hostel Essential Rules & Regulations",';
+        h += '      r1: "Students admitted to the hostel must strictly take meals in the mess.",';
+        h += '      r2: "Regular admission and attendance in the local educational institution are mandatory.",';
+        h += '      r3: "Continuous absence without information may lead to expulsion from the hostel.",';
+        h += '      r4: "Staying of non-admitted students is strictly prohibited without written permission.",';
+        h += '      r5: "Consumption of intoxicants or alcohol will result in immediate expulsion."';
+        h += '    }';
+        h += '  };';
+        h += '  const data = t[lang];';
+        h += '  document.getElementById("nav-title").innerHTML = data.navTitle;';
+        h += '  document.getElementById("rules-btn").innerHTML = data.rulesBtn;';
+        h += '  document.getElementById("st-tracker-title").innerHTML = data.stTitle;';
+        h += '  document.getElementById("sc-tracker-title").innerHTML = data.scTitle;';
+        h += '  document.querySelectorAll(".lang-total").forEach(e => e.innerHTML = data.total);';
+        h += '  document.querySelectorAll(".lang-confirm").forEach(e => e.innerHTML = data.confirm);';
+        h += '  document.querySelectorAll(".lang-vacant").forEach(e => e.innerHTML = data.vacant);';
+        h += '  document.getElementById("notice-title").innerHTML = data.noticeTitle;';
+        h += '  if(document.getElementById("no-notice")) document.getElementById("no-notice").innerHTML = data.noNotice;';
+        h += '  document.querySelector(".lang-btn-reg-title").innerHTML = data.btnReg;';
+        h += '  document.querySelector(".lang-btn-ren-title").innerHTML = data.btnRen;';
+        h += '  document.querySelector(".lang-btn-stat-title").innerHTML = data.btnStat;';
+        h += '  document.querySelector(".lang-session-badge").innerHTML = data.sessBadge;';
+        h += '  document.querySelector(".lang-old-badge").innerHTML = data.oldBadge;';
+        h += '  document.querySelector(".lang-receipt-badge").innerHTML = data.recBadge;';
+        h += '  document.getElementById("management-title").innerHTML = data.mgmtTitle;';
+        h += '  document.querySelectorAll(".lang-office").forEach(e => e.innerHTML = data.office);';
+        h += '  document.getElementById("merit-title").innerHTML = data.meritTitle;';
+        h += '  document.getElementById("merit-btn").innerHTML = data.meritBtn;';
+        h += '  document.getElementById("help-float-btn").innerHTML = data.helpFloat;';
+        h += '  document.getElementById("help-modal-title").innerHTML = data.helpTitle;';
+        h += '  document.getElementById("help-modal-sub").innerHTML = data.helpSub;';
+        h += '  document.getElementById("h-opt1").innerHTML = data.h1;';
+        h += '  document.getElementById("h-opt2").innerHTML = data.h2;';
+        h += '  document.getElementById("h-opt3").innerHTML = data.h3;';
+        h += '  document.getElementById("h-opt4").innerHTML = data.h4;';
+        h += '  document.getElementById("help-close-btn").innerHTML = data.close;';
+        h += '  document.getElementById("rules-modal-title").innerHTML = data.rTitle;';
+        h += '  const rList = document.getElementById("rules-list");';
+        h += '  rList.innerHTML = "<li class=\'mb-2\'>" + data.r1 + "</li><li class=\'mb-2\'>" + data.r2 + "</li><li class=\'mb-2\'>" + data.r3 + "</li><li class=\'mb-2\'>" + data.r4 + "</li><li class=\'mb-2\'>" + data.r5 + "</li>";';
+        h += '}';
+        h += '</script>';
+        
         h += '<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script></body></html>';
         res.send(h);
     } catch (err) { res.status(500).send("Error loading home page"); }
@@ -519,6 +522,16 @@ app.get('/view-students', async (req, res) => {
 
     archives.forEach((arc) => {
         let historyArray = Array.isArray(arc.history) ? arc.history : [];
+        
+        // 🛠️ [ऑटोमैटिक कब से कब तक रहा फिक्स] पहले साल से लेकर आखरी साल तक का परमानेंट सत्र लाइव कैलकुलेट करेगा
+        let allSessions = historyArray.map(item => item ? item.session : null).filter(Boolean).sort();
+        let durationText = 'N/A';
+        if (allSessions.length > 0) {
+            let startSess = allSessions[0];
+            let endSess = allSessions[allSessions.length - 1];
+            durationText = (startSess === endSess) ? startSess : startSess + ' से ' + endSess;
+        }
+
         let matchingHistories = historyArray.filter(h => {
             if (!h) return false;
             if (h.session !== selectedSession) return false;
@@ -538,7 +551,7 @@ app.get('/view-students', async (req, res) => {
                 '<td><b>' + arc.studentMobile + '</b></td>' +
                 '<td><small class="text-muted">📍 ' + (h.permanentAddress || 'N/A') + ', ' + (h.blockName || '') + '</small></td>' +
                 '<td><span class="badge ' + badgeColor + '">' + h.type + '</span></td>' + 
-                '<td><span class="badge bg-light text-dark border border-secondary">05 जून से अप्रैल तक</span></td>' +
+                '<td><span class="badge bg-light text-dark border border-secondary">' + durationText + '</span></td>' + // ✅ यहाँ लाइव ऑटो-कैलकुलेटेड रेंज दिखेगी
                 '<td><button class="btn btn-xs btn-dark py-1 px-2 fw-bold" style="font-size:11px;" data-bs-toggle="modal" data-bs-target="#' + profileModalId + '">📄 View Profile</button></td>' +
             '</tr>';
 
