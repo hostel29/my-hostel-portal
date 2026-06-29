@@ -25,6 +25,7 @@ const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
         folder: 'hostel_photos',
+        resource_type: 'auto', // ✅ इसे 'auto' किया ताकि PDF लिंक 401 एरर न दे
         allowed_formats: ['jpg', 'png', 'jpeg', 'pdf', 'webp']
     },
 });
@@ -91,10 +92,10 @@ const ArchiveSchema = new mongoose.Schema({
         blockName: String,
         districtName: String,
         dateArchived: String,
-        fullSnapshot: Object 
+        fullSnapshot: mongoose.Schema.Types.Mixed // ✅ वैलिडेशन एरर रोकने के लिए Mixed किया
     }],
     yearsActive: { type: Number, default: 1 }
-});
+}, { strict: false }); // ✅ एक्स्ट्रा सुरक्षा ताकि पुराने डेटा पर कोड न अटके
 const Archive = mongoose.model('Archive', ArchiveSchema);
 
 const NoticeSchema = new mongoose.Schema({ text: String, date: String });
@@ -127,7 +128,7 @@ const defaultWarden = {
     w2Name: "सहायक अधीक्षक", w2Desig: "छात्रावास अधीक्षक (B)", w2Mobile: "9999999999", w2Office: "कार्यालय कक्ष 02", w2Photo: "https://via.placeholder.com/150",
     helpLineNumber: "9329088615"
 };
-const defaultLogo = { url: "https://via.placeholder.comx250?text=PRE+MATRIC+BOYS+HOSTEL+SURAJPUR" };
+const defaultLogo = { url: "https://via.placeholder.com/800x250?text=PRE+MATRIC+BOYS+HOSTEL+SURAJPUR" };
 const defaultSetting = { photoActive: true, signatureActive: true, aadharActive: true, resultActive: true, casteActive: true, resActive: true, rationActive: true, meritListLink: "" };
 
 const getDynamicSession = () => {
@@ -187,7 +188,7 @@ app.get('/', async (req, res) => {
         h += '<div class="modal fade" id="helpCenterModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content rounded-4 border-0 shadow"><div class="modal-header bg-success text-white rounded-top-4"><h5 class="modal-title fw-bold" id="help-modal-title">🤝 डिजिटल हेल्पडेस्क सहायता केंद्र</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body p-3 text-center"><h6 class="text-secondary fw-bold mb-3" id="help-modal-sub">आपको किस प्रकार की सहायता चाहिए? नीचे संबंधित विषय चुनें:</h6><div class="list-group shadow-sm">';
         h += '<a href="https://wa.me/91' + helpNum + '?text=नमस्ते सर, मुझे नए प्रवेश फॉर्म भरने में समस्या आ रही है, कृपया सहायता करें।" target="_blank" class="list-group-item list-group-item-action text-start fw-bold p-3 text-primary" id="h-opt1">➔ 📝 नए प्रवेश फॉर्म भरने में समस्या है</a>';
         h += '<a href="https://wa.me/91' + helpNum + '?text=नमस्ते सर, मुझे डॉक्यूमेंट अपलोड करने में आकार का एरर आ रहा है, कृपया मदद करें।" target="_blank" class="list-group-item list-group-item-action text-start fw-bold p-3 text-primary" id="h-opt2">➔ 📂 दस्तावेज़ अपलोड (साइज) एरर है</a>';
-        h += '<a href="https://wa.me/91' + helpNum + '?text=नमस्ते सर, मेरा ROOM अलॉटमेंट स्टेटस नहीं दिख रहा है, कृपया चेक कर दीजिए।" target="_blank" class="list-group-item list-group-item-action text-start fw-bold p-3 text-primary" id="h-opt3">➔ 🔍 रूम अलॉटमेंट / स्टेटस संबंधी प्रश्न</a>';
+        h += '<a href="https://wa.me/91' + helpNum + '?text=नमस्ते सर, मेरा ROOM अलॉटमेंट स्टेटस नहीं दिख रहा है, कृपया चेक कर दीजिए।" target="_blank" class="list-group-item list-group-item-action text-start fw-bold p-3 text-primary" id="h-opt3">➔ 🔍 ROOM अलॉटमेंट / स्टेटस संबंधी प्रश्न</a>';
         h += '<a href="https://wa.me/91' + helpNum + '?text=नमस्ते सर, मुझे छात्रावास नवीनीकरण फॉर्म (Renewal Form) की जानकारी चाहिए।" target="_blank" class="list-group-item list-group-item-action text-start fw-bold p-3 text-primary" id="h-opt4">➔ 🔄 नवीनीकरण फॉर्म संबंधी जानकारी</a>';
         h += '</div></div><div class="modal-footer border-0"><button type="button" class="btn btn-secondary w-100 fw-bold rounded-pill py-2" data-bs-dismiss="modal" id="help-close-btn">बंद करें</button></div></div></div></div>';
 
@@ -320,7 +321,7 @@ app.get('/get-receipt-view', async (req, res) => {
 
         let rc = '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>डिजिटल पावती रसीद</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">';
         rc += '<style>body { background-color: #f1f5f9; } .receipt-box { background: white; border: 4px double #1e293b; max-width: 750px; margin: 15px auto; padding: 20px; border-radius: 8px; position: relative; box-shadow: 0 15px 35px rgba(0,0,0,0.1); } .watermark { position: absolute; top: 35%; left: 15%; font-size: 55px; color: rgba(15, 23, 42, 0.04); transform: rotate(-25deg); font-weight: 900; pointer-events: none; text-transform: uppercase; user-select: none; } .stamp { border: 3px dashed #16a34a; color: #16a34a; transform: rotate(-5deg); display: inline-block; padding: 5px 15px; font-weight: bold; border-radius: 4px; font-size: 13px; } @media print { .no-print { display: none; } body { background: white; } .receipt-box { border: 2px solid #000; box-shadow: none; margin: 0; padding:10px; } }</style></head><body><div class="container"><div class="receipt-box"><div class="watermark">SURAJPUR HOSTEL</div>';
-        rc += '<div class="row border-bottom pb-3 mb-4 align-items-center"><div class="col-2 text-center"><img src="https://via.placeholder.com/80?text=GOVT" class="img-fluid"></div><div class="col-8 text-center"><h6 class="text-secondary fw-bold mb-0" style="font-size:10px; letter-spacing:1px;">आदिम जाति तथा अनुसूचित जाति विकास विभाग, छत्तीसगढ़ शासन</h6><h4 class="fw-bold text-dark my-1 fs-5" style="font-family:\'Georgia\',serif;">PRE MATRIC ST+SC BOYS HOSTEL SURAJPUR</h4><span class="badge bg-dark px-3 py-1 text-warning fw-bold" style="font-size:10px;">🔒 डिजिटल पावती रसीद (सत्र ' + getDynamicSession() + ')</span></div><div class="col-2 text-center"><div class="stamp">DIGITAL<br>VERIFIED</div></div></div>';
+        rc += '<div class="row border-bottom pb-3 mb-4 align-items-center"><div class="col-2 text-center"><img src="https://via.placeholder.com/80?text=GOVT" class="img-fluid"></div><div class="col-8 text-center"><h6 class="text-secondary fw-bold mb-0" style="font-size:10px; letter-spacing:1px;">आदिम जाति तथा अनुसूचित जाति विकास विभाग, छत्तीसगढ़ शासन</h6><h4 class="fw-bold text-dark my-1 fs-5" style="font-family:\'Georgia\',serif;">PRE MATRIC ST+SC BOYS HOSTEL SURAJPUR</h4><span class="badge bg-dark px-3 py-1 text-warning fw-bold" style="font-size:10px;">🔒 DIGITAL पावती रसीद (सत्र ' + getDynamicSession() + ')</span></div><div class="col-2 text-center"><div class="stamp">DIGITAL<br>VERIFIED</div></div></div>';
         rc += '<div class="row mb-4"><div class="col-sm-8"><h5 class="fw-bold text-primary mb-3 fs-6">🎫 रसीद संख्या: <span class="text-danger">' + sData.appNo + '</span></h5><p class="mb-2"><b>विद्यार्थी का नाम:</b> ' + sData.studentName + '</p><p class="mb-2"><b>पिता का नाम:</b> ' + sData.fatherName + '</p><p class="mb-2"><b>पंजीकृत मोबाइल:</b> +91 ' + sData.mobile + '</p><p class="mb-2"><b>प्रकार:</b> ' + (sData.isRenewal ? '<span class="badge bg-warning text-dark">नवीनीकरण (Renewal)</span>' : '<span class="badge bg-primary">नवीन प्रवेश (New)</span>') + '</p></div>';
         rc += '<div class="col-sm-4 text-center mt-3 mt-sm-0"><img src="' + sData.photoUrl + '" class="img-thumbnail shadow-sm mb-2" style="width: 120px; height: 130px; object-fit: cover;" onerror="this.src=\'https://via.placeholder.com/150\'\"><div class="small fw-bold text-secondary mb-1">विद्यार्थी हस्ताक्षर:</div><img src="' + (sData.signatureUrl || 'https://via.placeholder.com/120x40?text=No+Sign') + '" class="border bg-white" style="width:120px; height:40px; object-fit:contain;"><div class="mt-2">' + badge + '</div></div></div>';
         rc += '<table class="table table-bordered bg-light" style="font-size:13px;"><tr><th class="bg-dark text-white" style="width:35%;">वर्तमान कक्षा/वर्ष</th><td>' + sData.studentClass + '</td></tr><tr><th class="bg-dark text-white">स्कूल / कॉलेज का नाम</th><td>' + sData.collegeName + '</td></tr><tr><th class="bg-dark text-white">आबंटित ROOM नंबर (Room)</th><td><b class="text-danger fs-6">' + (sData.roomNumber || 'अभी अलॉट नहीं हुआ') + '</b></td></tr><tr><th class="bg-dark text-white">डिजिटल सबमिशन टाइम</th><td>' + sData.date + '</td></tr></table>';
@@ -417,7 +418,7 @@ app.post('/submit-form', (req, res) => {
             if (old) { await Student.updateOne({ mobile: cleanMobile }, { $set: sData }); }
             else { const newStudent = new Student(sData); await newStudent.save(); }
 
-            // 🛠️ [आर्काइव एरर फिक्स] इसे सुरक्षित ट्राई-कैच में डाल दिया ताकि यह मुख्य फॉर्म सबमिशन को न रोके
+            // 🛠️ [आर्काइव एरर फिक्स] ट्राई-कैच सुरक्षा मैट्रिक्स
             try {
                 let archiveRecord = await Archive.findOne({ studentMobile: cleanMobile });
                 const historyEntry = {
@@ -603,7 +604,7 @@ app.get('/view-students', async (req, res) => {
     admHtml += '<button onclick="toggleF(\'resultActive\')" class="btn btn-xs w-100 mb-1 btn-' + (config.resultActive?'success':'danger') + '">मार्कशीट: ' + (config.resultActive?'ON':'OFF') + '</button>';
     admHtml += '<button onclick="toggleF(\'casteActive\')" class="btn btn-xs w-100 mb-1 btn-' + (config.casteActive?'success':'danger') + '">जाति: ' + (config.casteActive?'ON':'OFF') + '</button>';
     admHtml += '<button onclick="toggleF(\'resActive\')" class="btn btn-xs w-100 mb-1 btn-' + (config.resActive?'success':'danger') + '">निवास: ' + (config.resActive?'ON':'OFF') + '</button>';
-    admHtml += '<button onclick="toggleF(\'rationActive\')" class="btn btn-xs w-100 mb-1 btn-' + (config.rationActive?'success':'danger') + '">राशन: ' + (config.rationActive?'ON':'OFF') + '</button>';
+    admHtml += '<button onclick="toggleF(\ 'rationActive\')" class="btn btn-xs w-100 mb-1 btn-' + (config.rationActive?'success':'danger') + '">राशन: ' + (config.rationActive?'ON':'OFF') + '</button>';
     admHtml += '</div></div></div>';
 
     admHtml += '<div class="card p-3 mb-4 shadow-sm border-start border-primary border-4 bg-white">' +
