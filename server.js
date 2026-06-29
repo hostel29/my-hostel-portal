@@ -538,7 +538,7 @@ app.get('/view-students', async (req, res) => {
                 '<td><img src="' + (snap.photoUrl || 'https://via.placeholder.com/150') + '" class="rounded border me-2" style="width:40px; height:45px; object-fit:cover;"><b>' + arc.studentName + '</b></td>' +
                 '<td><b>' + arc.studentMobile + '</b></td>' +
                 '<td><small class="text-muted">📍 ' + (h.permanentAddress || 'N/A') + ', ' + (h.blockName || '') + '</small></td>' +
-                '<td><span class="badge ' + badgeColor + '">' + h.type + '</span></td>' +
+                '<td><span class="badge " + badgeColor + "">' + h.type + '</span></td>' +
                 '<td><span class="badge bg-light text-dark border border-secondary">05 जून से अप्रैल तक</span></td>' +
                 '<td><button class="btn btn-xs btn-dark py-1 px-2 fw-bold" style="font-size:11px;" data-bs-toggle="modal" data-bs-target="#' + profileModalId + '">📄 View Profile</button></td>' +
             '</tr>';
@@ -604,7 +604,7 @@ app.get('/view-students', async (req, res) => {
     admHtml += '<button onclick="toggleF(\'resultActive\')" class="btn btn-xs w-100 mb-1 btn-' + (config.resultActive?'success':'danger') + '">मार्कशीट: ' + (config.resultActive?'ON':'OFF') + '</button>';
     admHtml += '<button onclick="toggleF(\'casteActive\')" class="btn btn-xs w-100 mb-1 btn-' + (config.casteActive?'success':'danger') + '">जाति: ' + (config.casteActive?'ON':'OFF') + '</button>';
     admHtml += '<button onclick="toggleF(\'resActive\')" class="btn btn-xs w-100 mb-1 btn-' + (config.resActive?'success':'danger') + '">निवास: ' + (config.resActive?'ON':'OFF') + '</button>';
-    admHtml += '<button onclick="toggleF(\ 'rationActive\')" class="btn btn-xs w-100 mb-1 btn-' + (config.rationActive?'success':'danger') + '">राशन: ' + (config.rationActive?'ON':'OFF') + '</button>';
+    admHtml += '<button onclick="toggleF(\'rationActive\')" class="btn btn-xs w-100 mb-1 btn-' + (config.rationActive?'success':'danger') + '">राशन: ' + (config.rationActive?'ON':'OFF') + '</button>';
     admHtml += '</div></div></div>';
 
     admHtml += '<div class="card p-3 mb-4 shadow-sm border-start border-primary border-4 bg-white">' +
