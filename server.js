@@ -25,7 +25,7 @@ const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
         folder: 'hostel_photos',
-        resource_type: 'auto', // ✅ इसे 'auto' किया ताकि PDF लिंक 401 एरर न दे
+        resource_type: 'auto', 
         allowed_formats: ['jpg', 'png', 'jpeg', 'pdf', 'webp']
     },
 });
@@ -80,22 +80,15 @@ const StudentSchema = new mongoose.Schema({
 });
 const Student = mongoose.model('Student', StudentSchema);
 
+// 🛠️ [Cache Cleaner] पुराने लॉक्ड स्कीमा को डिलीट करके फ्रेश कंपाइल करने के लिए
+if (mongoose.models.Archive) { delete mongoose.models.Archive; }
+
 const ArchiveSchema = new mongoose.Schema({
     studentMobile: String,
     studentName: String,
-    history: [{
-        session: String,
-        type: String, 
-        studentClass: String,
-        collegeName: String,
-        permanentAddress: String,
-        blockName: String,
-        districtName: String,
-        dateArchived: String,
-        fullSnapshot: mongoose.Schema.Types.Mixed // ✅ वैलिडेशन एरर रोकने के लिए Mixed किया
-    }],
+    history: mongoose.Schema.Types.Mixed, // ✅ इसे पूर्ण रूप से Mixed किया ताकि कभी validation fail न हो
     yearsActive: { type: Number, default: 1 }
-}, { strict: false }); // ✅ एक्स्ट्रा सुरक्षा ताकि पुराने डेटा पर कोड न अटके
+}, { strict: false }); 
 const Archive = mongoose.model('Archive', ArchiveSchema);
 
 const NoticeSchema = new mongoose.Schema({ text: String, date: String });
@@ -418,7 +411,7 @@ app.post('/submit-form', (req, res) => {
             if (old) { await Student.updateOne({ mobile: cleanMobile }, { $set: sData }); }
             else { const newStudent = new Student(sData); await newStudent.save(); }
 
-            // 🛠️ [आर्काइव एरर फिक्स] डेटा को JSON सैनिटाइज़ करके सेव कर रहे हैं ताकि कोई एरर न आए
+            // 🛠️ [आर्काइव एरर फिक्स] डेटा को JSON सैनिटाइज़ करके सेव कर रहे हैं
             try {
                 let archiveRecord = await Archive.findOne({ studentMobile: cleanMobile });
                 const historyEntry = {
@@ -430,15 +423,18 @@ app.post('/submit-form', (req, res) => {
                     blockName: sData.blockName,
                     districtName: sData.districtName,
                     dateArchived: new Date().toLocaleDateString(),
-                    fullSnapshot: JSON.parse(JSON.stringify(sData)) // ✅ मोंगोडीबी कास्टिंग एरर फिक्स
+                    fullSnapshot: JSON.parse(JSON.stringify(sData)) 
                 };
 
                 if (archiveRecord) {
-                    const sessionExists = archiveRecord.history.some(h => h.session === currentSession);
+                    let historyArray = Array.isArray(archiveRecord.history) ? archiveRecord.history : [];
+                    const sessionExists = historyArray.some(h => h && h.session === currentSession);
                     if (!sessionExists) {
-                        archiveRecord.history.push(historyEntry);
-                        archiveRecord.yearsActive = archiveRecord.history.length;
-                        await archiveRecord.save();
+                        historyArray.push(historyEntry);
+                        await Archive.updateOne(
+                            { studentMobile: cleanMobile },
+                            { $set: { history: historyArray, yearsActive: historyArray.length } }
+                        );
                     } else {
                         await Archive.updateOne(
                             { studentMobile: cleanMobile, "history.session": currentSession },
@@ -491,7 +487,8 @@ app.get('/view-students', async (req, res) => {
     let filteredLiveStudents = sList.filter(s => {
         let arch = archives.find(a => a.studentMobile === s.mobile);
         if(!arch) return true;
-        let lastHistory = arch.history[arch.history.length - 1];
+        let historyArray = Array.isArray(arch.history) ? arch.history : [];
+        let lastHistory = historyArray[historyArray.length - 1];
         return lastHistory ? lastHistory.session === currentLiveSession : true;
     });
 
@@ -521,7 +518,9 @@ app.get('/view-students', async (req, res) => {
     let archCounter = 1;
 
     archives.forEach((arc) => {
-        let matchingHistories = arc.history.filter(h => {
+        let historyArray = Array.isArray(arc.history) ? arc.history : [];
+        let matchingHistories = historyArray.filter(h => {
+            if (!h) return false;
             if (h.session !== selectedSession) return false;
             if (currentTab === 'new' && h.type !== 'New') return false;
             if (currentTab === 'old' && h.type !== 'Renewal') return false;
@@ -530,7 +529,7 @@ app.get('/view-students', async (req, res) => {
 
         matchingHistories.forEach((h, hIdx) => {
             let snap = h.fullSnapshot || {};
-            let badgeColor = h.type === 'Renewal' ? 'bg-warning text-dark' : 'bg-primary';
+            let badgeColor = (h.type === 'Renewal') ? 'bg-warning text-dark' : 'bg-primary';
             let profileModalId = 'modal-' + arc.studentMobile + '-' + hIdx;
             
             archiveRows += '<tr style="font-size:12px;" class="align-middle">' +
@@ -538,7 +537,7 @@ app.get('/view-students', async (req, res) => {
                 '<td><img src="' + (snap.photoUrl || 'https://via.placeholder.com/150') + '" class="rounded border me-2" style="width:40px; height:45px; object-fit:cover;"><b>' + arc.studentName + '</b></td>' +
                 '<td><b>' + arc.studentMobile + '</b></td>' +
                 '<td><small class="text-muted">📍 ' + (h.permanentAddress || 'N/A') + ', ' + (h.blockName || '') + '</small></td>' +
-                '<td><span class="badge ' + badgeColor + '">' + h.type + '</span></td>' + // ✅ कोट्स टाइपो फिक्स किया
+                '<td><span class="badge ' + badgeColor + '">' + h.type + '</span></td>' + 
                 '<td><span class="badge bg-light text-dark border border-secondary">05 जून से अप्रैल तक</span></td>' +
                 '<td><button class="btn btn-xs btn-dark py-1 px-2 fw-bold" style="font-size:11px;" data-bs-toggle="modal" data-bs-target="#' + profileModalId + '">📄 View Profile</button></td>' +
             '</tr>';
@@ -604,7 +603,7 @@ app.get('/view-students', async (req, res) => {
     admHtml += '<button onclick="toggleF(\'resultActive\')" class="btn btn-xs w-100 mb-1 btn-' + (config.resultActive?'success':'danger') + '">मार्कशीट: ' + (config.resultActive?'ON':'OFF') + '</button>';
     admHtml += '<button onclick="toggleF(\'casteActive\')" class="btn btn-xs w-100 mb-1 btn-' + (config.casteActive?'success':'danger') + '">जाति: ' + (config.casteActive?'ON':'OFF') + '</button>';
     admHtml += '<button onclick="toggleF(\'resActive\')" class="btn btn-xs w-100 mb-1 btn-' + (config.resActive?'success':'danger') + '">निवास: ' + (config.resActive?'ON':'OFF') + '</button>';
-    admHtml += '<button onclick="toggleF(\'rationActive\')" class="btn btn-xs w-100 mb-1 btn-' + (config.rationActive?'success':'danger') + '">राशन: ' + (config.rationActive?'ON':'OFF') + '</button>'; // ✅ स्पेस एरर पूरी तरह ठीक किया
+    admHtml += '<button onclick="toggleF(\'rationActive\')" class="btn btn-xs w-100 mb-1 btn-' + (config.rationActive?'success':'danger') + '">राशन: ' + (config.rationActive?'ON':'OFF') + '</button>'; 
     admHtml += '</div></div></div>';
 
     admHtml += '<div class="card p-3 mb-4 shadow-sm border-start border-primary border-4 bg-white">' +
@@ -642,7 +641,7 @@ app.get('/view-students', async (req, res) => {
     admHtml += '<div class="bg-white border p-2 rounded shadow-sm table-responsive"><h4 class="text-center text-primary fw-bold mb-3 fs-5">🔒 छात्रावास लाइव छात्र सूची (सत्र ' + currentLiveSession + ')</h4><table class="table table-bordered table-striped text-center align-middle" style="min-width: 950px;"><thead class="table-dark"><tr><th>S.No</th><th>छात्र</th><th>पिता</th><th>मोबाइल व पता</th><th style="width:280px;">📁 दस्तावेज़ मैट्रिक्स</th><th>ROOM अलॉट</th><th>Approval</th><th>हटाएं</th></tr></thead><tbody>' + (rows || '<tr><td colspan="8">कोई छात्र रिकॉर्ड नहीं है।</td></tr>') + '</tbody></table></div>';
     admHtml += modalsHtml; 
     
-    admHtml += '<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script><script>function saveRoom(id){ const val=document.getElementById("room-"+id).value; fetch("/assign-room",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({studentId:id,roomNumber:val})}).then(()=>location.reload())} function approveStudent(id){ fetch("/approve-student",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({studentId:id})}).then(()=>location.reload())} function secureRemoveStudent(id, name){ const confirmAlert = confirm("⚠️ क्या आप सच में छात्र \'" + name + "\' का पूरा रिकॉर्ड डिलीट करना चाहते हैं?"); if(confirmAlert){ const doubleCheck = prompt("💥 सुरक्षा जांच! छात्र का डेटा हटाने के लिए बड़े अक्षरों में YES Type करें:"); if(doubleCheck === "YES"){ fetch("/remove-student",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({studentId:id})}).then(()=>location.reload()); } else { alert("❌ निरस्त कर दिया गया है।"); } } } function toggleF(field){ fetch("/toggle-field-setting",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({field:field})}).then(()=>location.reload()); } function deleteNotice(id){ if(confirm("क्या आप इस नोटिस को डिलीट करना चाहते हैं?")){ fetch("/delete-notice",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({noticeId:id})}).then(()=>location.reload()); } }</script></body></html>';
+    admHtml += '<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script><script>function saveRoom(id){ const val=document.getElementById("room-"+id).value; fetch("/assign-room",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({studentId:id,roomNumber:val})}).then(()=>location.reload())} function approveStudent(id){ fetch("/approve-student",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({studentId:id})}).then(()=>location.reload())} function secureRemoveStudent(id, name){ const confirmAlert = confirm("⚠️ क्या आप सच में छात्र \'" + name + "\' का पूरा रिकॉर्ड डिलीट करना चाहते हैं?"); if(confirmAlert){ const doubleCheck = prompt("💥 सुरक्षा जांच! छात्र का डेटा हटाने के लिए बड़े अक्षरों में YES टाइप करें:"); if(doubleCheck === "YES"){ fetch("/remove-student",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({studentId:id})}).then(()=>location.reload()); } else { alert("❌ निरस्त कर दिया गया है।"); } } } function toggleF(field){ fetch("/toggle-field-setting",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({field:field})}).then(()=>location.reload()); } function deleteNotice(id){ if(confirm("क्या आप इस नोटिस को डिलीट करना चाहते हैं?")){ fetch("/delete-notice",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({noticeId:id})}).then(()=>location.reload()); } }</script></body></html>';
     res.send(admHtml);
 });
 
