@@ -66,17 +66,15 @@ mongoose.connect(mongoURI)
 
 const StudentSchema = new mongoose.Schema({
     id: String, appNo: String, studentName: String, dob: String, aadharCard: String, mobile: String,
-    fatherName: String, motherName: String, annualIncome: Number, category: String, subCast: String,
-    permanentAddress: String, blockName: String, districtName: String, homeDistance: Number,
-    studentClass: String, course: String, collegeName: String, prevPercent: String, photoUrl: String,
-    signatureUrl: { type: String, default: "" }, resultUrl: { type: String, default: "" },
-    studentAadharUrl: { type: String, default: "" },
-    fatherAadharUrl: { type: String, default: "" }, motherAadharUrl: { type: String, default: "" },
-    casteCertUrl: { type: String, default: "" }, residenceCertUrl: { type: String, default: "" },
-    incomeCertUrl: { type: String, default: "" }, distanceCertUrl: { type: String, default: "" },
-    ayushmanUrl: { type: String, default: "" }, rationCardUrl: { type: String, default: "" },
-    renewalAppUrl: { type: String, default: "" },
-    isRenewal: { type: Boolean, default: false },
+    fatherName: String, fatherOcc: { type: String, default: "" }, motherName: String, annualIncome: Number, email: { type: String, default: "" },
+    category: String, subCast: String, permanentAddress: String, blockName: String, districtName: String, homeDistance: Number,
+    studentClass: String, course: String, collegeName: String, prevPercent: String,
+    bankName: { type: String, default: "" }, bankAcc: { type: String, default: "" }, bankIfsc: { type: String, default: "" },
+    photoUrl: String, signatureUrl: { type: String, default: "" }, resultUrl: { type: String, default: "" },
+    studentAadharUrl: { type: String, default: "" }, fatherAadharUrl: { type: String, default: "" }, motherAadharUrl: { type: String, default: "" },
+    casteCertUrl: { type: String, default: "" }, residenceCertUrl: { type: String, default: "" }, incomeCertUrl: { type: String, default: "" },
+    distanceCertUrl: { type: String, default: "" }, ayushmanUrl: { type: String, default: "" }, rationCardUrl: { type: String, default: "" },
+    renewalAppUrl: { type: String, default: "" }, isRenewal: { type: Boolean, default: false },
     roomNumber: { type: String, default: "अभी अलॉट नहीं हुआ" }, approved: { type: Boolean, default: false },
     date: String
 });
@@ -132,6 +130,25 @@ const getDynamicSession = () => {
 };
 
 const fileValidationScript = '<script>function validateFile(input) { const file = input.files[0]; if (!file) return true; const fileSizeKB = file.size / 1024; if (fileSizeKB < 20 || fileSizeKB > 150) { alert("❌ फ़ाइल का साइज़ 20KB से 150KB के बीच होना अनिवार्य है!"); input.value = ""; return false; } return true; }</script>';
+
+// 🔄 [ऑटो-फ़िल एपीआई] आधार नंबर या मोबाइल नंबर से पिछला रिकॉर्ड ढूँढने के लिए
+app.get('/api/get-student-by-aadhar', async (req, res) => {
+    try {
+        const queryVal = (req.query.search || '').trim();
+        if (!queryVal) return res.json({ success: false, message: "कृपया आधार नंबर या मोबाइल नंबर दर्ज करें!" });
+        
+        let student = await Student.findOne({ 
+            $or: [{ aadharCard: queryVal }, { mobile: queryVal }] 
+        });
+        
+        if (!student) {
+            return res.json({ success: false, message: "❌ इस आधार/मोबाइल नंबर का पुराना रिकॉर्ड नहीं मिला!" });
+        }
+        res.json({ success: true, data: student });
+    } catch (err) {
+        res.json({ success: false, message: "सर्वर एरर आया!" });
+    }
+});
 
 // 🏠 मुख्य पृष्ठ
 app.get('/', async (req, res) => {
@@ -276,75 +293,153 @@ app.get('/', async (req, res) => {
     } catch (err) { res.status(500).send("Error loading home page"); }
 });
 
-// 📝 नवीन प्रवेश फॉर्म (कक्षा 6वीं से 10वीं तक फिक्स)
+// 📝 नवीन प्रवेश फॉर्म 
 app.get('/registration-form', (req, res) => {
     const sessionVal = getDynamicSession();
-    let f = '<!DOCTYPE html><html lang="hi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>प्रवेश हेतु आवेदन पत्र ' + sessionVal + '</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"><style>body{ background-color: #f1f5f9; color:#0f172a; } .card { border:none; border-radius:20px; box-shadow:0 20px 40px rgba(0,0,0,0.05); } .section-title { background-color: #f8fafc; padding: 10px 15px; font-weight: bold; border-left: 5px solid #2563eb; margin-top: 20px; margin-bottom: 15px; border-radius:0 8px 8px 0; color: #1e40af; }</style></head><body class="p-2 p-md-4"><div class="container" style="max-width: 950px;"><div class="card p-3 p-md-5 bg-white"><div class="text-center mb-4"><h5 class="text-secondary fw-bold mb-1" style="font-size:13px; letter-spacing:1px;">आदिम जाति तथा अनुसूचित जाति विकास विभाग, छत्तीसगढ़ शासन</h5><h2 class="text-primary fw-bold fs-3">PRE MATRIC ST+SC BOYS HOSTEL SURAJPUR</h2><span class="badge bg-primary px-4 py-2 mt-2 rounded-pill fs-6 fw-bold">नवीन प्रवेश फॉर्म - सत्र ' + sessionVal + '</span></div><form action="/submit-form" method="POST" enctype="multipart/form-data" class="row g-3"><input type="hidden" name="isRenewal" value="false"><div class="section-title">1. व्यक्तिगत जानकारी, फ़ोटो एवं डिजिटल हस्ताक्षर</div><div class="col-md-4"><label class="form-label fw-bold">विद्यार्थी का नाम (आधार के अनुसार):</label><input type="text" name="studentName" class="form-control" required></div><div class="col-md-4"><label class="form-label fw-bold">जन्मतिथि (DOB):</label><input type="date" name="dob" class="form-control" required></div><div class="col-md-4"><label class="form-label fw-bold">विद्यार्थी का आधार नंबर:</label><input type="text" name="aadharCard" class="form-control" required></div><div class="col-md-4"><label class="form-label fw-bold">विद्यार्थी का वर्ग (Category):</label><select name="category" class="form-select" required><option value="ST">अनुसूचित जनजाति (ST)</option><option value="SC">अनुसूचित जाति (SC)</option></select></div><div class="col-md-4"><label class="form-label fw-bold">विद्यार्थी की जाति:</label><input type="text" name="subCast" class="form-control" required></div><div class="col-md-4"><label class="form-label fw-bold">पालक का mobile नंबर:</label><input type="tel" name="mobile" class="form-control" required></div>';
+    let f = '<!DOCTYPE html><html lang="hi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>प्रवेश हेतु आवेदन पत्र ' + sessionVal + '</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"><style>body{ background-color: #f1f5f9; color:#0f172a; } .card { border:none; border-radius:20px; box-shadow:0 20px 40px rgba(0,0,0,0.05); } .section-title { background-color: #f8fafc; padding: 10px 15px; font-weight: bold; border-left: 5px solid #2563eb; margin-top: 20px; margin-bottom: 15px; border-radius:0 8px 8px 0; color: #1e40af; }</style></head><body class="p-2 p-md-4"><div class="container" style="max-width: 950px;"><div class="card p-3 p-md-5 bg-white"><div class="text-center mb-4"><h5 class="text-secondary fw-bold mb-1" style="font-size:13px; letter-spacing:1px;">आदिम जाति तथा अनुसूचित जाति विकास विभाग, छत्तीसगढ़ शासन</h5><h2 class="text-primary fw-bold fs-3">PRE MATRIC ST+SC BOYS HOSTEL SURAJPUR</h2><span class="badge bg-primary px-4 py-2 mt-2 rounded-pill fs-6 fw-bold">नवीन प्रवेश फॉर्म - सत्र ' + sessionVal + '</span></div><form action="/submit-form" method="POST" enctype="multipart/form-data" class="row g-3"><input type="hidden" name="isRenewal" value="false"><div class="section-title">1. व्यक्तिगत जानकारी, फ़ोटो एवं डिजिटल हस्ताक्षर</div><div class="col-md-4"><label class="form-label fw-bold">विद्यार्थी का नाम (आधार के अनुसार):</label><input type="text" name="studentName" class="form-control" required></div><div class="col-md-4"><label class="form-label fw-bold">जन्मतिथि (DOB):</label><input type="date" name="dob" class="form-control" required></div><div class="col-md-4"><label class="form-label fw-bold">विद्यार्थी का आधार नंबर:</label><input type="text" name="aadharCard" class="form-control" required></div><div class="col-md-4"><label class="form-label fw-bold">विद्यार्थी का वर्ग (Category):</label><select name="category" class="form-select" required><option value="ST">अनुसूचित जनजाति (ST)</option><option value="SC">अनुसूचित जाति (SC)</option></select></div><div class="col-md-4"><label class="form-label fw-bold">विद्यार्थी की जाति:</label><input type="text" name="subCast" class="form-control" required></div><div class="col-md-4"><label class="form-label fw-bold">पालक का mobile नंबर:</label><input type="tel" name="mobile" class="form-control" required></div><div class="col-md-6"><label class="form-label fw-bold">ईमेल ID (Email - optional):</label><input type="email" name="email" class="form-control"></div>';
     f += '<div class="col-md-6"><label class="form-label fw-bold text-danger">📸 छात्र की फोटो (20KB - 150KB):</label><input type="file" name="studentPhoto" class="form-control" onchange="validateFile(this)" required></div>';
     f += '<div class="col-md-6"><label class="form-label fw-bold text-danger">✍️ छात्र के हस्ताक्षर (20KB - 150KB):</label><input type="file" name="studentSignature" class="form-control" onchange="validateFile(this)" required></div>';
-    f += '<div class="col-md-12"><label class="form-label fw-bold text-danger">📂 छात्र का आधार कार्ड दस्तावेज़ (20-150KB):</label><input type="file" name="studentAadharFile" class="form-control" onchange="validateFile(this)" required></div>';
-    f += '<div class="section-title">2. पारिवारिक विवरण एवं पालक आधार</div><div class="col-md-6"><label class="form-label fw-bold">पिता का नाम:</label><input type="text" name="fatherName" class="form-control" required></div><div class="col-md-6"><label class="form-label text-muted fw-bold">पिता का आधार कार्ड फ़ोटो (Optional):</label><input type="file" name="fatherAadharFile" class="form-control" onchange="validateFile(this)"></div><div class="col-md-6"><label class="form-label fw-bold">माता का नाम:</label><input type="text" name="motherName" class="form-control" required></div><div class="col-md-6"><label class="form-label text-muted fw-bold">माता का आधार कार्ड फ़ोटो (Optional):</label><input type="file" name="motherAadharFile" class="form-control" onchange="validateFile(this)"></div><div class="col-md-4"><label class="form-label fw-bold">पालक की वार्षिक आय (₹):</label><input type="number" name="annualIncome" class="form-control" required></div>';
+    f += '<div class="col-md-6"><label class="form-label fw-bold text-danger">📂 छात्र का आधार कार्ड दस्तावेज़ (20-150KB):</label><input type="file" name="studentAadharFile" class="form-control" onchange="validateFile(this)" required></div>';
+    f += '<div class="section-title">2. पारिवारिक विवरण एवं बैंक खाता जानकारी</div><div class="col-md-4"><label class="form-label fw-bold">पिता का नाम:</label><input type="text" name="fatherName" class="form-control" required></div><div class="col-md-4"><label class="form-label fw-bold">पिता का व्यवसाय:</label><input type="text" name="fatherOcc" class="form-control" placeholder="उदा. कृषक / मजदूरी" required></div><div class="col-md-4"><label class="form-label fw-bold">माता का नाम:</label><input type="text" name="motherName" class="form-control" required></div><div class="col-md-4"><label class="form-label fw-bold">पालक की वार्षिक आय (₹):</label><input type="number" name="annualIncome" class="form-control" required></div><div class="col-md-4"><label class="form-label fw-bold">बैंक का नाम:</label><input type="text" name="bankName" class="form-control" placeholder="उदा. SBI / CGBRRB" required></div><div class="col-md-4"><label class="form-label fw-bold">बैंक खाता नंबर:</label><input type="text" name="bankAcc" class="form-control" required></div><div class="col-md-4"><label class="form-label fw-bold">IFSC कोड:</label><input type="text" name="bankIfsc" class="form-control" required></div>';
     f += '<div class="section-title">3. सरकारी प्रमाण पत्र एवं कार्ड फ़ोटो अपलोड (20KB - 150KB)</div><div class="col-md-6"><label class="form-label fw-bold text-primary">जाति प्रमाण पत्र अपलोड (अनिवार्य):</label><input type="file" name="casteCertFile" class="form-control" onchange="validateFile(this)" required></div><div class="col-md-6"><label class="form-label fw-bold text-primary">निवास प्रमाण पत्र अपलोड (अनिवार्य):</label><input type="file" name="residenceCertFile" class="form-control" onchange="validateFile(this)" required></div><div class="col-md-6"><label class="form-label text-muted fw-bold">आय प्रमाण पत्र अपलोड:</label><input type="file" name="incomeCertFile" class="form-control" onchange="validateFile(this)"></div><div class="col-md-6"><label class="form-label text-muted fw-bold">दूरी प्रमाण पत्र अपलोड:</label><input type="file" name="distanceCertFile" class="form-control" onchange="validateFile(this)"></div><div class="col-md-6"><label class="form-label text-muted fw-bold">आयुष्मान कार्ड अपलोड:</label><input type="file" name="ayushmanFile" class="form-control" onchange="validateFile(this)"></div><div class="col-md-6"><label class="form-label fw-bold text-primary">राशन कार्ड फ़ोटो अपलोड (अनिवार्य):</label><input type="file" name="rationCardFile" class="form-control" onchange="validateFile(this)" required></div>';
-    f += '<div class="section-title">4. पता एवं विद्यालय विवरण</div><div class="col-md-6"><label class="form-label fw-bold">स्थायी पता:</label><input type="text" name="permanentAddress" class="form-control" required></div><div class="col-md-3"><label class="form-label fw-bold">विकासखंड:</label><input type="text" name="blockName" class="form-control" required></div><div class="col-md-3"><label class="form-label fw-bold">जिला:</label><input type="text" name="districtName" class="form-control" required></div><div class="col-md-4"><label class="form-label fw-bold">घर से शाला की दूरी (कि.मी.):</label><input type="number" name="homeDistance" class="form-control" required></div>';
+    f += '<div class="section-title">4. पता एवं विद्यालय विवरण</div><div class="col-md-6"><label class="form-label fw-bold">स्थायी पता:</label><input type="text" name="permanentAddress" class="form-control" required></div>';
     
+    f += '<div class="col-md-3"><label class="form-label fw-bold">जिला:</label><select name="districtName" class="form-select" required><option value="सूरजपुर">सूरजपुर</option><option value="बलरामपुर">बलरामपुर</option><option value="सरगुजा">सरगुजा</option><option value="कोरिया">कोरिया</option><option value="मनेन्द्रगढ़-चिरमिरी-भरतपुर">मनेन्द्रगढ़-चिरमिरी-भरतपुर</option><option value="जशपुर">जशपुर</option><option value="अन्य">अन्य</option></select></div>';
+    f += '<div class="col-md-3"><label class="form-label fw-bold">विकासखंड:</label><select name="blockName" class="form-select" required><option value="सूरजपुर">सूरजपुर</option><option value="प्रेमनगर">प्रेमनगर</option><option value="रामानुजनगर">रामानुजनगर</option><option value="भैयाथान">भैयाथान</option><option value="प्रतापपुर">प्रतापपुर</option><option value="ओडगी">ओडगी</option><option value="अन्य">अन्य</option></select></div>';
+    
+    f += '<div class="col-md-4"><label class="form-label fw-bold">घर से शाला की दूरी (कि.मी.):</label><input type="number" name="homeDistance" class="form-control" required></div>';
     f += '<div class="col-md-4"><label class="form-label fw-bold text-primary">वर्तमान कक्षा (10वीं तक):</label><select name="studentClass" class="form-select" required><option value="">कक्षा चुनें...</option><option value="6th">6वीं (Class 6th)</option><option value="7th">7वीं (Class 7th)</option><option value="8th">8वीं (Class 8th)</option><option value="9th">9वीं (Class 9th)</option><option value="10th">10वीं (Class 10th)</option></select></div>';
     f += '<div class="col-md-4"><label class="form-label fw-bold">कोर्स / संकाय:</label><input type="text" name="course" class="form-control" value="General" required></div>';
     f += '<div class="col-md-8"><label class="form-label fw-bold">स्कूल का नाम:</label><input type="text" name="collegeName" class="form-control" required></div><div class="col-md-4"><label class="form-label fw-bold">पिछला परीक्षा प्रतिशत (%):</label><input type="text" name="prevPercent" class="form-control" required></div><div class="col-12 mt-4"><button type="submit" class="btn btn-primary w-100 fw-bold fs-5 py-3 rounded-3 shadow">🚀 ऑनलाइन आवेदन पत्र सुरक्षित रूप से जमा करें</button></div></form><div class="text-center mt-3"><a href="/" class="btn btn-link text-decoration-none fw-bold">🏠 मुख्य पृष्ठ पर वापस जाएँ</a></div></div></div>' + fileValidationScript + '</body></html>';
     res.send(f);
 });
 
-// 🔄 हॉस्टल नवीनीकरण फॉर्म (गूगल फॉर्म का पूरा कंटेंट हमारे स्टाइल में - 100% Native)
+// 🔄 हॉस्टल नवीनीकरण फॉर्म (स्मार्ट ऑटो-फ़िल सिस्टम के साथ)
 app.get('/renewal-form', async (req, res) => {
     const config = await Setting.findOne({}) || defaultSetting; const sessionVal = getDynamicSession();
-    let rf = '<!DOCTYPE html><html lang="hi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>हॉस्टल नवीनीकरण आवेदन पत्र</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"><style>body{ background-color: #fefcbf; color:#2d3748; } .card { border:none; border-radius:20px; box-shadow:0 20px 40px rgba(0,0,0,0.05); } .section-title { background-color: #fef3c7; padding: 10px 15px; font-weight: bold; border-left: 5px solid #d97706; margin-top: 20px; margin-bottom: 15px; border-radius:0 8px 8px 0; color: #b45309; } .declaration-box { background-color: #fffbe3; border: 1px solid #fef08a; border-radius: 12px; padding: 15px; font-size: 13px; line-height: 1.7; }</style></head><body class="p-2 p-md-4"><div class="container" style="max-width: 900px;"><div class="card p-3 p-md-5 bg-white"><div class="text-center mb-4"><h5 class="text-secondary fw-bold mb-1" style="font-size:13px; letter-spacing:1px;">आदिम जाति तथा अनुसूचित जाति विकास विभाग, छत्तीसगढ़ शासन</h5><h3 class="text-warning text-dark fw-bold fs-3">PRE MATRIC ST+SC BOYS HOSTEL SURAJPUR</h3><span class="badge bg-warning text-dark px-4 py-2 mt-2 rounded-pill fs-6 fw-bold">🔄 नवीनीकरण हेतु आवेदन पत्र - सत्र ' + sessionVal + '</span></div>';
+    let rf = '<!DOCTYPE html><html lang="hi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>हॉस्टल नवीनीकरण आवेदन पत्र</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"><style>body{ background-color: #fefcbf; color:#2d3748; } .card { border:none; border-radius:20px; box-shadow:0 20px 40px rgba(0,0,0,0.05); } .section-title { background-color: #fef3c7; padding: 10px 15px; font-weight: bold; border-left: 5px solid #d97706; margin-top: 20px; margin-bottom: 15px; border-radius:0 8px 8px 0; color: #b45309; } .autofill-box { background: linear-gradient(135deg, #fef08a 0%, #fef08a 100%); border: 2px dashed #d97706; border-radius: 15px; padding: 20px; margin-bottom: 25px; } .declaration-box { background-color: #fffbe3; border: 1px solid #fef08a; border-radius: 12px; padding: 15px; font-size: 13px; line-height: 1.7; }</style></head><body class="p-2 p-md-4"><div class="container" style="max-width: 900px;"><div class="card p-3 p-md-5 bg-white"><div class="text-center mb-4"><h5 class="text-secondary fw-bold mb-1" style="font-size:13px; letter-spacing:1px;">आदिम जाति तथा अनुसूचित जाति विकास विभाग, छत्तीसगढ़ शासन</h5><h3 class="text-warning text-dark fw-bold fs-3">PRE MATRIC ST+SC BOYS HOSTEL SURAJPUR</h3><span class="badge bg-warning text-dark px-4 py-2 mt-2 rounded-pill fs-6 fw-bold">🔄 नवीनीकरण हेतु आवेदन पत्र - सत्र ' + sessionVal + '</span></div>';
     
+    // ⚡ [स्मार्ट ऑटो-फ़िल बॉक्स]
+    rf += '<div class="autofill-box shadow-sm"><h5 class="fw-bold text-dark mb-2">⚡ पुराने छात्र ऑटो-फ़िल सिस्टम (Smart Auto-Fill)</h5><p class="small text-secondary mb-3">अपना आधार नंबर या पंजीकृत मोबाइल नंबर डालकर सर्च करें, पिछला पूरा फॉर्म अपने आप भर जाएगा!</p><div class="input-group"><input type="tel" id="autoSearchInput" class="form-control border-warning" placeholder="आधार नंबर या मोबाइल नंबर लिखें..."><button type="button" onclick="autoFillStudentData()" class="btn btn-dark text-warning fw-bold px-4">🔍 डेटा ऑटो-फ़िल करें</button></div><div id="autofillStatus" class="mt-2 fw-bold small"></div></div>';
+
     rf += '<form action="/submit-form" method="POST" enctype="multipart/form-data" class="row g-3"><input type="hidden" name="isRenewal" value="true">';
     
-    rf += '<div class="section-title">1. छात्र की जानकारी व सत्यापन</div>';
-    rf += '<div class="col-md-6"><label class="form-label fw-bold">विद्यार्थी का नाम (आवेदक):</label><input type="text" name="studentName" class="form-control" required></div>';
-    rf += '<div class="col-md-6"><label class="form-label fw-bold">पंजीकृत मोबाइल नंबर (वही पुराना नंबर):</label><input type="tel" name="mobile" class="form-control" required></div>';
-    rf += '<div class="col-md-6"><label class="form-label fw-bold">पिता / पालक का नाम:</label><input type="text" name="fatherName" class="form-control" required></div>';
-    rf += '<div class="col-md-6"><label class="form-label fw-bold">विद्यार्थी का आधार नंबर:</label><input type="text" name="aadharCard" class="form-control" required></div>';
+    rf += '<div class="section-title">1. छात्र की व्यक्तिगत व पहचान जानकारी</div>';
+    rf += '<div class="col-md-6"><label class="form-label fw-bold">विद्यार्थी का नाम (आवेदक):</label><input type="text" name="studentName" id="sName" class="form-control" required></div>';
+    rf += '<div class="col-md-6"><label class="form-label fw-bold">पंजीकृत मोबाइल नंबर:</label><input type="tel" name="mobile" id="sMobile" class="form-control" required></div>';
+    rf += '<div class="col-md-6"><label class="form-label fw-bold">विद्यार्थी का आधार नंबर:</label><input type="text" name="aadharCard" id="sAadhar" class="form-control" required></div>';
+    rf += '<div class="col-md-6"><label class="form-label fw-bold">जन्मतिथि (DOB):</label><input type="date" name="dob" id="sDob" class="form-control" required></div>';
+    rf += '<div class="col-md-4"><label class="form-label fw-bold">वर्ग (Category):</label><select name="category" id="sCat" class="form-select" required><option value="ST">अनुसूचित जनजाति (ST)</option><option value="SC">अनुसूचित जाति (SC)</option></select></div>';
+    rf += '<div class="col-md-4"><label class="form-label fw-bold">जाति:</label><input type="text" name="subCast" id="sSubcast" class="form-control" required></div>';
+    rf += '<div class="col-md-4"><label class="form-label fw-bold">ईमेल ID (Optional):</label><input type="email" name="email" id="sEmail" class="form-control"></div>';
     
-    rf += '<div class="col-md-6"><label class="form-label fw-bold text-primary">नई कक्षा जिसमें अध्ययनरत हैं (10वीं तक):</label><select name="studentClass" class="form-select" required><option value="">कक्षा चुनें...</option><option value="6th">6वीं (Class 6th)</option><option value="7th">7वीं (Class 7th)</option><option value="8th">8वीं (Class 8th)</option><option value="9th">9वीं (Class 9th)</option><option value="10th">10वीं (Class 10th)</option></select></div>';
-    
-    rf += '<div class="col-md-6"><label class="form-label fw-bold">स्कूल का नाम:</label><input type="text" name="collegeName" class="form-control" required></div>';
-    
-    rf += '<div class="section-title">2. नियम, अनिवार्य अनुशासन एवं पालक घोषणा</div>';
+    rf += '<div class="section-title">2. पारिवारिक विवरण एवं बैंक खाता जानकारी</div>';
+    rf += '<div class="col-md-4"><label class="form-label fw-bold">पिता / पालक का नाम:</label><input type="text" name="fatherName" id="fName" class="form-control" required></div>';
+    rf += '<div class="col-md-4"><label class="form-label fw-bold">पिता का व्यवसाय:</label><input type="text" name="fatherOcc" id="fOcc" class="form-control" placeholder="उदा. कृषक / मजदूरी" required></div>';
+    rf += '<div class="col-md-4"><label class="form-label fw-bold">माता का नाम:</label><input type="text" name="motherName" id="mName" class="form-control" required></div>';
+    rf += '<div class="col-md-4"><label class="form-label fw-bold">वार्षिक आय (₹):</label><input type="number" name="annualIncome" id="aIncome" class="form-control" required></div>';
+    rf += '<div class="col-md-4"><label class="form-label fw-bold">बैंक का नाम:</label><input type="text" name="bankName" id="bName" class="form-control" placeholder="उदा. SBI / CGBRRB" required></div>';
+    rf += '<div class="col-md-4"><label class="form-label fw-bold">बैंक खाता नंबर:</label><input type="text" name="bankAcc" id="bAcc" class="form-control" required></div>';
+    rf += '<div class="col-md-4"><label class="form-label fw-bold">IFSC कोड:</label><input type="text" name="bankIfsc" id="bIfsc" class="form-control" required></div>';
+
+    rf += '<div class="section-title">3. वर्तमान स्कूल, कक्षा एवं स्थायी पता</div>';
+    rf += '<div class="col-md-6"><label class="form-label fw-bold text-primary">नई कक्षा जिसमें प्रवेश लिया है (10वीं तक):</label><select name="studentClass" id="sClass" class="form-select" required><option value="">कक्षा चुनें...</option><option value="6th">6वीं (Class 6th)</option><option value="7th">7वीं (Class 7th)</option><option value="8th">8वीं (Class 8th)</option><option value="9th">9वीं (Class 9th)</option><option value="10th">10वीं (Class 10th)</option></select></div>';
+    rf += '<div class="col-md-6"><label class="form-label fw-bold">School का नाम:</label><input type="text" name="collegeName" id="sSchool" class="form-control" required></div>';
+    rf += '<div class="col-md-4"><label class="form-label fw-bold">पिछला परीक्षा प्रतिशत (%):</label><input type="text" name="prevPercent" id="sPercent" class="form-control" required></div>';
+    rf += '<div class="col-md-8"><label class="form-label fw-bold">स्थायी पता:</label><input type="text" name="permanentAddress" id="sAddress" class="form-control" required></div>';
+    rf += '<div class="col-md-4"><label class="form-label fw-bold">जिला:</label><select name="districtName" id="sDistrict" class="form-select" required><option value="सूरजपुर">सूरजपुर</option><option value="बलरामपुर">बलरामपुर</option><option value="सरगुजा">सरगुजा</option><option value="कोरिया">कोरिया</option><option value="मनेन्द्रगढ़-चिरमिरी-भरतपुर">मनेन्द्रगढ़-चिरमिरी-भरतपुर</option><option value="जशपुर">जशपुर</option><option value="अन्य">अन्य</option></select></div>';
+    rf += '<div class="col-md-4"><label class="form-label fw-bold">विकासखंड:</label><select name="blockName" id="sBlock" class="form-select" required><option value="सूरजपुर">सूरजपुर</option><option value="प्रेमनगर">प्रेमनगर</option><option value="रामानुजनगर">रामानुजनगर</option><option value="भैयाथान">भैयाथान</option><option value="प्रतापपुर">प्रतापपुर</option><option value="ओडगी">ओडगी</option><option value="अन्य">अन्य</option></select></div>';
+    rf += '<div class="col-md-4"><label class="form-label fw-bold">घर से दूरी (कि.मी.):</label><input type="number" name="homeDistance" id="sDist" class="form-control" required></div>';
+
+    rf += '<div class="section-title">4. नियम, अनिवार्य अनुशासन एवं पालक घोषणा</div>';
     rf += '<div class="col-12"><div class="declaration-box text-secondary"><b>पिता/पालक द्वारा घोषणा एवं नियम पालन:</b><ol class="mb-0 ps-3"><li>अधीक्षक व वरिष्ठ अधिकारियों के निर्देशों का कड़ाई से पालन किया जाएगा।</li><li>प्रदाय की गई व्यक्तिगत सामग्री (पलंग, गद्दा, चादर आदि) तथा छात्रावास परिसर की वस्तुओं को नुकसान नहीं पहुँचाया जाएगा।</li><li>परिसर में साफ़-सफाई एवं शांति व्यवस्था बनाए रखने में पूर्ण सहयोग प्रदान किया जाएगा।</li><li>धूम्रपान, शराब, गुटका व किसी भी प्रकार के असामाजिक व्यवहार करने पर निष्कासन मान्य होगा।</li></ol></div></div>';
     
-    rf += '<div class="section-title">3. दस्तावेज़ एवं नवीनीकरण पत्र अपलोड (20KB - 150KB)</div>';
-    rf += '<div class="col-md-12"><label class="form-label fw-bold text-danger">📄 हस्ताक्षरित नवीनीकरण आवेदन पत्र फ़ोटो/PDF अपलोड करें (20KB - 150KB):</label><input type="file" name="renewalAppFile" class="form-control" onchange="validateFile(this)" required></div>';
+    rf += '<div class="section-title">5. दस्तावेज़ एवं नवीनीकरण पत्र अपलोड (20KB - 150KB)</div>';
+    rf += '<div class="col-md-12"><label class="form-label fw-bold text-danger">📄 नवीनीकरण आवेदन पत्र फ़ोटो/PDF (20KB - 150KB):</label><input type="file" name="renewalAppFile" class="form-control" onchange="validateFile(this)"><small class="text-muted d-block">ऑटो-फ़िल होने पर यदि पुराना फॉर्म सुरक्षित है, तो नया अपलोड करना ऐच्छिक है।</small></div>';
 
-    if (config.photoActive) { rf += '<div class="col-md-6"><label class="form-label fw-bold">📸 नई फोटो अपलोड (20-150KB):</label><input type="file" name="studentPhoto" class="form-control" onchange="validateFile(this)" required></div>'; }
-    if (config.signatureActive) { rf += '<div class="col-md-6"><label class="form-label fw-bold">✍️ नया हस्ताक्षर अपलोड (20-150KB):</label><input type="file" name="studentSignature" class="form-control" onchange="validateFile(this)" required></div>'; }
-    if (config.aadharActive) { rf += '<div class="col-md-12"><label class="form-label fw-bold">📂 छात्र आधार कार्ड फ़ोटो कॉपी (20-150KB):</label><input type="file" name="studentAadharFile" class="form-control" onchange="validateFile(this)" required></div>'; }
-    if (config.resultActive) { rf += '<div class="col-md-12"><label class="form-label fw-bold text-primary">📊 पिछली क्लास का रिजल्ट / मार्कशीट:</label><input type="file" name="resultFile" class="form-control" onchange="validateFile(this)" required></div>'; }
-    if (config.casteActive) { rf += '<div class="col-md-4"><label class="form-label fw-bold">जाति प्रमाण पत्र:</label><input type="file" name="casteCertFile" class="form-control" onchange="validateFile(this)" required></div>'; }
-    if (config.resActive) { rf += '<div class="col-md-4"><label class="form-label fw-bold">निवास प्रमाण पत्र:</label><input type="file" name="residenceCertFile" class="form-control" onchange="validateFile(this)" required></div>'; }
-    if (config.rationActive) { rf += '<div class="col-md-4"><label class="form-label fw-bold">राशन कार्ड फ़ोटो:</label><input type="file" name="rationCardFile" class="form-control" onchange="validateFile(this)" required></div>'; }
+    if (config.photoActive) { rf += '<div class="col-md-6"><label class="form-label fw-bold">📸 नई फोटो (20-150KB):</label><input type="file" name="studentPhoto" class="form-control" onchange="validateFile(this)"></div>'; }
+    if (config.signatureActive) { rf += '<div class="col-md-6"><label class="form-label fw-bold">✍️ नया हस्ताक्षर (20-150KB):</label><input type="file" name="studentSignature" class="form-control" onchange="validateFile(this)"></div>'; }
+    if (config.aadharActive) { rf += '<div class="col-md-12"><label class="form-label fw-bold">📂 छात्र आधार फ़ोटो कॉपी (20-150KB):</label><input type="file" name="studentAadharFile" class="form-control" onchange="validateFile(this)"></div>'; }
+    if (config.resultActive) { rf += '<div class="col-md-12"><label class="form-label fw-bold text-primary">📊 पिछली क्लास की मार्कशीट:</label><input type="file" name="resultFile" class="form-control" onchange="validateFile(this)"></div>'; }
+    if (config.casteActive) { rf += '<div class="col-md-4"><label class="form-label fw-bold">जाति प्रमाण पत्र:</label><input type="file" name="casteCertFile" class="form-control" onchange="validateFile(this)"></div>'; }
+    if (config.resActive) { rf += '<div class="col-md-4"><label class="form-label fw-bold">निवास प्रमाण पत्र:</label><input type="file" name="residenceCertFile" class="form-control" onchange="validateFile(this)"></div>'; }
+    if (config.rationActive) { rf += '<div class="col-md-4"><label class="form-label fw-bold">राशन कार्ड फ़ोटो:</label><input type="file" name="rationCardFile" class="form-control" onchange="validateFile(this)"></div>'; }
     
-    rf += '<div class="col-md-12 mt-4"><button type="submit" class="btn btn-warning text-dark w-100 fw-bold fs-5 py-3 rounded-3 shadow">🔄 नवीनीकरण आवेदन सबमिट करें</button></div></form><div class="text-center mt-3"><a href="/" class="btn btn-link text-decoration-none fw-bold text-dark">🏠 मुख्य पृष्ठ</a></div></div></div>' + fileValidationScript + '</body></html>';
+    rf += '<div class="col-md-12 mt-4"><button type="submit" class="btn btn-warning text-dark w-100 fw-bold fs-5 py-3 rounded-3 shadow">🔄 नवीनीकरण आवेदन सबमिट करें</button></div></form><div class="text-center mt-3"><a href="/" class="btn btn-link text-decoration-none fw-bold text-dark">🏠 मुख्य पृष्ठ</a></div></div></div>';
+    
+    // ⚡ [ऑटो-फ़िल जावास्क्रिप्ट लॉजिक]
+    rf += `<script>
+    function autoFillStudentData() {
+        const val = document.getElementById("autoSearchInput").value.trim();
+        const status = document.getElementById("autofillStatus");
+        if(!val) { alert("कृपया आधार नंबर या मोबाइल नंबर दर्ज करें!"); return; }
+        
+        status.className = "mt-2 fw-bold small text-primary";
+        status.innerHTML = "⏳ पुराना रिकॉर्ड खोजा जा रहा है...";
+        
+        fetch("/api/get-student-by-aadhar?search=" + encodeURIComponent(val))
+            .then(res => res.json())
+            .then(res => {
+                if(res.success && res.data) {
+                    const d = res.data;
+                    document.getElementById("sName").value = d.studentName || "";
+                    document.getElementById("sMobile").value = d.mobile || "";
+                    document.getElementById("sAadhar").value = d.aadharCard || "";
+                    document.getElementById("sDob").value = d.dob || "";
+                    document.getElementById("sCat").value = d.category || "ST";
+                    document.getElementById("sSubcast").value = d.subCast || "";
+                    document.getElementById("sEmail").value = d.email || "";
+                    document.getElementById("fName").value = d.fatherName || "";
+                    document.getElementById("fOcc").value = d.fatherOcc || "";
+                    document.getElementById("mName").value = d.motherName || "";
+                    document.getElementById("aIncome").value = d.annualIncome || 0;
+                    document.getElementById("bName").value = d.bankName || "";
+                    document.getElementById("bAcc").value = d.bankAcc || "";
+                    document.getElementById("bIfsc").value = d.bankIfsc || "";
+                    document.getElementById("sClass").value = d.studentClass || "";
+                    document.getElementById("sSchool").value = d.collegeName || "";
+                    document.getElementById("sPercent").value = d.prevPercent || "";
+                    document.getElementById("sAddress").value = d.permanentAddress || "";
+                    document.getElementById("sDistrict").value = d.districtName || "सूरजपुर";
+                    document.getElementById("sBlock").value = d.blockName || "सूरजपुर";
+                    document.getElementById("sDist").value = d.homeDistance || 0;
+                    
+                    status.className = "mt-2 fw-bold small text-success";
+                    status.innerHTML = "✅ बधाई! छात्र '" + d.studentName + "' का रिकॉर्ड सफलतापूर्वक ऑटो-फ़िल हो गया है!";
+                } else {
+                    status.className = "mt-2 fw-bold small text-danger";
+                    status.innerHTML = res.message || "❌ रिकॉर्ड नहीं मिला!";
+                }
+            })
+            .catch(e => {
+                status.className = "mt-2 fw-bold small text-danger";
+                status.innerHTML = "❌ नेटवर्क या सर्वर एरर!";
+            });
+    }
+    </script>`;
+    
+    rf += fileValidationScript + '</body></html>';
     res.send(rf);
 });
 // 🔍 अलॉटमेंट रिजल्ट स्टेटस पेज
 app.get('/check-status-page', (req, res) => {
-    res.send('<!DOCTYPE html><html lang="hi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>अलॉटमेंट रिजल्ट स्टेटस</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"></head><body class="p-3 p-md-5 bg-light"><div class="container" style="max-width: 650px;"><div class="card p-3 p-md-4 shadow-sm bg-white border border-success mb-4" style="border-radius:15px;"><h3 class="text-center text-success fw-bold mb-4 fs-4">🔍 छात्रावास अलॉटमेंट रिजल्ट / स्टेटस</h3><div class="input-group mb-3"><input type="tel" id="searchMobile" class="form-control" placeholder="रजिस्टर्ड मोबाइल नंबर दर्ज करें..."><button onclick="checkStatus()" class="btn btn-success fw-bold">रिजल्ट देखें</button></div><div id="statusResult"></div></div><div class="card p-3 p-md-4 shadow-sm bg-white border border-warning" style="border-radius:15px;"><h4 class="text-center text-warning fw-bold mb-3 fs-5 text-dark">⚠️ आवेदन पत्र में त्रुटि सुधार (Edit Form)</h4><div class="input-group"><input type="tel" id="editMobile" class="form-control" placeholder="अपना रजिस्टर्ड मोबाइल नंबर डालें..."><button onclick="openEditForm()" class="btn btn-warning fw-bold">त्रुटि सुधार खोलें</button></div></div><div class="text-center mt-4"><a href="/" class="btn btn-link text-decoration-none fw-bold">🏠 मुख्य पृष्ठ पर वापस जाएँ</a></div></div><script>function checkStatus() { const mobile = document.getElementById("searchMobile").value; if(!mobile) { alert("कृपया मोबाइल नंबर लिखें!"); return; } window.location.href = "/get-receipt-view?mobile=" + mobile; } function openEditForm() { const m = document.getElementById("editMobile").value; if(!m) return alert("नंबर लिखें!"); window.location.href = "/edit-student-form?mobile=" + m; }</script></body></html>');
+    res.send('<!DOCTYPE html><html lang="hi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>अलॉटमेंट रिजल्ट स्टेटस</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"></head><body class="p-3 p-md-5 bg-light"><div class="container" style="max-width: 650px;"><div class="card p-3 p-md-4 shadow-sm bg-white border border-success mb-4" style="border-radius:15px;"><h3 class="text-center text-success fw-bold mb-4 fs-4">🔍 छात्रावास अलॉटमेंट रिजल्ट / स्टेटस</h3><div class="input-group mb-3"><input type="tel" id="searchMobile" class="form-control" placeholder="रजिस्टर्ड मोबाइल नंबर या आधार दर्ज करें..."><button onclick="checkStatus()" class="btn btn-success fw-bold">रिजल्ट देखें</button></div><div id="statusResult"></div></div><div class="card p-3 p-md-4 shadow-sm bg-white border border-warning" style="border-radius:15px;"><h4 class="text-center text-warning fw-bold mb-3 fs-5 text-dark">⚠️ आवेदन पत्र में त्रुटि सुधार (Edit Form)</h4><div class="input-group"><input type="tel" id="editMobile" class="form-control" placeholder="अपना रजिस्टर्ड मोबाइल नंबर डालें..."><button onclick="openEditForm()" class="btn btn-warning fw-bold">त्रुटि सुधार खोलें</button></div></div><div class="text-center mt-4"><a href="/" class="btn btn-link text-decoration-none fw-bold">🏠 मुख्य पृष्ठ पर वापस जाएँ</a></div></div><script>function checkStatus() { const mobile = document.getElementById("searchMobile").value; if(!mobile) { alert("कृपया मोबाइल नंबर या आधार नंबर लिखें!"); return; } window.location.href = "/get-receipt-view?mobile=" + mobile; } function openEditForm() { const m = document.getElementById("editMobile").value; if(!m) return alert("नंबर लिखें!"); window.location.href = "/edit-student-form?mobile=" + m; }</script></body></html>');
 });
 
 // 🎫 डिजिटल पावती रसीद व्यू
 app.get('/get-receipt-view', async (req, res) => {
     try {
-        const sData = await Student.findOne({ mobile: req.query.mobile.trim() });
+        const q = (req.query.mobile || '').trim();
+        const sData = await Student.findOne({ $or: [{ mobile: q }, { aadharCard: q }] });
         if (!sData) return res.send("<h2>❌ रिकॉर्ड नहीं मिला!</h2><a href='/'>वापस</a>");
         let badge = sData.approved ? '<span class="badge bg-success p-2 fs-6">✅ ADMISSION CONFIRMED</span>' : '<span class="badge bg-danger p-2 fs-6">⏳ PENDING APPROVAL</span>';
 
         let rc = '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>डिजिटल पावती रसीद</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">';
         rc += '<style>body { background-color: #f1f5f9; } .receipt-box { background: white; border: 4px double #1e293b; max-width: 750px; margin: 15px auto; padding: 20px; border-radius: 8px; position: relative; box-shadow: 0 15px 35px rgba(0,0,0,0.1); } .watermark { position: absolute; top: 35%; left: 15%; font-size: 55px; color: rgba(15, 23, 42, 0.04); transform: rotate(-25deg); font-weight: 900; pointer-events: none; text-transform: uppercase; user-select: none; } .stamp { border: 3px dashed #16a34a; color: #16a34a; transform: rotate(-5deg); display: inline-block; padding: 5px 15px; font-weight: bold; border-radius: 4px; font-size: 13px; } @media print { .no-print { display: none; } body { background: white; } .receipt-box { border: 2px solid #000; box-shadow: none; margin: 0; padding:10px; } }</style></head><body><div class="container"><div class="receipt-box"><div class="watermark">SURAJPUR HOSTEL</div>';
         rc += '<div class="row border-bottom pb-3 mb-4 align-items-center"><div class="col-2 text-center"><img src="https://via.placeholder.com/80?text=GOVT" class="img-fluid"></div><div class="col-8 text-center"><h6 class="text-secondary fw-bold mb-0" style="font-size:10px; letter-spacing:1px;">आदिम जाति तथा अनुसूचित जाति विकास विभाग, छत्तीसगढ़ शासन</h6><h4 class="fw-bold text-dark my-1 fs-5" style="font-family:\'Georgia\',serif;">PRE MATRIC ST+SC BOYS HOSTEL SURAJPUR</h4><span class="badge bg-dark px-3 py-1 text-warning fw-bold" style="font-size:10px;">🔒 DIGITAL पावती रसीद (सत्र ' + getDynamicSession() + ')</span></div><div class="col-2 text-center"><div class="stamp">DIGITAL<br>VERIFIED</div></div></div>';
-        rc += '<div class="row mb-4"><div class="col-sm-8"><h5 class="fw-bold text-primary mb-3 fs-6">🎫 रसीद संख्या: <span class="text-danger">' + sData.appNo + '</span></h5><p class="mb-2"><b>विद्यार्थी का नाम:</b> ' + sData.studentName + '</p><p class="mb-2"><b>पिता का नाम:</b> ' + sData.fatherName + '</p><p class="mb-2"><b>पंजीकृत मोबाइल:</b> +91 ' + sData.mobile + '</p><p class="mb-2"><b>प्रकार:</b> ' + (sData.isRenewal ? '<span class="badge bg-warning text-dark">नवीनीकरण (Renewal)</span>' : '<span class="badge bg-primary">नवीन प्रवेश (New)</span>') + '</p></div>';
+        rc += '<div class="row mb-4"><div class="col-sm-8"><h5 class="fw-bold text-primary mb-3 fs-6">🎫 रसीद संख्या: <span class="text-danger">' + sData.appNo + '</span></h5><p class="mb-2"><b>विद्यार्थी का नाम:</b> ' + sData.studentName + '</p><p class="mb-2"><b>पिता का नाम:</b> ' + sData.fatherName + ' (' + (sData.fatherOcc || 'कृषक') + ')</p><p class="mb-2"><b>माता का नाम:</b> ' + sData.motherName + '</p><p class="mb-2"><b>पंजीकृत मोबाइल:</b> +91 ' + sData.mobile + '</p><p class="mb-2"><b>ईमेल ID:</b> ' + (sData.email || 'N/A') + '</p><p class="mb-2"><b>प्रकार:</b> ' + (sData.isRenewal ? '<span class="badge bg-warning text-dark">नवीनीकरण (Renewal)</span>' : '<span class="badge bg-primary">नवीन प्रवेश (New)</span>') + '</p></div>';
         rc += '<div class="col-sm-4 text-center mt-3 mt-sm-0"><img src="' + sData.photoUrl + '" class="img-thumbnail shadow-sm mb-2" style="width: 120px; height: 130px; object-fit: cover;" onerror="this.src=\'https://via.placeholder.com/150\'\"><div class="small fw-bold text-secondary mb-1">विद्यार्थी हस्ताक्षर:</div><img src="' + (sData.signatureUrl || 'https://via.placeholder.com/120x40?text=No+Sign') + '" class="border bg-white" style="width:120px; height:40px; object-fit:contain;"><div class="mt-2">' + badge + '</div></div></div>';
-        rc += '<table class="table table-bordered bg-light" style="font-size:13px;"><tr><th class="bg-dark text-white" style="width:35%;">वर्तमान कक्षा/वर्ष</th><td>' + sData.studentClass + '</td></tr><tr><th class="bg-dark text-white">स्कूल का नाम</th><td>' + sData.collegeName + '</td></tr><tr><th class="bg-dark text-white">आबंटित ROOM नंबर (Room)</th><td><b class="text-danger fs-6">' + (sData.roomNumber || 'अभी अलॉट नहीं हुआ') + '</b></td></tr>';
+        rc += '<table class="table table-bordered bg-light" style="font-size:13px;"><tr><th class="bg-dark text-white" style="width:35%;">वर्तमान कक्षा</th><td>' + sData.studentClass + '</td></tr><tr><th class="bg-dark text-white">स्कूल का नाम</th><td>' + sData.collegeName + '</td></tr><tr><th class="bg-dark text-white">जिला व विकासखंड</th><td>' + (sData.districtName || 'सूरजपुर') + ', ' + (sData.blockName || 'सूरजपुर') + '</td></tr><tr><th class="bg-dark text-white">बैंक विवरण</th><td><b>बैंक:</b> ' + (sData.bankName || 'N/A') + ' | <b>खाता:</b> ' + (sData.bankAcc || 'N/A') + ' | <b>IFSC:</b> ' + (sData.bankIfsc || 'N/A') + '</td></tr><tr><th class="bg-dark text-white">आबंटित ROOM नंबर</th><td><b class="text-danger fs-6">' + (sData.roomNumber || 'अभी अलॉट नहीं हुआ') + '</b></td></tr>';
         
         if (sData.isRenewal && sData.renewalAppUrl) {
             rc += '<tr><th class="bg-dark text-white">नवीनीकरण आवेदन पत्र</th><td><a href="' + sData.renewalAppUrl + '" target="_blank" class="btn btn-xs btn-outline-danger fw-bold py-0 px-2" style="font-size:11px;">📄 अपलोडेड फॉर्म देखें</a></td></tr>';
@@ -356,22 +451,31 @@ app.get('/get-receipt-view', async (req, res) => {
     } catch(e) { res.status(500).send("Receipt view error"); }
 });
 
-// 🛠️ त्रुटि सुधार फॉर्म (कक्षा 6वीं से 10वीं सीमित)
+// 🛠️ त्रुटि सुधार फॉर्म (कक्षा 6वीं से 10वीं सीमित व नए फ़ील्ड्स के साथ)
 app.get('/edit-student-form', async (req, res) => {
     try {
-        const student = await Student.findOne({ mobile: (req.query.mobile || '').trim() });
+        const q = (req.query.mobile || '').trim();
+        const student = await Student.findOne({ $or: [{ mobile: q }, { aadharCard: q }] });
         if (!student) return res.send("<h1>❌ रिकॉर्ड नहीं मिला!</h1>");
 
         let editHtml = '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>त्रुटि सुधार पैनल</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"><style>body{background-color:#f1f5f9;}.card {border:none; border-radius:20px; box-shadow:0 15px 35px rgba(0,0,0,0.05);}.section-title { background-color: #e2e8f0; padding: 8px 12px; font-weight: bold; border-left: 5px solid #d97706; margin-top: 15px; margin-bottom: 15px; border-radius:0 6px 6px 0; color:#9a3412; }</style></head><body class="p-2 p-md-4 bg-light"><div class="container" style="max-width: 900px;"><div class="card p-3 p-md-5 bg-white border border-warning"><h2 class="text-center text-warning fw-bold mb-4 fs-4 text-dark">🛠️ आवेदन पत्र में त्रुटि सुधार (Full Form Edit Hub)</h2><form action="/submit-form" method="POST" enctype="multipart/form-data" class="row g-3">';
         editHtml += '<input type="hidden" name="mobile" value="' + student.mobile + '"><input type="hidden" name="isRenewal" value="' + student.isRenewal + '">';
-        editHtml += '<div class="section-title">1. व्यक्तिगत विवरण संपादन</div>';
+        editHtml += '<div class="section-title">1. व्यक्तिगत व पारिवारिक विवरण संपादन</div>';
         editHtml += '<div class="col-md-4"><label class="form-label fw-bold">विद्यार्थी का नाम:</label><input type="text" name="studentName" class="form-control" value="' + (student.studentName || '') + '" required></div>';
         editHtml += '<div class="col-md-4"><label class="form-label fw-bold">पिता का नाम:</label><input type="text" name="fatherName" class="form-control" value="' + (student.fatherName || '') + '" required></div>';
+        editHtml += '<div class="col-md-4"><label class="form-label fw-bold">पिता का व्यवसाय:</label><input type="text" name="fatherOcc" class="form-control" value="' + (student.fatherOcc || '') + '" required></div>';
         editHtml += '<div class="col-md-4"><label class="form-label fw-bold">माता का नाम:</label><input type="text" name="motherName" class="form-control" value="' + (student.motherName || '') + '" required></div>';
         editHtml += '<div class="col-md-4"><label class="form-label fw-bold">जन्मतिथि:</label><input type="date" name="dob" class="form-control" value="' + (student.dob || '') + '" required></div>';
         editHtml += '<div class="col-md-4"><label class="form-label fw-bold">आधार नंबर:</label><input type="text" name="aadharCard" class="form-control" value="' + (student.aadharCard || '') + '" required></div>';
         editHtml += '<div class="col-md-4"><label class="form-label fw-bold">वार्षिक आय (₹):</label><input type="number" name="annualIncome" class="form-control" value="' + (student.annualIncome || 0) + '" required></div>';
-        editHtml += '<div class="section-title">2. स्कूल एवं पता संपादन</div>';
+        editHtml += '<div class="col-md-4"><label class="form-label fw-bold">ईमेल ID:</label><input type="email" name="email" class="form-control" value="' + (student.email || '') + '"></div>';
+        
+        editHtml += '<div class="section-title">2. बैंक खाता विवरण</div>';
+        editHtml += '<div class="col-md-4"><label class="form-label fw-bold">बैंक का नाम:</label><input type="text" name="bankName" class="form-control" value="' + (student.bankName || '') + '" required></div>';
+        editHtml += '<div class="col-md-4"><label class="form-label fw-bold">बैंक खाता नंबर:</label><input type="text" name="bankAcc" class="form-control" value="' + (student.bankAcc || '') + '" required></div>';
+        editHtml += '<div class="col-md-4"><label class="form-label fw-bold">IFSC कोड:</label><input type="text" name="bankIfsc" class="form-control" value="' + (student.bankIfsc || '') + '" required></div>';
+
+        editHtml += '<div class="section-title">3. स्कूल एवं पता संपादन</div>';
         editHtml += '<div class="col-md-6"><label class="form-label fw-bold">स्कूल का नाम:</label><input type="text" name="collegeName" class="form-control" value="' + (student.collegeName || '') + '" required></div>';
         
         let c = student.studentClass || '';
@@ -379,9 +483,13 @@ app.get('/edit-student-form', async (req, res) => {
         
         editHtml += '<div class="col-md-3"><label class="form-label fw-bold">पिछला प्रतिशत (%):</label><input type="text" name="prevPercent" class="form-control" value="' + (student.prevPercent || '') + '" required></div>';
         editHtml += '<div class="col-md-6"><label class="form-label fw-bold">स्थायी पता:</label><input type="text" name="permanentAddress" class="form-control" value="' + (student.permanentAddress || '') + '" required></div>';
-        editHtml += '<div class="col-md-3"><label class="form-label fw-bold">विकासखंड:</label><input type="text" name="blockName" class="form-control" value="' + (student.blockName || '') + '" required></div>';
-        editHtml += '<div class="col-md-3"><label class="form-label fw-bold">जिला:</label><input type="text" name="districtName" class="form-control" value="' + (student.districtName || '') + '" required></div>';
-        editHtml += '<div class="section-title">3. दस्तावेज़ संपादन (20-150KB)</div>';
+        
+        let d = student.districtName || 'सूरजपुर';
+        let b = student.blockName || 'सूरजपुर';
+        editHtml += '<div class="col-md-3"><label class="form-label fw-bold">जिला:</label><select name="districtName" class="form-select" required><option value="सूरजपुर" ' + (d==='सूरजपुर'?'selected':'') + '>सूरजपुर</option><option value="बलरामपुर" ' + (d==='बलरामपुर'?'selected':'') + '>बलरामपुर</option><option value="सरगुजा" ' + (d==='सरगुजा'?'selected':'') + '>सरगुजा</option><option value="कोरिया" ' + (d==='कोरिया'?'selected':'') + '>कोरिया</option><option value="मनेन्द्रगढ़-चिरमिरी-भरतपुर" ' + (d==='मनेन्द्रगढ़-चिरमिरी-भरतपुर'?'selected':'') + '>मनेन्द्रगढ़-चिरमिरी-भरतपुर</option><option value="जशपुर" ' + (d==='जशपुर'?'selected':'') + '>जशपुर</option><option value="अन्य" ' + (d==='अन्य'?'selected':'') + '>अन्य</option></select></div>';
+        editHtml += '<div class="col-md-3"><label class="form-label fw-bold">विकासखंड:</label><select name="blockName" class="form-select" required><option value="सूरजपुर" ' + (b==='सूरजपुर'?'selected':'') + '>सूरजपुर</option><option value="प्रेमनगर" ' + (b==='प्रेमनगर'?'selected':'') + '>प्रेमनगर</option><option value="रामानुजनगर" ' + (b==='रामानुजनगर'?'selected':'') + '>रामानुजनगर</option><option value="भैयाथान" ' + (b==='भैयाथान'?'selected':'') + '>भैयाथान</option><option value="प्रतापपुर" ' + (b==='प्रतापपुर'?'selected':'') + '>प्रतापपुर</option><option value="ओडगी" ' + (b==='ओडगी'?'selected':'') + '>ओडगी</option><option value="अन्य" ' + (b==='अन्य'?'selected':'') + '>अन्य</option></select></div>';
+        
+        editHtml += '<div class="section-title">4. दस्तावेज़ संपादन (20-150KB)</div>';
         
         if (student.isRenewal) {
             editHtml += '<div class="col-md-12"><label class="form-label text-warning fw-bold">📄 नवीनीकरण आवेदन पत्र बदलें:</label><input type="file" name="renewalAppFile" class="form-control" onchange="validateFile(this)"></div>';
@@ -412,7 +520,7 @@ app.get('/public-admission-list', async (req, res) => {
     }
 });
 
-// 🚀 फॉर्म सबमिशन रूट (नवीन, नवीनीकरण और संपादन के लिए सामूहिक)
+// 🚀 फॉर्म सबमिशन रूट (नवीन, नवीनीकरण और संपादन के लिए सामूहिक - सभी फ़ील्ड्स कैप्चर)
 app.post('/submit-form', (req, res) => {
     uploadMiddleware(req, res, async (err) => {
         try {
@@ -422,11 +530,13 @@ app.post('/submit-form', (req, res) => {
             
             let sData = {
                 id: cleanMobile, studentName: req.body.studentName, dob: req.body.dob || (old ? old.dob : ""), aadharCard: req.body.aadharCard,
-                mobile: cleanMobile, fatherName: req.body.fatherName, motherName: req.body.motherName || (old ? old.motherName : ""),
-                annualIncome: req.body.annualIncome || (old ? old.annualIncome : 0), category: req.body.category || (old ? old.category : "ST"), subCast: req.body.subCast || (old ? old.subCast : ""),
-                permanentAddress: req.body.permanentAddress || (old ? old.permanentAddress : ""), blockName: req.body.blockName || (old ? old.blockName : ""), districtName: req.body.districtName || (old ? old.districtName : ""),
+                mobile: cleanMobile, fatherName: req.body.fatherName, fatherOcc: req.body.fatherOcc || (old ? old.fatherOcc : ""), motherName: req.body.motherName || (old ? old.motherName : ""),
+                annualIncome: req.body.annualIncome || (old ? old.annualIncome : 0), email: req.body.email || (old ? old.email : ""),
+                category: req.body.category || (old ? old.category : "ST"), subCast: req.body.subCast || (old ? old.subCast : ""),
+                permanentAddress: req.body.permanentAddress || (old ? old.permanentAddress : ""), blockName: req.body.blockName || (old ? old.blockName : "सूरजपुर"), districtName: req.body.districtName || (old ? old.districtName : "सूरजपुर"),
                 homeDistance: req.body.homeDistance || (old ? old.homeDistance : 0), studentClass: req.body.studentClass, course: req.body.course || "General",
                 collegeName: req.body.collegeName, prevPercent: req.body.prevPercent || (old ? old.prevPercent : ""),
+                bankName: req.body.bankName || (old ? old.bankName : ""), bankAcc: req.body.bankAcc || (old ? old.bankAcc : ""), bankIfsc: req.body.bankIfsc || (old ? old.bankIfsc : ""),
                 isRenewal: req.body.isRenewal === 'true', 
                 photoUrl: old ? old.photoUrl : "", signatureUrl: old ? old.signatureUrl : "", studentAadharUrl: old ? old.studentAadharUrl : "", fatherAadharUrl: old ? old.fatherAadharUrl : "", motherAadharUrl: old ? old.motherAadharUrl : "", casteCertUrl: old ? old.casteCertUrl : "", residenceCertUrl: old ? old.residenceCertUrl : "", incomeCertUrl: old ? old.incomeCertUrl : "", distanceCertUrl: old ? old.distanceCertUrl : "", ayushmanUrl: old ? old.ayushmanUrl : "", rationCardUrl: old ? old.rationCardUrl : "", resultUrl: old ? old.resultUrl : "", renewalAppUrl: old ? old.renewalAppUrl : "",
                 date: new Date().toLocaleString()
@@ -610,7 +720,7 @@ app.get('/view-students', async (req, res) => {
                                 '<div class="col-md-9 row g-2">' +
                                     '<div class="col-6"><b>नाम:</b> ' + (snap.studentName || 'N/A') + '</div>' +
                                     '<div class="col-6"><b>mobile:</b> ' + (snap.mobile || 'N/A') + '</div>' +
-                                    '<div class="col-6"><b>पिता का नाम:</b> ' + (snap.fatherName || 'N/A') + '</div>' +
+                                    '<div class="col-6"><b>पिता का नाम:</b> ' + (snap.fatherName || 'N/A') + ' (' + (snap.fatherOcc || 'N/A') + ')</div>' +
                                     '<div class="col-6"><b>माता का नाम:</b> ' + (snap.motherName || 'N/A') + '</div>' +
                                     '<div class="col-6"><b>जन्मतिथि:</b> ' + (snap.dob || 'N/A') + '</div>' +
                                     '<div class="col-6"><b>वर्ग:</b> ' + (snap.category || 'ST') + ' (' + (snap.subCast || 'N/A') + ')</div>' +
@@ -620,7 +730,7 @@ app.get('/view-students', async (req, res) => {
                                 '<div class="col-md-6"><b>स्थायी पता:</b> ' + (snap.permanentAddress || 'N/A') + ', ' + (snap.blockName || '') + ', ' + (snap.districtName || '') + '</div>' +
                                 '<div class="col-md-6"><b>स्कूल का नाम:</b> ' + (snap.collegeName || 'N/A') + ' (कक्षा: ' + (snap.studentClass || 'N/A') + ')</div>' +
                                 '<div class="col-md-6"><b>वार्षिक आय:</b> ₹' + (snap.annualIncome || 0) + '</div>' +
-                                '<div class="col-md-6"><b>घर से दूरी:</b> ' + (snap.homeDistance || 0) + ' किमी</div>' +
+                                '<div class="col-md-6"><b>बैंक खाता:</b> ' + (snap.bankName || 'N/A') + ' (' + (snap.bankAcc || 'N/A') + ')</div>' +
                             '</div>' +
                             '<h6 class="fw-bold border-bottom pb-1 text-primary">📁 अपलोड किए गए दस्तावेज़ बैकअप सूची:</h6>' +
                             '<div class="d-flex flex-wrap gap-2 mt-2">' +
